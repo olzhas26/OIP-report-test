@@ -1129,6 +1129,50 @@ function fillWorkFilterOptions(){
 // ── DYNAMICS (тренд по неделям) ───────────────────────────────────────────────
 function parseDynamics(rows){
   if(!rows||!rows.length)return null;
+  // Блочный формат: повторяющиеся блоки по дивизионам со строкой ИТОГО и колонкой «Неделя»
+  if(rows.some(r=>r.some(c=>c&&c.trim()==='Дивизион')))return parseDynamicsStacked(rows);
+  return parseDynamicsRows(rows);
+}
+function parseDynamicsStacked(rows){
+  const blocks=[]; let cur=null;
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];
+    if(r.some(c=>c&&c.trim()==='Дивизион')){
+      const hdr=r.map(c=>(c||'').trim());
+      cur={divCol:hdr.findIndex(h=>h==='Дивизион'),totalCol:hdr.findIndex(h=>h==='Всего'),
+           weekCol:hdr.findIndex(h=>h==='Неделя'),
+           typeCols:TYPE_ORDER.map(t=>({t,j:hdr.findIndex(h=>h===t)})).filter(x=>x.j>=0),rows:[]};
+      blocks.push(cur);
+    }else if(cur){cur.rows.push(r);}
+  }
+  const weeks=[];
+  blocks.forEach(b=>{
+    let wk='';
+    if(b.weekCol>=0)for(const r of b.rows){const v=(r[b.weekCol]||'').trim();if(v){wk=v;break;}}
+    if(!wk)wk=String(weeks.length+1);
+    const divTypes={}, vals={}; let itogo=null;
+    b.rows.forEach(r=>{
+      const name=(r[b.divCol]||'').trim();
+      if(!name)return;
+      if(name.toUpperCase()==='ИТОГО'){itogo=r;return;}
+      const mapped=DN_MAP[name]||name;
+      if(!divTypes[mapped])divTypes[mapped]={};
+      b.typeCols.forEach(({t,j})=>{divTypes[mapped][t]=(divTypes[mapped][t]||0)+(parseInt(r[j])||0);});
+    });
+    TYPE_ORDER.forEach(t=>{
+      const jc=b.typeCols.find(x=>x.t===t);
+      if(itogo&&jc)vals[t]=parseInt(itogo[jc.j])||0;
+      else vals[t]=Object.values(divTypes).reduce((a,dt)=>a+(dt[t]||0),0);
+    });
+    if(itogo&&b.totalCol>=0)vals['Всего']=parseInt(itogo[b.totalCol])||0;
+    else if(b.totalCol>=0)vals['Всего']=b.rows.reduce((a,r)=>{const nm=(r[b.divCol]||'').trim();return (nm&&nm.toUpperCase()!=='ИТОГО')?a+(parseInt(r[b.totalCol])||0):a;},0);
+    else vals['Всего']=TYPE_ORDER.filter(t=>t!=='Видео').reduce((a,t)=>a+(vals[t]||0),0);
+    weeks.push({week:wk,vals,divTypes});
+  });
+  if(!weeks.length)return null;
+  return{weeks,columns:['Всего',...TYPE_ORDER,...DN],stacked:true};
+}
+function parseDynamicsRows(rows){
   let hi=-1;
   for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c&&c.trim()==='Неделя')){hi=i;break;}}
   if(hi<0)return null;
@@ -1142,17 +1186,13 @@ function parseDynamics(rows){
     if(!wk)continue;
     const vals={};
     cols.forEach(c=>{const raw=(r[c.j]||'').toString().replace(',','.').trim();const v=parseFloat(raw);vals[c.name]=isNaN(v)?null:v;});
-    weeks.push({week:wk,vals});
+    weeks.push({week:wk,vals,divTypes:{}});
   }
   if(!weeks.length)return null;
   let columns=cols.map(c=>c.name);
-  // если нет столбца «Всего» — считаем как сумму типов
   if(!columns.includes('Всего')){
     const typeCols=TYPE_ORDER.filter(t=>columns.includes(t));
-    if(typeCols.length){
-      weeks.forEach(w=>{w.vals['Всего']=typeCols.reduce((a,t)=>a+(w.vals[t]||0),0);});
-      columns=['Всего',...columns];
-    }
+    if(typeCols.length){weeks.forEach(w=>{w.vals['Всего']=typeCols.reduce((a,t)=>a+(w.vals[t]||0),0);});columns=['Всего',...columns];}
   }
   return{weeks,columns};
 }
@@ -1160,9 +1200,11 @@ function parseDynamics(rows){
 let dynChart=null, dynView='load';
 const DYN_SLOTS=10; // фиксированное число секций на оси
 // Вес типа задачи в пд (как в датчике загрузки). При необходимости поправьте числа.
-const TYPE_LOAD_WEIGHTS={Концепт:10,Посадка:0.5,Визуализация:2,'ЭП':3.5,Планировки:3.5,Видео:1};
+// Вес типа в пд = (часы × люди) / 8. Из таблицы часов: Концепт 40×2/8=10, ЭП 48×2/8=12, Визуализация 24/8=3, Планировки 28/8=3.5, Посадка 4/8=0.5, Видео 8/8=1.
+const TYPE_LOAD_WEIGHTS={Концепт:10,Посадка:0.5,Визуализация:3,'ЭП':12,Планировки:3.5,Видео:1};
 function weekLoad(vals){return TYPE_ORDER.reduce((a,t)=>a+((vals[t]||0)*(TYPE_LOAD_WEIGHTS[t]||0)),0);}
 function weekTotal(vals){return vals['Всего']!=null?vals['Всего']:TYPE_ORDER.reduce((a,t)=>a+(vals[t]||0),0);}
+function divLoad(dt){return dt?TYPE_ORDER.reduce((a,t)=>a+((dt[t]||0)*(TYPE_LOAD_WEIGHTS[t]||0)),0):0;}
 
 function renderDyn(){
   const dyn=DATA.dynamics;
@@ -1174,10 +1216,11 @@ function renderDyn(){
     if(ctrls)ctrls.style.display='none';
     empty.style.display='block';
     empty.innerHTML='Чтобы видеть динамику, добавьте в Google-таблицу лист <b>«Динамика недель»</b>.<br><br>'+
-      'Первый столбец — <b>Неделя</b> (1, 2, 3…). Каждая строка — одна неделя. <b>Неделя 1 — отправная точка</b> и на графике не показывается: динамика считается как разница с предыдущей неделей, поэтому первой на графике будет неделя 2.<br><br>'+
-      '<b>Нагрузка (пд):</b> каждую неделю вносите накопительную сводку по типам — Концепт, Посадка, Визуализация, ЭП, Планировки, Видео. Дашборд умножит на вес типа и покажет прирост за неделю.<br>'+
-      '<b>Запросов за неделю:</b> столбец <b>Всего</b> (разница между соседними неделями).<br>'+
-      '<b>По дивизионам:</b> столбцы Центр, Алматы, Юг, Запад, РДС, Ташкент / Другое (количество за неделю = разница).';
+      'Лист — это блоки по неделям (как ваша сводка). В каждом блоке: шапка <b>Дивизион | Концепт | Посадка | Визуализация | Планировки | ЭП | Видео | Всего | Неделя</b>, строки дивизионов и строка <b>ИТОГО</b>. В колонке <b>Неделя</b> — номер (1, 2, 3…).<br><br>'+
+      '<b>Неделя 1 — отправная точка</b>, на графике не показывается: всё считается как разница с предыдущей неделей, первой идёт неделя 2.<br><br>'+
+      '<b>Нагрузка (пд):</b> типы × удельный вес (Концепт 10, ЭП 12, Визуализация 3, Планировки 3.5, Посадка 0.5, Видео 1), прирост за неделю.<br>'+
+      '<b>Запросов/нед:</b> разница «Всего» между неделями.<br>'+
+      '<b>По дивизионам:</b> взвешенная нагрузка (пд) каждого дивизиона за неделю, своим цветом.';
     return;
   }
   empty.style.display='none';
@@ -1211,10 +1254,11 @@ function drawDynChart(){
     ctype='bar';
     const data=labels.map((_,k)=>{const wi=k+1;return wi<W.length?(weekTotal(W[wi].vals)-weekTotal(W[wi-1].vals)):null;});
     datasets=[{label:'Запросов за неделю',data,backgroundColor:'#1e3a6b',borderRadius:4,maxBarThickness:48}];
-  }else{ // divs — количество за неделю = разница
+  }else{ // divs — взвешенная нагрузка (пд) за неделю по каждому дивизиону
     ctype='line';
-    datasets=DN.filter(d=>dyn.columns.includes(d)).map(d=>({
-      label:d,data:labels.map((_,k)=>{const wi=k+1;return wi<W.length?((W[wi].vals[d]||0)-(W[wi-1].vals[d]||0)):null;}),
+    const divsPresent=DN.filter(d=>W.some(w=>w.divTypes&&w.divTypes[d]));
+    datasets=divsPresent.map(d=>({
+      label:d,data:labels.map((_,k)=>{const wi=k+1;return wi<W.length?Math.round((divLoad(W[wi].divTypes&&W[wi].divTypes[d])-divLoad(W[wi-1].divTypes&&W[wi-1].divTypes[d]))*10)/10:null;}),
       borderColor:dc(d),backgroundColor:dc(d),borderWidth:2.5,tension:.3,pointRadius:3,pointHoverRadius:5,spanGaps:false,fill:false
     }));
   }
@@ -1356,12 +1400,10 @@ async function load(){
         {num:32,name:'Поликлиника Бигвиль фасад',      division:'Алматы', task:'Разработка фасада',     persons:'',                      deadline:'',    status:'в очереди'},
       ],
       total:238, totalVideo:26,
-      dynamics:{columns:['Всего','Концепт','Посадка','Визуализация','ЭП','Планировки','Видео','Центр','Алматы','Юг','Запад','РДС','Ташкент / Другое'],weeks:[
-        {week:'1',vals:{'Всего':215,'Концепт':54,'Посадка':50,'Визуализация':70,'ЭП':15,'Планировки':17,'Видео':20,'Центр':57,'Алматы':38,'Юг':42,'Запад':34,'РДС':12,'Ташкент / Другое':32}},
-        {week:'2',vals:{'Всего':226,'Концепт':58,'Посадка':52,'Визуализация':74,'ЭП':16,'Планировки':18,'Видео':22,'Центр':60,'Алматы':40,'Юг':44,'Запад':36,'РДС':13,'Ташкент / Другое':33}},
-        {week:'3',vals:{'Всего':238,'Концепт':63,'Посадка':55,'Визуализация':78,'ЭП':18,'Планировки':21,'Видео':26,'Центр':64,'Алматы':42,'Юг':46,'Запад':38,'РДС':14,'Ташкент / Другое':34}},
-        {week:'4',vals:{'Всего':251,'Концепт':72,'Посадка':56,'Визуализация':83,'ЭП':18,'Планировки':22,'Видео':30,'Центр':66,'Алматы':44,'Юг':50,'Запад':40,'РДС':15,'Ташкент / Другое':36}},
-        {week:'5',vals:{'Всего':263,'Концепт':78,'Посадка':58,'Визуализация':87,'ЭП':19,'Планировки':24,'Видео':33,'Центр':69,'Алматы':46,'Юг':53,'Запад':42,'РДС':16,'Ташкент / Другое':37}}
+      dynamics:{stacked:true,columns:['Всего','Концепт','Посадка','Визуализация','ЭП','Планировки','Видео','Центр','Алматы','Юг','Запад','РДС','Ташкент / Другое'],weeks:[
+        {week:'1',vals:{'Концепт':66,'Посадка':56,'Визуализация':78,'Планировки':21,'ЭП':18,'Видео':28,'Всего':239},divTypes:{'Центр':{'Концепт':12,'Посадка':20,'Визуализация':22,'Планировки':4,'ЭП':7,'Видео':7},'Алматы':{'Концепт':6,'Посадка':11,'Визуализация':16,'Планировки':5,'ЭП':5,'Видео':2},'Юг':{'Концепт':11,'Посадка':13,'Визуализация':10,'Планировки':10,'ЭП':0,'Видео':4},'Запад':{'Концепт':9,'Посадка':7,'Визуализация':16,'Планировки':0,'ЭП':5,'Видео':3},'РДС':{'Концепт':10,'Посадка':0,'Визуализация':5,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':18,'Посадка':5,'Визуализация':9,'Планировки':2,'ЭП':1,'Видео':4}}},
+        {week:'2',vals:{'Концепт':72,'Посадка':56,'Визуализация':83,'Планировки':22,'ЭП':18,'Видео':30,'Всего':251},divTypes:{'Центр':{'Концепт':12,'Посадка':20,'Визуализация':23,'Планировки':4,'ЭП':7,'Видео':7},'Алматы':{'Концепт':6,'Посадка':11,'Визуализация':17,'Планировки':5,'ЭП':5,'Видео':2},'Юг':{'Концепт':15,'Посадка':13,'Визуализация':12,'Планировки':10,'ЭП':0,'Видео':5},'Запад':{'Концепт':11,'Посадка':7,'Визуализация':17,'Планировки':0,'ЭП':5,'Видео':4},'РДС':{'Концепт':10,'Посадка':0,'Визуализация':5,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':18,'Посадка':5,'Визуализация':9,'Планировки':3,'ЭП':1,'Видео':4}}},
+        {week:'3',vals:{'Концепт':77,'Посадка':62,'Визуализация':89,'Планировки':24,'ЭП':20,'Видео':34,'Всего':272},divTypes:{'Центр':{'Концепт':13,'Посадка':21,'Визуализация':24,'Планировки':4,'ЭП':8,'Видео':8},'Алматы':{'Концепт':7,'Посадка':12,'Визуализация':18,'Планировки':5,'ЭП':5,'Видео':3},'Юг':{'Концепт':16,'Посадка':14,'Визуализация':13,'Планировки':11,'ЭП':1,'Видео':6},'Запад':{'Концепт':12,'Посадка':8,'Визуализация':18,'Планировки':1,'ЭП':5,'Видео':4},'РДС':{'Концепт':10,'Посадка':1,'Визуализация':6,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':19,'Посадка':6,'Визуализация':10,'Планировки':3,'ЭП':1,'Видео':5}}}
       ]},
       prevDivs:null, prevTypes:null, prevTotal:null
     };
