@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ОИП — Отчет 2026</title>
+<title>🧪 ТЕСТ · ОИП — Отчет 2026</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
 :root{color-scheme:light}
@@ -14,6 +14,7 @@ body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f3f8;color:#1a2a4a;mi
 .topbar{background:#1a2a4a;color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200}
 .topbar-logo{font-size:15px;font-weight:800;letter-spacing:.5px}
 .topbar-logo span{color:#00c2e0}
+.test-badge{background:#ff5252;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:5px;margin-left:8px;vertical-align:middle}
 .tab-group{display:flex;gap:2px}
 .tab{padding:6px 18px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-radius:6px;transition:all .15s;letter-spacing:.3px;white-space:nowrap}
 .tab:hover{background:rgba(255,255,255,.15);color:#fff}
@@ -159,6 +160,12 @@ body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f3f8;color:#1a2a4a;mi
 .finput{min-width:200px}
 .finput:focus,.fsel:focus{border-color:#00a8cc}
 .fsel{cursor:pointer}
+/* Dynamics tab */
+.dyn-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.dyn-card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);padding:18px 18px 12px}
+.dyn-chart-wrap{position:relative;width:100%;height:380px}
+.dyn-empty{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);padding:26px;color:#777;font-size:13px;line-height:1.7}
+.dyn-empty b{color:#1a2a4a}
 .work-table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
 .work-table{width:100%;border-collapse:collapse;font-size:13px}
 .work-table th{background:#1a2a4a;color:rgba(255,255,255,.7);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
@@ -245,17 +252,19 @@ body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f3f8;color:#1a2a4a;mi
   .modal-stats{grid-template-columns:repeat(2,1fr)}
   .modal{width:96vw}
   .modal-body{padding:16px}
+  .dyn-chart-wrap{height:300px}
 }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>ОТЧЕТ</span></div>
+  <div class="topbar-logo">ОИП · <span>ОТЧЕТ</span><span class="test-badge">ТЕСТ</span></div>
   <div class="tab-group">
     <button class="tab on"  onclick="showTab('div')">По дивизионам</button>
     <button class="tab"     onclick="showTab('type')">По типам</button>
     <button class="tab"     onclick="showTab('weekly')">Недельный отчёт</button>
+    <button class="tab"     onclick="showTab('dyn')">Динамика</button>
     <button class="tab"     onclick="showTab('work')">Проекты в работе</button>
   </div>
   <div class="topbar-right"><b id="updated-ts">—</b>обновлено</div>
@@ -364,6 +373,19 @@ body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f3f8;color:#1a2a4a;mi
   </div>
 </div>
 
+<!-- ──────────── TAB 5: Динамика ──────────── -->
+<div id="tab-dyn" class="page">
+  <div class="page-title">Динамика <span>по неделям</span></div>
+  <div class="dyn-controls">
+    <button class="fbtn dyn on" data-view="total" onclick="setDynView('total')">Всего</button>
+    <button class="fbtn dyn" data-view="types" onclick="setDynView('types')">По типам</button>
+    <button class="fbtn dyn" data-view="divs" onclick="setDynView('divs')">По дивизионам</button>
+    <button class="fbtn dyn" data-view="video" onclick="setDynView('video')">Видео</button>
+  </div>
+  <div class="dyn-card"><div class="dyn-chart-wrap"><canvas id="dyn-chart"></canvas></div></div>
+  <div id="dyn-empty" class="dyn-empty" style="display:none"></div>
+</div>
+
 <!-- ──────────── MODAL ──────────── -->
 <div class="overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal">
@@ -389,6 +411,7 @@ const URL_KPI  = BASE_URL + encodeURIComponent('Отчет KPI');
 const URL_SUM  = BASE_URL + encodeURIComponent('Сводка типов');
 const URL_WORK = BASE_URL + encodeURIComponent('Проекты в работе');
 const URL_PREV = BASE_URL + encodeURIComponent('Прошлая неделя');
+const URL_DYN  = BASE_URL + encodeURIComponent('Динамика недель');
 
 // ── TASK WEIGHTS (person-days per task unit) ─────────────────────────────────
 // Order matters — more specific patterns first
@@ -1104,6 +1127,96 @@ function fillWorkFilterOptions(){
   _fillSel('f-person','Все исполнители',persons);
 }
 
+// ── DYNAMICS (тренд по неделям) ───────────────────────────────────────────────
+function parseDynamics(rows){
+  if(!rows||!rows.length)return null;
+  let hi=-1;
+  for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c&&c.trim()==='Неделя')){hi=i;break;}}
+  if(hi<0)return null;
+  const hdr=rows[hi].map(h=>(h||'').trim());
+  const weekCol=hdr.findIndex(h=>h==='Неделя');
+  const cols=hdr.map((h,j)=>({name:h,j})).filter(c=>c.name&&c.j!==weekCol);
+  const weeks=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i];
+    const wk=(r[weekCol]||'').trim();
+    if(!wk)continue;
+    const vals={};
+    cols.forEach(c=>{const raw=(r[c.j]||'').toString().replace(',','.').trim();const v=parseFloat(raw);vals[c.name]=isNaN(v)?null:v;});
+    weeks.push({week:wk,vals});
+  }
+  if(!weeks.length)return null;
+  let columns=cols.map(c=>c.name);
+  // если нет столбца «Всего» — считаем как сумму типов
+  if(!columns.includes('Всего')){
+    const typeCols=TYPE_ORDER.filter(t=>columns.includes(t));
+    if(typeCols.length){
+      weeks.forEach(w=>{w.vals['Всего']=typeCols.reduce((a,t)=>a+(w.vals[t]||0),0);});
+      columns=['Всего',...columns];
+    }
+  }
+  return{weeks,columns};
+}
+
+let dynChart=null, dynView='total';
+function dynSeriesFor(view,columns){
+  if(view==='total')return columns.includes('Всего')?[{name:'Всего',color:'#00a8cc'}]:[];
+  if(view==='types')return TYPE_ORDER.filter(t=>columns.includes(t)).map(t=>({name:t,color:TC[t]}));
+  if(view==='divs')return DN.filter(d=>columns.includes(d)).map(d=>({name:d,color:dc(d)}));
+  if(view==='video')return columns.includes('Видео')?[{name:'Видео',color:TC['Видео']}]:[];
+  return[];
+}
+function renderDyn(){
+  const dyn=DATA.dynamics;
+  const empty=document.getElementById('dyn-empty');
+  const card=document.querySelector('.dyn-card');
+  const ctrls=document.querySelector('.dyn-controls');
+  if(!dyn||!dyn.weeks||!dyn.weeks.length){
+    if(card)card.style.display='none';
+    if(ctrls)ctrls.style.display='none';
+    empty.style.display='block';
+    empty.innerHTML='Чтобы видеть динамику, добавьте в Google-таблицу лист <b>«Динамика недель»</b>.<br><br>'+
+      'Первый столбец — <b>Неделя</b> (значения: 1, 2, 3… для прошлых недель и <b>активная</b> для текущей). '+
+      'Далее столбцы с числами: <b>Всего</b>, Концепт, Посадка, Визуализация, ЭП, Планировки, Видео — '+
+      'и при желании дивизионы (Центр, Алматы, Юг, Запад, РДС, Ташкент / Другое).<br>'+
+      'Каждая строка — одна неделя. Дашборд построит график автоматически по тем столбцам, что найдёт.';
+    return;
+  }
+  empty.style.display='none';
+  if(card)card.style.display='';
+  if(ctrls)ctrls.style.display='';
+  drawDynChart();
+}
+function setDynView(v){
+  dynView=v;
+  document.querySelectorAll('.fbtn.dyn').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+  drawDynChart();
+}
+function drawDynChart(){
+  const dyn=DATA.dynamics;if(!dyn)return;
+  const labels=dyn.weeks.map(w=>w.week);
+  let series=dynSeriesFor(dynView,dyn.columns);
+  if(!series.length)series=dynSeriesFor('total',dyn.columns);
+  const datasets=series.map(sx=>({
+    label:sx.name,
+    data:dyn.weeks.map(w=>w.vals[sx.name]),
+    borderColor:sx.color,backgroundColor:sx.color,
+    borderWidth:2.5,tension:.3,pointRadius:3,pointHoverRadius:5,spanGaps:true,fill:false
+  }));
+  const el=document.getElementById('dyn-chart');if(!el)return;
+  if(dynChart){dynChart.destroy();dynChart=null;}
+  dynChart=new Chart(el.getContext('2d'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      devicePixelRatio:Math.max(window.devicePixelRatio||1,2),
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:series.length>1,position:'bottom',labels:{boxWidth:12,font:{size:11},padding:12,usePointStyle:true,pointStyle:'line'}}},
+      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#eef2f7'}},x:{grid:{display:false}}}
+    }
+  });
+}
+
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 function openDiv(divName){
   const vals=DATA.divs[divName];
@@ -1134,17 +1247,18 @@ const tabRendered={};
 function showTab(t){
   if(currentTab===t)return;
   currentTab=t;
-  ['div','type','weekly','work'].forEach(id=>{
+  ['div','type','weekly','dyn','work'].forEach(id=>{
     document.getElementById('tab-'+id).classList.toggle('show',id===t);
   });
   document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('on',['div','type','weekly','work'][i]===t);
+    b.classList.toggle('on',['div','type','weekly','dyn','work'][i]===t);
   });
   if(!tabRendered[t]){
     tabRendered[t]=true;
     if(t==='div')renderDiv();
     else if(t==='type')renderType();
     else if(t==='weekly')renderWeekly();
+    else if(t==='dyn')renderDyn();
     else if(t==='work')renderWork();
   }
 }
@@ -1152,11 +1266,12 @@ function showTab(t){
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function load(){
   try{
-    const[sumCsv,kpiCsv,workCsv,prevCsv]=await Promise.all([
+    const[sumCsv,kpiCsv,workCsv,prevCsv,dynCsv]=await Promise.all([
       fetch(URL_SUM).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
       fetch(URL_KPI).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
       fetch(URL_WORK).then(r=>r.ok?r.text():'').catch(()=>''),
-      fetch(URL_PREV).then(r=>r.ok?r.text():'').catch(()=>'')
+      fetch(URL_PREV).then(r=>r.ok?r.text():'').catch(()=>''),
+      fetch(URL_DYN).then(r=>r.ok?r.text():'').catch(()=>'')
     ]);
     const{total,totalVideo,divs,types}=buildFromSummary(parseSummary(parseCSV(sumCsv)));
     const projects=parseKPI(parseCSV(kpiCsv));
@@ -1164,6 +1279,7 @@ async function load(){
     const workProjects=workRows.length>1?parseWork(workRows):[];
     const prevData=prevCsv?buildFromSummary(parseSummary(parseCSV(prevCsv))):null;
     DATA={divs,types,projects,workProjects,total,totalVideo,
+      dynamics:dynCsv?parseDynamics(parseCSV(dynCsv)):null,
       prevDivs:prevData?prevData.divs:null,
       prevTypes:prevData?prevData.types:null,
       prevTotal:prevData?prevData.total:null};
@@ -1224,6 +1340,11 @@ async function load(){
         {num:32,name:'Поликлиника Бигвиль фасад',      division:'Алматы', task:'Разработка фасада',     persons:'',                      deadline:'',    status:'в очереди'},
       ],
       total:238, totalVideo:26,
+      dynamics:{columns:['Всего','Концепт','Посадка','Визуализация','ЭП','Планировки','Видео'],weeks:[
+        {week:'1',vals:{'Всего':226,'Концепт':58,'Посадка':52,'Визуализация':74,'ЭП':16,'Планировки':18,'Видео':22}},
+        {week:'2',vals:{'Всего':238,'Концепт':63,'Посадка':55,'Визуализация':78,'ЭП':18,'Планировки':21,'Видео':26}},
+        {week:'активная',vals:{'Всего':251,'Концепт':72,'Посадка':56,'Визуализация':83,'ЭП':18,'Планировки':22,'Видео':30}}
+      ]},
       prevDivs:null, prevTypes:null, prevTotal:null
     };
     document.getElementById('loading').style.display='none';
