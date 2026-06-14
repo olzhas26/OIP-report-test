@@ -1174,10 +1174,10 @@ function renderDyn(){
     if(ctrls)ctrls.style.display='none';
     empty.style.display='block';
     empty.innerHTML='Чтобы видеть динамику, добавьте в Google-таблицу лист <b>«Динамика недель»</b>.<br><br>'+
-      'Первый столбец — <b>Неделя</b> (1, 2, 3… для прошлых недель и <b>активная</b> для текущей). Каждая строка — одна неделя.<br><br>'+
+      'Первый столбец — <b>Неделя</b> (1, 2, 3…). Каждая строка — одна неделя. <b>Неделя 1 — отправная точка</b> и на графике не показывается: динамика считается как разница с предыдущей неделей, поэтому первой на графике будет неделя 2.<br><br>'+
       '<b>Нагрузка (пд):</b> каждую неделю вносите накопительную сводку по типам — Концепт, Посадка, Визуализация, ЭП, Планировки, Видео. Дашборд умножит на вес типа и покажет прирост за неделю.<br>'+
-      '<b>Запросов за неделю:</b> столбец <b>Всего</b> (берётся разница между соседними неделями).<br>'+
-      '<b>По дивизионам:</b> столбцы Центр, Алматы, Юг, Запад, РДС, Ташкент / Другое.';
+      '<b>Запросов за неделю:</b> столбец <b>Всего</b> (разница между соседними неделями).<br>'+
+      '<b>По дивизионам:</b> столбцы Центр, Алматы, Юг, Запад, РДС, Ташкент / Другое (количество за неделю = разница).';
     return;
   }
   empty.style.display='none';
@@ -1193,27 +1193,28 @@ function setDynView(v){
 function drawDynChart(){
   const dyn=DATA.dynamics;if(!dyn)return;
   const W=dyn.weeks;
-  const n=Math.max(DYN_SLOTS,W.length); // всегда минимум 10 секций
+  // Неделя 1 — отправная точка (baseline), в динамике не показывается.
+  // Каждая точка = разница с предыдущей неделей. Слот k -> неделя W[k+1].
+  const diffCount=Math.max(0,W.length-1);
+  const n=Math.max(DYN_SLOTS,diffCount); // минимум 10 секций
   const labels=[];
-  for(let i=0;i<n;i++)labels.push(i<W.length?W[i].week:String(i+1));
+  for(let k=0;k<n;k++){const wi=k+1;labels.push(wi<W.length?W[wi].week:String(wi+1));}
   let datasets=[], ctype='bar';
   if(dynView==='load'){
     ctype='bar';
-    const loads=W.map(w=>weekLoad(w.vals)); // накопительная нагрузка по сводке
-    const data=labels.map((_,i)=>(i>0&&i<W.length)?Math.round((loads[i]-loads[i-1])*10)/10:null); // прирост за неделю
+    const data=labels.map((_,k)=>{const wi=k+1;return wi<W.length?Math.round((weekLoad(W[wi].vals)-weekLoad(W[wi-1].vals))*10)/10:null;});
     datasets=[
       {label:'Нагрузка за неделю, пд',data,backgroundColor:'#00a8cc',borderRadius:4,maxBarThickness:48},
       {label:'Норма ('+DEPT_CAPACITY+' пд/нед)',type:'line',data:labels.map(()=>DEPT_CAPACITY),borderColor:'#ef4444',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}
     ];
   }else if(dynView==='intake'){
     ctype='bar';
-    const totals=W.map(w=>weekTotal(w.vals));
-    const data=labels.map((_,i)=>(i>0&&i<W.length)?(totals[i]-totals[i-1]):null);
+    const data=labels.map((_,k)=>{const wi=k+1;return wi<W.length?(weekTotal(W[wi].vals)-weekTotal(W[wi-1].vals)):null;});
     datasets=[{label:'Запросов за неделю',data,backgroundColor:'#1e3a6b',borderRadius:4,maxBarThickness:48}];
-  }else{ // divs
+  }else{ // divs — количество за неделю = разница
     ctype='line';
     datasets=DN.filter(d=>dyn.columns.includes(d)).map(d=>({
-      label:d,data:labels.map((_,i)=>i<W.length?(W[i].vals[d]??null):null),
+      label:d,data:labels.map((_,k)=>{const wi=k+1;return wi<W.length?((W[wi].vals[d]||0)-(W[wi-1].vals[d]||0)):null;}),
       borderColor:dc(d),backgroundColor:dc(d),borderWidth:2.5,tension:.3,pointRadius:3,pointHoverRadius:5,spanGaps:false,fill:false
     }));
   }
@@ -1356,9 +1357,11 @@ async function load(){
       ],
       total:238, totalVideo:26,
       dynamics:{columns:['Всего','Концепт','Посадка','Визуализация','ЭП','Планировки','Видео','Центр','Алматы','Юг','Запад','РДС','Ташкент / Другое'],weeks:[
-        {week:'1',vals:{'Всего':226,'Концепт':58,'Посадка':52,'Визуализация':74,'ЭП':16,'Планировки':18,'Видео':22,'Центр':60,'Алматы':40,'Юг':44,'Запад':36,'РДС':13,'Ташкент / Другое':33}},
-        {week:'2',vals:{'Всего':238,'Концепт':63,'Посадка':55,'Визуализация':78,'ЭП':18,'Планировки':21,'Видео':26,'Центр':64,'Алматы':42,'Юг':46,'Запад':38,'РДС':14,'Ташкент / Другое':34}},
-        {week:'активная',vals:{'Всего':251,'Концепт':72,'Посадка':56,'Визуализация':83,'ЭП':18,'Планировки':22,'Видео':30,'Центр':66,'Алматы':44,'Юг':50,'Запад':40,'РДС':15,'Ташкент / Другое':36}}
+        {week:'1',vals:{'Всего':215,'Концепт':54,'Посадка':50,'Визуализация':70,'ЭП':15,'Планировки':17,'Видео':20,'Центр':57,'Алматы':38,'Юг':42,'Запад':34,'РДС':12,'Ташкент / Другое':32}},
+        {week:'2',vals:{'Всего':226,'Концепт':58,'Посадка':52,'Визуализация':74,'ЭП':16,'Планировки':18,'Видео':22,'Центр':60,'Алматы':40,'Юг':44,'Запад':36,'РДС':13,'Ташкент / Другое':33}},
+        {week:'3',vals:{'Всего':238,'Концепт':63,'Посадка':55,'Визуализация':78,'ЭП':18,'Планировки':21,'Видео':26,'Центр':64,'Алматы':42,'Юг':46,'Запад':38,'РДС':14,'Ташкент / Другое':34}},
+        {week:'4',vals:{'Всего':251,'Концепт':72,'Посадка':56,'Визуализация':83,'ЭП':18,'Планировки':22,'Видео':30,'Центр':66,'Алматы':44,'Юг':50,'Запад':40,'РДС':15,'Ташкент / Другое':36}},
+        {week:'5',vals:{'Всего':263,'Концепт':78,'Посадка':58,'Визуализация':87,'ЭП':19,'Планировки':24,'Видео':33,'Центр':69,'Алматы':46,'Юг':53,'Запад':42,'РДС':16,'Ташкент / Другое':37}}
       ]},
       prevDivs:null, prevTypes:null, prevTotal:null
     };
