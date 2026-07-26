@@ -3,1420 +3,942 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🧪 ТЕСТ · ОИП — Отчет 2026</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<title>ОИП — Проекты Q3 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
-:root{color-scheme:light}
+:root{
+  --navy:#1a2a4a; --navy2:#24365c; --cyan:#00c2e0; --cyan-d:#00a8cc;
+  --bg:#f0f3f8; --line:#dde8f4; --ink:#1a2a4a; --mute:#7a8aa0; --faint:#b9c4d4;
+  color-scheme:light;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Segoe UI",Arial,sans-serif;background:#f0f3f8;color:#1a2a4a;min-height:100vh}
+body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+button{font-family:inherit}
 
 /* ── TOPBAR ── */
-.topbar{background:#1a2a4a;color:#fff;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:200}
-.topbar-logo{font-size:15px;font-weight:800;letter-spacing:.5px}
-.topbar-logo span{color:#00c2e0}
-.test-badge{background:#ff5252;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:5px;margin-left:8px;vertical-align:middle}
-.tab-group{display:flex;gap:2px}
-.tab{padding:6px 18px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-radius:6px;transition:all .15s;letter-spacing:.3px;white-space:nowrap}
+.topbar{background:var(--navy);color:#fff;padding:0 24px;display:flex;align-items:center;gap:18px;height:52px;position:sticky;top:0;z-index:200}
+.topbar-logo{font-size:15px;font-weight:800;letter-spacing:.5px;white-space:nowrap}
+.topbar-logo span{color:var(--cyan)}
+.tab-group{display:flex;gap:2px;flex:1;overflow-x:auto}
+.tab{padding:6px 15px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border-radius:6px;transition:.15s;letter-spacing:.3px;white-space:nowrap}
 .tab:hover{background:rgba(255,255,255,.15);color:#fff}
-.tab.on{background:#00c2e0;color:#1a2a4a}
-.topbar-right{font-size:11px;color:rgba(255,255,255,.45);text-align:right;min-width:140px}
-.topbar-right b{color:rgba(255,255,255,.75);display:block;font-size:12px}
+.tab.on{background:var(--cyan);color:var(--navy)}
+.topbar-right{font-size:11px;color:rgba(255,255,255,.45);text-align:right;white-space:nowrap}
+.topbar-right b{color:rgba(255,255,255,.8);display:block;font-size:12px}
+.refresh{background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;width:30px;height:30px;font-size:14px;cursor:pointer}
+.refresh:hover{background:rgba(255,255,255,.2)}
 
 /* ── LOADING ── */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:70vh;gap:14px;color:#aaa}
-.spin{width:34px;height:34px;border:3px solid #e0e8f0;border-top-color:#00c2e0;border-radius:50%;animation:spin .7s linear infinite}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:70vh;gap:14px;color:var(--faint)}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.err{color:#e53935;font-size:13px;max-width:380px;text-align:center;line-height:1.6}
+.err{color:#e53935;font-size:13px;max-width:440px;text-align:center;line-height:1.65}
+.err code{background:#fff;padding:1px 5px;border-radius:4px;font-size:12px}
 
 /* ── PAGES ── */
-.page{display:none;padding:22px 28px}
+.page{display:none;padding:20px 24px 40px}
 .page.show{display:block}
-.page-title{font-size:18px;font-weight:800;color:#1a2a4a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:18px}
-.page-title span{color:#00a8cc}
-.page-subtitle{font-size:13px;font-weight:600;color:#7a8aa0;letter-spacing:.3px;margin:-12px 0 18px}
+.page-title{font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.page-title span{color:var(--cyan-d)}
+.page-subtitle{font-size:13px;font-weight:600;color:var(--mute);letter-spacing:.3px;margin:4px 0 18px}
 
-/* ── MAIN LAYOUT ── */
-.report-body{display:grid;grid-template-columns:155px 1fr;gap:20px}
-.stats-panel{display:flex;flex-direction:column;gap:20px;padding-right:16px;border-right:1px solid #dde8f4}
-.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#00a8cc;line-height:1.5;margin-bottom:3px}
-.stat-val{font-size:38px;font-weight:900;color:#1a2a4a;line-height:1}
-.stat-sub{font-size:12px;color:#00a8cc;font-weight:700;margin-top:2px}
-.stat-hint{font-size:11px;color:#bbb;margin-top:2px}
-.stat-delta{font-size:16px;font-weight:700;color:#00a8cc;margin-top:2px;min-height:20px}
+/* ── STATS + CHARTS ── */
+.report-body{display:grid;grid-template-columns:160px 1fr;gap:20px}
+.stats-panel{display:flex;flex-direction:column;gap:20px;padding-right:16px;border-right:1px solid var(--line)}
+.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--cyan-d);line-height:1.5;margin-bottom:3px}
+.stat-val{font-size:36px;font-weight:900;line-height:1}
+.stat-sub{font-size:12px;color:var(--cyan-d);font-weight:700;margin-top:2px}
+.stat-hint{font-size:11px;color:var(--faint);margin-top:2px}
+.charts-grid{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}
+.chart-card{background:#fff;border-radius:12px;padding:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);text-align:center}
+.chart-card.clickable{cursor:pointer;transition:.15s}
+.chart-card.clickable:hover{box-shadow:0 3px 14px rgba(0,0,0,.13);transform:translateY(-2px)}
+.cc-title{font-size:12px;font-weight:800;letter-spacing:.3px;margin-bottom:6px}
+.cc-canvas{position:relative;display:inline-block}
+.cc-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;pointer-events:none}
+.cc-legend{margin-top:8px;display:flex;flex-direction:column;gap:2px;text-align:left}
+.lg{display:flex;align-items:center;gap:5px;font-size:11px;color:#5a6a80}
+.lg i{width:8px;height:8px;border-radius:2px;flex:0 0 8px}
+.lg b{margin-left:auto;color:var(--ink)}
+.delta{font-size:11px;font-weight:700}
+.delta.up{color:#2aa87a}.delta.down{color:#e5533d}.delta.zero{color:var(--faint)}
 
-/* ── CHARTS GRID ── */
-.charts-grid{display:grid;gap:10px}
-.g3{grid-template-columns:repeat(3,1fr)}
-.g2{grid-template-columns:repeat(2,1fr)}
-.g3b{grid-template-columns:repeat(3,1fr);margin-top:10px}
+/* ── ROADMAP (signature) ── */
+.road-legend{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 12px;font-size:11px;color:var(--mute)}
+.road-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px}
+.road-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--cyan)}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.road{background:#fff;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.07);overflow:hidden}
+.road-scroll{overflow-x:auto}
+.road-inner{min-width:860px}
+.road-head{display:grid;grid-template-columns:186px 1fr;border-bottom:1px solid var(--line);background:#fff}
+.road-head-l{position:sticky;left:0;z-index:12;background:#fff;padding:8px 12px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);border-right:1px solid var(--line);display:flex;align-items:flex-end}
+.road-days{display:grid;grid-template-columns:repeat(14,1fr)}
+.rd{padding:6px 2px;text-align:center;border-left:1px solid #eef3f9;font-size:11px;color:var(--mute)}
+.rd b{display:block;font-size:14px;font-weight:800;color:var(--ink);line-height:1.2}
+.rd.we{background:#f6f9fc;color:var(--faint)}
+.rd.we b{color:var(--faint)}
+.rd.today{background:var(--navy);color:rgba(255,255,255,.7)}
+.rd.today b{color:#fff}
+.rd-week{grid-column:span 7;text-align:center;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--cyan-d);padding:4px 0 2px;border-left:1px solid #eef3f9}
+.road-row{display:grid;grid-template-columns:186px 1fr;border-bottom:1px solid #f0f5fa}
+.road-row:hover .road-person{background:#f8fbfe}
+.road-person{position:sticky;left:0;z-index:10;background:#fff;padding:8px 12px;display:flex;align-items:center;gap:9px;border-right:1px solid var(--line)}
+.ava{width:32px;height:32px;border-radius:50%;flex:0 0 32px;object-fit:cover;background:var(--navy2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;overflow:hidden}
+.ava img{width:100%;height:100%;object-fit:cover;display:block}
+.p-name{font-size:12.5px;font-weight:700;line-height:1.2}
+.p-sub{font-size:10.5px;color:var(--mute)}
+.p-free{color:var(--faint);font-style:italic}
+.road-lanes{position:relative;background-image:repeating-linear-gradient(to right,#eef3f9 0 1px,transparent 1px calc(100%/14))}
+.we-band{position:absolute;top:0;bottom:0;background:#f6f9fc;pointer-events:none}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--cyan);pointer-events:none;z-index:6}
+.bar{position:absolute;height:22px;border-radius:5px;padding:0 7px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#fff;overflow:hidden;white-space:nowrap;cursor:pointer;z-index:4;box-shadow:0 1px 3px rgba(0,0,0,.16)}
+.bar small{font-weight:500;opacity:.82;overflow:hidden;text-overflow:ellipsis}
+.bar.overdue{outline:2px solid #e5533d;outline-offset:-2px}
+.bar.pale{opacity:.5}
+.road-empty{padding:26px;text-align:center;color:var(--faint);font-size:13px}
+.unassigned{margin-top:16px;background:#fff;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.07);padding:14px 16px}
+.un-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#e5533d;margin-bottom:10px}
+.un-grid{display:flex;flex-wrap:wrap;gap:7px}
+.un-item{border:1px dashed #d8c0b8;background:#fff8f6;border-radius:7px;padding:5px 10px;font-size:11.5px}
+.un-item b{font-weight:700}
+.un-item span{color:var(--mute)}
 
-/* ── COMPACT CHART CARD ── */
-.chart-card{background:#fff;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s,box-shadow .15s}
-.chart-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.10)}
-.chart-card.no-click{cursor:default}
-.chart-card.no-click:hover{transform:none;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.chart-card-title{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#00a8cc;margin-bottom:8px;text-align:center;width:100%}
-/* Two-column: legend list left, donut right */
-.card-inner{display:flex;align-items:center;gap:10px;width:100%}
-.card-leg-col{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
-.leg-row2{display:flex;align-items:center;gap:6px}
-.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.leg-name2{flex:1;font-size:11px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.leg-num{font-size:12px;font-weight:700;color:#1a2a4a;text-align:right;white-space:nowrap;flex-shrink:0}
-.leg-extra{margin-top:7px;padding-top:7px;border-top:1px dashed #d6deea}
-.leg-extra .leg-name2{font-style:italic;color:#7a8aa0}
-.leg-extra .leg-num{color:#4fb3d9}
-.chart-wrap{position:relative;width:120px;height:120px;flex-shrink:0}
+/* ── TOOLTIP ── */
+.tip{position:fixed;background:var(--navy);color:#fff;border-radius:8px;padding:8px 11px;font-size:11.5px;line-height:1.55;pointer-events:none;opacity:0;transition:opacity .12s;z-index:900;max-width:260px;box-shadow:0 6px 22px rgba(0,0,0,.28)}
+.tip.on{opacity:1}
+.tip b{color:var(--cyan)}
+
+/* ── TABLE ── */
+.filter-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.tbl-wrap{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:#f4f8fc;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);padding:9px 10px;text-align:left;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;font-size:12.5px;border-bottom:1px solid #f2f6fa;vertical-align:top}
+tr.prow{cursor:pointer}
+tr.prow:hover td{background:#f8fbfe}
+.num{color:var(--faint);font-weight:700}
+.pname{font-weight:700}
+.pill{display:inline-block;padding:2px 8px;border-radius:11px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.tsk{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;color:#fff;border-radius:4px;padding:2px 7px;margin:2px 3px 2px 0}
+.tsk.off{background:#eef3f9!important;color:#9aa8b8}
+.sub-row td{background:#fbfdff;padding:4px 10px 12px 44px}
+.due{font-variant-numeric:tabular-nums;white-space:nowrap}
+.due.late{color:#e5533d;font-weight:700}
+.due.soon{color:#e07000;font-weight:700}
+
+/* ── WEEK ── */
+.week-grid{display:grid;grid-template-columns:290px 1fr;gap:16px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);padding:15px 17px}
+.card-h{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);margin-bottom:12px}
+.load-num{font-size:44px;font-weight:900;line-height:1}
+.load-num small{font-size:15px;color:var(--mute);font-weight:700}
+.load-bar{height:9px;background:var(--line);border-radius:5px;margin:12px 0 6px;overflow:hidden}
+.load-fill{height:100%;border-radius:5px;transition:width .5s}
+.load-note{font-size:11.5px;color:var(--mute);line-height:1.6}
+.mini{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f2f6fa;font-size:12px}
+.mini:last-child{border-bottom:none}
+.mini .mbar{flex:1;height:7px;background:#eef3f9;border-radius:4px;overflow:hidden}
+.mini .mbar i{display:block;height:100%;border-radius:4px}
+.mini b{width:26px;text-align:right;font-variant-numeric:tabular-nums}
+.day-cols{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.day-col{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;min-height:90px}
+.day-col.we{background:#f7fafd}
+.dc-h{padding:6px 8px;font-size:10.5px;font-weight:800;color:var(--mute);border-bottom:1px solid #f0f5fa;text-align:center}
+.dc-h.today{background:var(--navy);color:#fff}
+.dc-b{padding:6px}
+.dc-item{border-radius:5px;padding:3px 6px;font-size:10.5px;font-weight:600;color:#fff;margin-bottom:4px;line-height:1.35}
+.dc-item span{display:block;font-weight:400;opacity:.85;font-size:9.5px}
 
 /* ── MODAL ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(16,26,46,.6);z-index:800;align-items:center;justify-content:center;padding:20px}
 .overlay.open{display:flex}
-.modal{background:#fff;border-radius:18px;width:680px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-head{background:#1a2a4a;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.modal-head h2{font-size:18px;font-weight:800;letter-spacing:.3px}
-.modal-head .close-btn{background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
-.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
-.modal-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
-.mstat{background:#f0f3f8;border-radius:10px;padding:10px;text-align:center}
-.mstat-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.mstat-val{font-size:22px;font-weight:900;color:#1a2a4a}
-.mstat-dot{width:10px;height:10px;border-radius:2px;margin:0 auto 5px}
-.modal-table{width:100%;border-collapse:collapse;font-size:12px}
-.modal-table th{background:#f0f3f8;padding:8px 10px;text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#888;border-bottom:2px solid #e8eef5}
-.modal-table td{padding:8px 10px;border-bottom:1px solid #f4f6fa;color:#333;vertical-align:top}
-.modal-table tr:hover td{background:#f8fafd}
-.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
-.b-k{background:#e3f2fd;color:#1565c0}.b-p{background:#fff8e1;color:#f57f17}
-.b-v{background:#fce4ec;color:#b71c1c}.b-pl{background:#e8f5e9;color:#2e7d32}
-.b-e{background:#f3e5f5;color:#6a1b9a}.b-x{background:#f5f5f5;color:#666}
+.modal{background:#fff;border-radius:14px;max-width:820px;width:100%;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-head{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{font-size:15px;font-weight:800}
+.modal-head .ms{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.close-btn{background:rgba(255,255,255,.14);border:none;color:#fff;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:13px}
+.modal-body{padding:16px 18px;overflow-y:auto}
+.mstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.mstat{background:#f6f9fc;border-radius:9px;padding:9px 11px}
+.mstat .v{font-size:21px;font-weight:900}
+.mstat .l{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mute)}
 
-/* ── WEEKLY TAB ── */
-.weekly-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.weekly-header .page-title{margin-bottom:0}
-
-.snap-info{min-height:30px;margin-bottom:14px}
-.snap-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:#e0f7fa;color:#006064}
-.snap-none{background:#fff8e1;color:#b45309}
-
-.weekly-main-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:14px;align-items:start}
-
-/* Delta cards */
-.delta-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
-.delta-header{background:#1a2a4a;color:rgba(255,255,255,.88);padding:10px 16px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
-.delta-row{display:flex;align-items:center;gap:8px;padding:9px 16px;border-bottom:1px solid #f0f4fa}
-.delta-row:last-child{border-bottom:none}
-.delta-total-row{display:flex;align-items:center;gap:8px;padding:9px 16px;background:#f8fafd;border-top:2px solid #e0e8f4}
-.delta-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
-.delta-name{flex:1;font-size:12px;color:#444;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.delta-val{font-size:14px;font-weight:800;color:#1a2a4a;min-width:26px;text-align:right}
-.delta-badge{display:inline-block;min-width:34px;text-align:center;padding:2px 7px;border-radius:12px;font-size:11px;font-weight:700;margin-left:4px}
-.delta-up{background:#e8f5e9;color:#1b5e20}
-.delta-dn{background:#fce4ec;color:#b71c1c}
-.delta-zero{background:#f5f5f5;color:#999}
-
-/* Load gauge card */
-.load-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
-.load-gauge-wrap{padding:16px 20px 10px}
-.load-pct{font-size:52px;font-weight:900;line-height:1;letter-spacing:-1px}
-.load-label{font-size:13px;font-weight:700;margin-bottom:14px;margin-top:2px}
-.gauge-track{height:10px;background:#f0f3f8;border-radius:5px;overflow:hidden;margin-bottom:6px}
-.gauge-fill{height:100%;border-radius:5px;transition:width .6s ease}
-.gauge-sub{font-size:11px;color:#aaa;margin-bottom:4px}
-.load-breakdown{border-top:1px solid #f0f4fa;padding:4px 0}
-.load-row{display:flex;align-items:baseline;gap:8px;padding:6px 20px;border-bottom:1px solid #f8fafd}
-.load-row:last-child{border-bottom:none}
-.load-task{flex:1;font-size:11px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.load-detail{font-size:10px;color:#bbb;white-space:nowrap}
-.load-pd{font-size:12px;font-weight:700;color:#1a2a4a;min-width:42px;text-align:right;white-space:nowrap}
-.load-empty{text-align:center;padding:12px;color:#bbb;font-size:12px}
-.load-two-col{display:grid;grid-template-columns:1fr 1fr;gap:0}
-.load-half{padding:14px 16px 8px}
-.load-half-next{border-left:1px solid #f0f4fa;background:#fafbfd}
-.load-half-title{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#aaa;margin-bottom:6px}
-
-/* ── WORK TAB ── */
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.fbtn{padding:6px 16px;border-radius:20px;border:1.5px solid #dde4ee;background:#fff;color:#666;cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
-.fbtn:hover{border-color:#1a2a4a;color:#1a2a4a}
-.fbtn.on{background:#1a2a4a;border-color:#1a2a4a;color:#fff}
-.fbtn.work.on{background:#00a8cc;border-color:#00a8cc;color:#fff}
-.fbtn.queue.on{background:#f0a030;border-color:#f0a030;color:#fff}
-/* People load card */
-.delta-header .ph-hint{float:right;font-weight:600;letter-spacing:.3px;opacity:.65;text-transform:none}
-.pl-list{padding:2px 0}
-.pl-row{display:grid;grid-template-columns:160px 1fr 86px;gap:14px;align-items:center;padding:9px 16px;border-bottom:1px solid #f0f4fa}
-.pl-row:last-child{border-bottom:none}
-.pl-name{font-size:12px;font-weight:600;color:#1a2a4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl-sub{font-size:10px;font-weight:500;color:#aaa;margin-top:1px}
-.pl-bar-track{height:9px;background:#f0f3f8;border-radius:5px;overflow:hidden}
-.pl-bar-fill{height:100%;border-radius:5px;transition:width .5s ease}
-.pl-right{text-align:right;white-space:nowrap}
-.pl-pct{font-size:14px;font-weight:800;line-height:1}
-.pl-pd{font-size:10px;color:#aaa;margin-top:1px}
-.people-section{margin-top:14px}
-/* Work table secondary filters */
-.filter-bar2{display:flex;gap:8px;margin:-6px 0 16px;flex-wrap:wrap;align-items:center}
-.finput,.fsel{padding:7px 12px;border-radius:8px;border:1.5px solid #dde4ee;background:#fff;color:#444;font-size:12px;font-family:inherit;outline:none}
-.finput{min-width:200px}
-.finput:focus,.fsel:focus{border-color:#00a8cc}
-.fsel{cursor:pointer}
-/* Dynamics tab */
-.dyn-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.dyn-card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);padding:18px 18px 12px}
-.dyn-chart-wrap{position:relative;width:100%;height:380px}
-.dyn-empty{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);padding:26px;color:#777;font-size:13px;line-height:1.7}
-.dyn-empty b{color:#1a2a4a}
-.work-table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
-.work-table{width:100%;border-collapse:collapse;font-size:13px}
-.work-table th{background:#1a2a4a;color:rgba(255,255,255,.7);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.work-table td{padding:10px 14px;border-bottom:1px solid #f0f4fa;vertical-align:top}
-.work-table tr:last-child td{border-bottom:none}
-.work-table tr:hover td{background:#f8fafd}
-.status-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
-.sp-work{background:#e0f7fa;color:#006064}
-.sp-queue{background:#fff8e1;color:#e65100}
-.sp-done{background:#e8f5e9;color:#1b5e20}
-.no-data{text-align:center;padding:40px;color:#aaa;font-size:13px}
-
-/* ── DONE PROJECTS SECTION ── */
-.done-section{margin-top:16px;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
-.done-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:14px}
-.done-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.07);border:1px solid #e8eef5}
-.done-card-info{padding:10px 14px 10px}
-.done-name{font-size:13px;font-weight:700;color:#1a2a4a;line-height:1.3}
-.done-meta{font-size:11px;color:#888;margin-top:2px}
-.done-empty{padding:24px;color:#bbb;font-size:13px;text-align:center}
-/* Adaptive photo zone */
-.photo-zone{position:relative;height:200px;display:grid;gap:2px;background:#d8e4ee}
-.pz-empty{grid-template-columns:1fr}
-.pz-1{grid-template-columns:1fr}
-.pz-2{grid-template-columns:1fr 1fr}
-.pz-3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
-.pz-3 .photo-panel:nth-child(1){grid-row:1/3}
-.photo-panel{position:relative;overflow:hidden;cursor:pointer}
-.photo-panel img{width:100%;height:100%;object-fit:cover;display:block}
-.photo-panel.empty{background:#edf3fa;border:2px dashed #b8d0e8;display:flex;align-items:center;justify-content:center;transition:border-color .15s,background .15s}
-.photo-panel.empty:hover{border-color:#00a8cc;background:#e0f4fb}
-.panel-plus{font-size:28px;color:#b8d0e8;pointer-events:none;user-select:none}
-.slot-del{position:absolute;top:6px;right:6px;width:22px;height:22px;background:rgba(0,0,0,.55);border-radius:50%;border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;z-index:5}
-.zone-add-btn{position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.88);border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#1a2a4a;cursor:pointer;z-index:5;transition:background .15s}
-.zone-add-btn:hover{background:#fff}
-/* Lightbox */
-.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;align-items:center;justify-content:center;cursor:pointer}
-.lightbox.open{display:flex}
-.lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 10px 60px rgba(0,0,0,.4)}
-
-@media(max-width:960px){
+@media(max-width:1080px){
+  .charts-grid{grid-template-columns:repeat(3,1fr)}
+  .week-grid{grid-template-columns:1fr}
+  .day-cols{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:820px){
   .report-body{grid-template-columns:1fr}
-  .stats-panel{border-right:none;border-bottom:1px solid #dde8f4;padding-bottom:14px;flex-direction:row;flex-wrap:wrap;gap:14px}
-  .g3,.g2,.g3b{grid-template-columns:1fr 1fr}
-  .weekly-main-grid{grid-template-columns:1fr}
-  .modal-stats{grid-template-columns:repeat(3,1fr)}
+  .stats-panel{border-right:none;border-bottom:1px solid var(--line);padding:0 0 14px;flex-direction:row;flex-wrap:wrap;gap:18px}
+  .charts-grid{grid-template-columns:repeat(2,1fr)}
+  .day-cols{grid-template-columns:repeat(2,1fr)}
+  .mstats{grid-template-columns:repeat(2,1fr)}
+  .page{padding:16px 12px 40px}
+  .road-head{top:0}
 }
-/* ── MOBILE (phones) ── */
-@media(max-width:600px){
-  body{overflow-x:hidden}
-  .topbar{flex-wrap:wrap;height:auto;padding:8px 14px;gap:6px 10px;position:sticky;top:0}
-  .topbar-logo{font-size:13px}
-  .topbar-right{min-width:0;font-size:10px;line-height:1.2}
-  .tab-group{order:3;width:100%;overflow-x:auto;gap:4px;padding-bottom:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .tab-group::-webkit-scrollbar{display:none}
-  .tab{padding:7px 12px;font-size:11px;flex:0 0 auto}
-  .page{padding:16px 14px}
-  .page-title{font-size:16px;margin-bottom:14px}
-  .page-subtitle{font-size:12px;margin:-9px 0 14px}
-  /* one chart per row */
-  .g3,.g2,.g3b{grid-template-columns:1fr}
-  .g3b{margin-top:10px}
-  /* stats panel: 2 per row */
-  .stats-panel{gap:12px 16px}
-  .stats-panel>div{flex:1 1 40%;min-width:120px}
-  .stat-val{font-size:30px}
-  /* division/type card: keep legend + donut side by side, just tighten */
-  .chart-card{padding:12px}
-  /* people-load rows narrower */
-  .pl-row{grid-template-columns:108px 1fr 60px;gap:10px;padding:9px 12px}
-  .pl-name{font-size:11px}
-  .delta-header .ph-hint{display:none}
-  /* work table scrolls horizontally inside its card */
-  .work-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .work-table{min-width:640px}
-  .filter-bar{gap:6px;margin-bottom:12px}
-  .fbtn{padding:6px 12px;font-size:11px}
-  .filter-bar2{gap:6px}
-  .finput{min-width:0;flex:1 1 100%}
-  .fsel{flex:1 1 calc(50% - 3px);min-width:0}
-  /* done projects: 1 per row */
-  .done-grid{grid-template-columns:1fr}
-  /* modal */
-  .modal-stats{grid-template-columns:repeat(2,1fr)}
-  .modal{width:96vw}
-  .modal-body{padding:16px}
-  .dyn-chart-wrap{height:300px}
-}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>ОТЧЕТ</span><span class="test-badge">ТЕСТ</span></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span></div>
   <div class="tab-group">
-    <button class="tab on"  onclick="showTab('div')">По дивизионам</button>
-    <button class="tab"     onclick="showTab('type')">По типам</button>
-    <button class="tab"     onclick="showTab('weekly')">Недельный отчёт</button>
-    <button class="tab"     onclick="showTab('dyn')">Динамика</button>
-    <button class="tab"     onclick="showTab('work')">Проекты в работе</button>
+    <button class="tab on" data-tab="road">Дорожная карта</button>
+    <button class="tab" data-tab="div">По дивизионам</button>
+    <button class="tab" data-tab="type">По типам</button>
+    <button class="tab" data-tab="week">Неделя</button>
+    <button class="tab" data-tab="work">Проекты</button>
   </div>
-  <div class="topbar-right"><b id="updated-ts">—</b>обновлено</div>
+  <div class="topbar-right"><b id="ts">—</b>обновлено</div>
+  <button class="refresh" id="btn-refresh" title="Обновить">⟳</button>
 </div>
 
 <div id="loading" class="loading">
   <div class="spin"></div>
-  <div style="font-size:13px">Загрузка из Google Sheets…</div>
+  <div style="font-size:13px">Читаю Google Таблицу…</div>
 </div>
-<div id="err-msg" style="display:none" class="loading"><div class="err" id="err-txt"></div></div>
+<div id="errbox" style="display:none" class="loading"><div class="err" id="errtxt"></div></div>
 
-<!-- ──────────── TAB 1: По дивизионам ──────────── -->
-<div id="tab-div" class="page">
-  <div class="page-title">Отдел инициации проектов <span>2026</span></div>
-  <div class="page-subtitle">Проекты по дивизионам</div>
-  <div class="report-body">
-    <div class="stats-panel">
-      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="s-total">—</div><div class="stat-delta" id="s-total-delta"></div></div>
-      <div><div class="stat-lbl">Запросов Q2</div><div class="stat-val" id="s-q2" style="font-size:32px">—</div><div class="stat-delta" id="s-q2-delta"></div></div>
-      <div><div class="stat-lbl">С видео</div><div class="stat-val" id="s-video" style="font-size:32px">—</div><div class="stat-hint" id="s-video-pct"></div></div>
+<!-- ═══ ДОРОЖНАЯ КАРТА ═══ -->
+<div id="tab-road" class="page">
+  <div class="page-title">План отдела <span>на две недели</span></div>
+  <div class="page-subtitle" id="road-range">—</div>
+  <div class="road-toolbar">
+    <button class="chip on" data-road="assigned">С исполнителем</button>
+    <button class="chip" data-road="all">Все, включая свободных</button>
+    <span style="flex:1"></span>
+    <span class="load-note" id="road-stats"></span>
+  </div>
+  <div class="road-legend" id="road-legend"></div>
+  <div class="road"><div class="road-scroll"><div class="road-inner">
+    <div class="road-head">
+      <div class="road-head-l">Исполнитель</div>
+      <div>
+        <div class="road-days" id="road-weeks"></div>
+        <div class="road-days" id="road-dates"></div>
+      </div>
     </div>
-    <div class="charts-grid g3" id="div-charts"></div>
+    <div id="road-rows"></div>
+  </div></div></div>
+  <div class="unassigned" id="unassigned" style="display:none">
+    <div class="un-title">Задачи с датой, но без исполнителя</div>
+    <div class="un-grid" id="un-grid"></div>
   </div>
 </div>
 
-<!-- ──────────── TAB 2: По типам ──────────── -->
-<div id="tab-type" class="page">
-  <div class="page-title">Отдел инициации проектов <span>2026</span></div>
-  <div class="page-subtitle">Проекты по типам</div>
+<!-- ═══ ПО ДИВИЗИОНАМ ═══ -->
+<div id="tab-div" class="page">
+  <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
+  <div class="page-subtitle">Запросы по дивизионам</div>
   <div class="report-body">
     <div class="stats-panel">
-      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="t-total">—</div><div class="stat-delta" id="t-total-delta"></div></div>
-      <div><div class="stat-lbl">Процент<br>концептов</div><div class="stat-val" id="t-konc" style="font-size:32px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
-      <div><div class="stat-lbl">Видео для<br>концептов</div><div class="stat-val" id="t-video" style="font-size:32px">—</div><div class="stat-sub" id="t-video-pct"></div></div>
+      <div><div class="stat-lbl">Всего<br>запросов</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
+      <div><div class="stat-lbl">В работе</div><div class="stat-val" id="d-work" style="font-size:30px">—</div><div class="stat-sub" id="d-work-pct"></div></div>
+      <div><div class="stat-lbl">В очереди</div><div class="stat-val" id="d-queue" style="font-size:30px">—</div><div class="stat-hint">ждут запуска</div></div>
+      <div><div class="stat-lbl">Активных<br>задач</div><div class="stat-val" id="d-tasks" style="font-size:30px">—</div><div class="stat-hint" id="d-tasks-sub"></div></div>
+    </div>
+    <div class="charts-grid" id="div-charts"></div>
+  </div>
+</div>
+
+<!-- ═══ ПО ТИПАМ ═══ -->
+<div id="tab-type" class="page">
+  <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
+  <div class="page-subtitle">Запросы по типам · сравнение с предыдущим периодом</div>
+  <div class="report-body">
+    <div class="stats-panel">
+      <div><div class="stat-lbl">Всего<br>запросов</div><div class="stat-val" id="t-total">—</div></div>
+      <div><div class="stat-lbl">Доля<br>концептов</div><div class="stat-val" id="t-konc" style="font-size:30px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
+      <div><div class="stat-lbl">Прошлый<br>период</div><div class="stat-val" id="t-old" style="font-size:30px">—</div><div class="stat-hint">Q1–Q2, справочно</div></div>
+    </div>
+    <div class="charts-grid" id="type-charts"></div>
+  </div>
+</div>
+
+<!-- ═══ НЕДЕЛЯ ═══ -->
+<div id="tab-week" class="page">
+  <div class="page-title">Отчёт <span>за неделю</span></div>
+  <div class="page-subtitle" id="week-range">—</div>
+  <div class="week-grid">
+    <div>
+      <div class="card">
+        <div class="card-h">Загрузка отдела</div>
+        <div class="load-num" id="w-load">—</div>
+        <div class="load-bar"><div class="load-fill" id="w-fill" style="width:0"></div></div>
+        <div class="load-note" id="w-note"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-h">Нагрузка по исполнителям</div>
+        <div id="w-persons"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-h">Задачи по видам</div>
+        <div id="w-tasks"></div>
+      </div>
     </div>
     <div>
-      <div class="charts-grid g3" id="type-charts-top"></div>
-      <div class="charts-grid g3b" id="type-charts-bot"></div>
+      <div class="card" style="padding:15px 17px 8px">
+        <div class="card-h">Календарь текущей недели</div>
+        <div class="day-cols" id="w-days"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="card-h">Ближайшие дедлайны</div>
+        <div class="tbl-wrap" style="box-shadow:none">
+          <table><thead><tr><th>Проект</th><th>Дивизион</th><th>Задача</th><th>Исполнитель</th><th>Срок</th></tr></thead>
+          <tbody id="w-dead"></tbody></table>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ──────────── TAB 3: Недельный отчёт ──────────── -->
-<div id="tab-weekly" class="page">
-  <div class="weekly-header">
-    <div class="page-title" style="margin-bottom:0">Недельный отчёт <span>2026</span></div>
-  </div>
-  <div id="weekly-snap-info" class="snap-info"></div>
-  <div class="weekly-main-grid">
-    <div class="load-card" id="load-card"></div>
-    <div class="delta-card">
-      <div class="delta-header">По дивизионам</div>
-      <div id="div-delta"></div>
-    </div>
-    <div class="delta-card">
-      <div class="delta-header">По типам</div>
-      <div id="type-delta"></div>
-    </div>
-  </div>
-  <div class="people-section">
-    <div class="delta-card">
-      <div class="delta-header">Загрузка по людям · в работе + очередь<span class="ph-hint">норма 5 пд / чел</span></div>
-      <div class="pl-list" id="people-load"></div>
-    </div>
-  </div>
-  <div class="done-section">
-    <div class="delta-header">Выполненные работы недели</div>
-    <div id="done-grid" class="done-grid"></div>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox" class="lightbox" onclick="this.classList.remove('open')">
-  <img src="" alt="">
-</div>
-
-<!-- ──────────── TAB 4: Проекты в работе ──────────── -->
+<!-- ═══ ПРОЕКТЫ ═══ -->
 <div id="tab-work" class="page">
-  <div class="page-title">Проекты <span>в работе</span></div>
-  <div class="filter-bar">
-    <button class="fbtn work on" onclick="filterWork('в работе')">В работе <span id="cnt-work"></span></button>
-    <button class="fbtn queue"   onclick="filterWork('в очереди')">В очереди <span id="cnt-queue"></span></button>
-    <button class="fbtn"         onclick="filterWork('готово')">Готово <span id="cnt-done"></span></button>
-    <button class="fbtn"         onclick="filterWork('все')">Все <span id="cnt-all"></span></button>
-  </div>
-  <div class="filter-bar2">
-    <input id="work-search" class="finput" placeholder="🔍 Поиск по названию, задаче, исполнителю..." oninput="applyWorkFilters()">
-    <select id="f-div" class="fsel" onchange="applyWorkFilters()"><option value="">Все дивизионы</option></select>
-    <select id="f-task" class="fsel" onchange="applyWorkFilters()"><option value="">Все задачи</option></select>
-    <select id="f-person" class="fsel" onchange="applyWorkFilters()"><option value="">Все исполнители</option></select>
-    <button class="fbtn" onclick="resetWorkFilters()">Сбросить</button>
-  </div>
-  <div class="work-table-wrap">
-    <table class="work-table">
+  <div class="page-title">Проекты <span>в реестре</span></div>
+  <div class="page-subtitle">Нажмите на строку, чтобы раскрыть состав работ</div>
+  <div class="filter-bar" id="work-filters"></div>
+  <div class="tbl-wrap">
+    <table>
       <thead><tr>
-        <th style="width:36px">№</th>
-        <th>Наименование</th>
-        <th>Дивизион</th>
-        <th>Задача</th>
-        <th>Ответственные</th>
-        <th>Срок</th>
-        <th>Статус</th>
+        <th style="width:34px">№</th><th>Наименование</th><th>Дивизион</th><th>Город</th>
+        <th>Тип</th><th>Состав работ</th><th>Срок</th><th>Статус</th>
       </tr></thead>
       <tbody id="work-tbody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- ──────────── TAB 5: Динамика ──────────── -->
-<div id="tab-dyn" class="page">
-  <div class="page-title">Динамика <span>по неделям</span></div>
-  <div class="dyn-controls">
-    <button class="fbtn dyn on" data-view="load" onclick="setDynView('load')">Нагрузка (пд)</button>
-    <button class="fbtn dyn" data-view="intake" onclick="setDynView('intake')">Запросов/нед</button>
-    <button class="fbtn dyn" data-view="divs" onclick="setDynView('divs')">По дивизионам</button>
-  </div>
-  <div class="dyn-card"><div class="dyn-chart-wrap"><canvas id="dyn-chart"></canvas></div></div>
-  <div id="dyn-empty" class="dyn-empty" style="display:none"></div>
-</div>
-
-<!-- ──────────── MODAL ──────────── -->
-<div class="overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="modal-title">—</h2>
-      <button class="close-btn" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-stats" id="modal-stats"></div>
-      <table class="modal-table">
-        <thead><tr><th>№</th><th>Наименование</th><th>Тип</th><th>Ответственные</th></tr></thead>
-        <tbody id="modal-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
+<div class="overlay" id="ov"><div class="modal">
+  <div class="modal-head"><div><h2 id="m-title">—</h2><div class="ms" id="m-sub"></div></div>
+  <button class="close-btn" id="m-close">✕</button></div>
+  <div class="modal-body"><div class="mstats" id="m-stats"></div><div id="m-body"></div></div>
+</div></div>
+<div class="tip" id="tip"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-const SHEET_ID = '1zwNjuojBXjJ3ZwwyyORgGdCPW5afsypIF0gk1A8qphY';
-const BASE_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&sheet=';
-const URL_KPI  = BASE_URL + encodeURIComponent('Отчет KPI');
-const URL_SUM  = BASE_URL + encodeURIComponent('Сводка типов');
-const URL_WORK = BASE_URL + encodeURIComponent('Проекты в работе');
-const URL_PREV = BASE_URL + encodeURIComponent('Прошлая неделя');
-const URL_DYN  = BASE_URL + encodeURIComponent('Динамика недель');
+/* ═══════════════════ НАСТРОЙКИ ═══════════════════ */
+const SHEET_ID = '1bK4JnYWsf8BndjRvJdGGGuYbzjW9jZfAr2pCnFYMKeU';
+const SHEETS   = {main:'Общий лист', sum:'Сводный лист', old:'Старый свод', ref:'Справочник'};
+const base = n => 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+
+                  '/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(n);
 
-// ── TASK WEIGHTS (person-days per task unit) ─────────────────────────────────
-// Order matters — more specific patterns first
-const TASK_WEIGHTS = [
-  {keys:['разработка концепта','концепт'],            label:'Концепт',           weight:10},
-  {keys:['разработка фасада','фасад'],                label:'Разработка фасада', weight:3.5},
-  {keys:['разработка планировок','планировк'],        label:'Планировки',        weight:3.5},
-  {keys:['3d посадка','3d-посадка','3d'],             label:'3D посадка',        weight:1.25},
-  {keys:['разработка видео','видео'],                 label:'Видео',             weight:1},
-  {keys:['визуализация'],                             label:'Визуализация',      weight:2},
-  {keys:['посадка'],                                  label:'Посадка',           weight:0.5},
+/* Нормативы трудоёмкости, человеко-дней на задачу. Правьте под факт отдела. */
+const TASK_BLOCKS = [
+  {label:'Посадка',           col:10, weight:0.5, color:'#f0a030'},
+  {label:'Генплан',           col:13, weight:1.0, color:'#c99a2e'},
+  {label:'Планировка',        col:16, weight:3.5, color:'#4a80c0'},
+  {label:'Разработка фасада', col:19, weight:3.5, color:'#1e3a6b'},
+  {label:'Визуализация',      col:22, weight:2.0, color:'#4fb3d9'},
+  {label:'Видео',             col:25, weight:1.0, color:'#8e6bc9'},
+  {label:'Сборка',            col:28, weight:2.0, color:'#2aa87a'},
+  {label:'Другое',            col:31, weight:1.0, color:'#9aa8b8'},
 ];
-const DEPT_CAPACITY = 50; // 10 чел × 5 дней
-// Q1 baseline (Концепт:32 + Визуализации:41 + Посадка:34 + ЭП:8)
-const Q1_BASELINE = 115;
-const GAS_URL='https://script.google.com/macros/s/AKfycbyAxLwmM1RiOa8Yq_LAT3aY41IZ4DtIFp_93-AJ8Fm11Q7_OIkE647n_FuLW0IP_NhL/exec';
+const WORK_DAYS_PER_WEEK = 5;
 
-// ── COLORS ──────────────────────────────────────────────────────────────────
-const TC = {Концепт:'#1e3a6b',Посадка:'#f0a030',Визуализация:'#f5d8a8',Планировки:'#9ab8cc',ЭП:'#c8dff0',Видео:'#4fb3d9','Без типа':'#e8e8e8'};
-const TYPE_ORDER = ['Концепт','Посадка','Визуализация','ЭП','Планировки','Видео'];
-// Division colors — 6 after merge
-const DC = ['#1e3a6b','#4a80c0','#f0a030','#f5d8a8','#9ab8cc','#d0d8e8'];
-const DN = ['Центр','Алматы','Юг','Запад','РДС','Ташкент / Другое'];
-// Map old names → merged name
-const DN_MAP = {'Ташкент':'Ташкент / Другое','Другое':'Ташкент / Другое'};
+/* Фото исполнителей. Проще всего добавить в «Справочник» колонку «Фото»
+   со ссылками на файлы Google Диска — тогда этот блок не нужен.
+   Иначе впишите ссылки здесь: 'Имя':'https://drive.google.com/file/d/ID/view' */
+const AVATARS_MANUAL = {
+  // 'Аружан': '',
+  // 'Дана': '',
+};
 
-function dc(n){const i=DN.indexOf(n);return i>=0?DC[i]:'#ccc';}
-function bc(t){return{Концепт:'b-k',Посадка:'b-p',Визуализация:'b-v',Планировки:'b-pl',Эскиз:'b-e'}[t]||'b-x';}
+/* Либо папка Google Диска с фото. Файл должен называться именем исполнителя:
+   «Аружан.jpg», «Рамазан.png». Нужен ключ API Google (Cloud Console →
+   API и сервисы → Учётные данные → Создать ключ → включить Google Drive API).
+   Папку открыть по ссылке для чтения. Без ключа блок игнорируется. */
+const DRIVE = {
+  folder: '1tkCmroSmMYKBRFrA1iT5KL5tzv4ijvP_',
+  apiKey: ''            // ← вставьте ключ, иначе фото берутся только из «Справочника»
+};
 
-// ── STATE ────────────────────────────────────────────────────────────────────
-let DATA = {divs:{}, types:{}, projects:[], workProjects:[], total:0, totalVideo:0, prevDivs:null, prevTypes:null, prevTotal:null};
-let workFilter = 'в работе';
-const charts = {};
+/* Колонки «Общего листа» (0-based) */
+const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9,pct:34,status:35,week:36};
+const SKIP_NAMES = ['шаблон'];
 
-// ── CSV PARSER ───────────────────────────────────────────────────────────────
+const DIV_COLORS  = {'Центр':'#1e3a6b','Астана':'#2f5fa0','Алматы':'#4a80c0','Юг':'#f0a030',
+  'Запад':'#f5d8a8','РДС':'#9ab8cc','In-house':'#4fb3d9','Другое':'#d0d8e8'};
+const TYPE_COLORS = {'Концепт':'#1e3a6b','Посадка':'#f0a030','Генплан':'#c99a2e','Планировки':'#4a80c0',
+  'Разработка фасада':'#6b7fa8','Визуализация':'#4fb3d9','Видео':'#8e6bc9',
+  'Эскизный проект':'#c8dff0','Другое':'#9aa8b8'};
+const STATUS_STYLE = {'Очередь':['#fff8e1','#e65100'],'В работе':['#e0f7fa','#006064'],
+  'На паузе':['#f3e5f5','#6a1b9a'],'Готова':['#e8f5e9','#1b5e20'],'Готово':['#e8f5e9','#1b5e20']};
+const taskColor = l => (TASK_BLOCKS.find(t=>t.label===l)||{}).color || '#9aa8b8';
+const divColor  = d => DIV_COLORS[d] || '#c0ccdc';
+const typeColor = t => TYPE_COLORS[t] || '#c0ccdc';
+
+/* ═══════════════════ ПАРСИНГ ═══════════════════ */
 function parseCSV(text){
-  const rows=[]; let cur='',inQ=false; const cells=[];
+  const rows=[]; let cur='', inQ=false, cells=[];
   for(let i=0;i<text.length;i++){
     const c=text[i];
-    if(c==='"'){inQ=!inQ;continue;}
-    if(c===','&&!inQ){cells.push(cur.trim());cur='';continue;}
+    if(c==='"'){ if(inQ&&text[i+1]==='"'){cur+='"';i++;} else inQ=!inQ; continue; }
+    if(c===','&&!inQ){ cells.push(cur); cur=''; continue; }
     if((c==='\n'||c==='\r')&&!inQ){
-      cells.push(cur.trim());cur='';
-      if(cells.some(x=>x))rows.push([...cells]);
-      cells.length=0;
+      cells.push(cur); cur=''; rows.push(cells); cells=[];
       if(c==='\r'&&text[i+1]==='\n')i++;
       continue;
     }
     cur+=c;
   }
-  if(cur||cells.length){cells.push(cur.trim());if(cells.some(x=>x))rows.push(cells);}
-  return rows;
+  if(cur!==''||cells.length){ cells.push(cur); rows.push(cells); }
+  return rows.map(r=>r.map(c=>c.replace(/\s+/g,' ').trim()));
 }
+function parseDate(v){
+  if(!v) return null;
+  const s=String(v).trim(); if(!s) return null; let m;
+  if((m=s.match(/^Date\((\d+),(\d+),(\d+)/)))      return new Date(+m[1],+m[2],+m[3]);
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))  return new Date(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/)))return new Date(+m[3],+m[2]-1,+m[1]);
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))){
+    const a=+m[1],b=+m[2];
+    return a>12 ? new Date(+m[3],b-1,a) : new Date(+m[3],a-1,b);
+  }
+  const RU='янв фев мар апр май июн июл авг сен окт ноя дек'.split(' ');
+  if((m=s.toLowerCase().match(/^(\d{1,2})\s+([а-я]{3})[а-я.]*\s+(\d{4})/))){
+    const mi=RU.indexOf(m[2]);
+    if(mi>=0) return new Date(+m[3],mi,+m[1]);
+  }
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+/* 01.01.20xx — служебная заглушка «дата не задана» */
+function realDate(v){
+  const d=parseDate(v);
+  if(!d) return null;
+  return (d.getMonth()===0 && d.getDate()===1) ? null : d;
+}
+const truthy = v => ['TRUE','ИСТИНА','1','ДА'].includes(String(v||'').trim().toUpperCase());
+const midnight = d => new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const dmy = d => d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '—';
+const dm  = d => d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0') : '—';
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-// ── PARSE SHEETS ─────────────────────────────────────────────────────────────
+function findHeader(rows,probes){
+  for(let i=0;i<Math.min(rows.length,15);i++){
+    const j=rows[i].join('|');
+    if(probes.every(p=>j.includes(p))) return i;
+  }
+  return -1;
+}
+/* Записи «Общего листа» занимают по две строки: паспорт сверху, статусы и флаги снизу */
+function parseMain(rows){
+  const hi=findHeader(rows,['Наименование','Дивизион']);
+  if(hi<0) throw new Error('В листе «'+SHEETS.main+'» не найдена строка заголовков');
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const top=rows[i], next=rows[i+1]||[];
+    const name=(top[C.name]||'').trim();
+    if(!name) continue;
+    const child = !(next[C.name]||'').trim();
+    if(SKIP_NAMES.includes(name.toLowerCase())){ if(child)i++; continue; }
+    const bot = child ? next : [];
+    const tasks=[];
+    TASK_BLOCKS.forEach(t=>{
+      const person=(top[t.col]||'').trim(), date=realDate(top[t.col+1]);
+      const status=(bot[t.col]||'').trim(), active=truthy(bot[t.col+2]);
+      if(person||date||status||active) tasks.push({label:t.label,weight:t.weight,person,date,status,active});
+    });
+    out.push({num:parseFloat(top[C.num])||out.length+1, name,
+      div:(top[C.div]||'—').trim(), city:(top[C.city]||'').trim(), contact:(top[C.contact]||'').trim(),
+      got:realDate(top[C.got]), due:realDate(top[C.due]), taken:realDate(top[C.taken]),
+      type:(top[C.type]||'—').trim(), status:(top[C.status]||'—').trim(), tasks});
+    if(child) i++;
+  }
+  return out;
+}
+function driveUrl(u){
+  const m=String(u).match(/[-\w]{25,}/);
+  return m ? 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w400' : u;
+}
+function parseRef(rows){
+  const ref={divisions:[],persons:[],statuses:[],types:[],avatars:{}};
+  if(!rows.length) return ref;
+  const hdr=rows[0], colOf=t=>hdr.findIndex(h=>h&&h.toLowerCase().includes(t));
+  const down=j=>{const a=[];for(let i=1;i<rows.length;i++){const v=(rows[i][j]||'').trim();if(v)a.push(v);}return a;};
+  const cD=colOf('дивизион'),cP=colOf('исполнител'),cS=colOf('статус'),cT=colOf('тип'),cF=colOf('фото');
+  if(cD>=0) ref.divisions=down(cD);
+  if(cP>=0) ref.persons=down(cP);
+  if(cS>=0) ref.statuses=down(cS);
+  if(cT>=0) ref.types=down(cT);
+  if(cP>=0&&cF>=0) for(let i=1;i<rows.length;i++){
+    const n=(rows[i][cP]||'').trim(), u=(rows[i][cF]||'').trim();
+    if(n&&u) ref.avatars[n]=driveUrl(u);
+  }
+  Object.entries(AVATARS_MANUAL).forEach(([k,v])=>{ if(v) ref.avatars[k]=driveUrl(v); });
+  return ref;
+}
 function parseSummary(rows){
-  let hi=-1;
-  for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c==='Дивизион'||c==='Концепт')){hi=i;break;}}
-  if(hi<0)return{};
-  const hdr=rows[hi]; const result={};
+  const hi=findHeader(rows,['Дивизион','Всего']);
+  if(hi<0) return {};
+  const hdr=rows[hi], res={};
   for(let i=hi+1;i<rows.length;i++){
-    const r=rows[i]; const name=r[0];
-    if(!name||name==='ИТОГО')continue;
-    result[name]={};
-    hdr.forEach((h,j)=>{if(h&&j>0)result[name][h]=parseInt(r[j])||0;});
+    const n=(rows[i][0]||'').trim();
+    if(!n) continue;
+    if(n==='ИТОГО') break;
+    res[n]={};
+    hdr.forEach((h,j)=>{ if(h&&j>0) res[n][h]=parseFloat(rows[i][j])||0; });
   }
-  return result;
+  return res;
 }
 
-function parseKPI(rows){
-  const projects=[]; let hi=-1;
-  for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c==='№ п/п'||c==='Наименование')){hi=i;break;}}
-  if(hi<0)return projects;
-  for(let i=hi+1;i<rows.length;i++){
-    const r=rows[i];
-    if(!r[0]||isNaN(parseInt(r[0])))continue;
-    let type=r[3]||'';
-    if(type.toLowerCase().startsWith('эскиз'))type='Эскиз';
-    projects.push({num:parseInt(r[0]),name:r[1]||'',division:r[2]||'',type,video:r[4]==='Да',
-      deadline:r[5]||'',persons:[r[7],r[8],r[9]].filter(Boolean).join(', '),status:r[10]||''});
-  }
-  return projects;
+/* Фото из папки Диска: сопоставление по имени файла */
+const normName = s => String(s).toLowerCase().replace(/\.[a-z0-9]+$/,'')
+  .replace(/[^a-zа-яё]/g,'');
+async function loadDriveAvatars(persons){
+  if(!DRIVE.apiKey||!DRIVE.folder) return {};
+  const q="'"+DRIVE.folder+"' in parents and mimeType contains 'image/' and trashed=false";
+  const url='https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+
+            '&fields=files(id,name)&pageSize=200&key='+encodeURIComponent(DRIVE.apiKey);
+  try{
+    const r=await fetch(url);
+    if(!r.ok) return {};
+    const files=((await r.json()).files)||[];
+    const map={};
+    persons.forEach(p=>{
+      const n=normName(p);
+      const f=files.find(x=>normName(x.name)===n) || files.find(x=>normName(x.name).startsWith(n));
+      if(f) map[p]='https://drive.google.com/thumbnail?id='+f.id+'&sz=w400';
+    });
+    return map;
+  }catch(e){ return {}; }
 }
 
-function parsePhotoUrls(val){
-  const urls=['','',''];
-  if(!val)return urls;
-  try{const a=JSON.parse(val);if(Array.isArray(a)){a.slice(0,3).forEach((u,i)=>urls[i]=u||'');}}
-  catch(e){if(val)urls[0]=val;}
-  return urls;
-}
-function parseWork(rows){
-  const work=[]; let hi=-1;
-  for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c==='Наименование'||c==='№ п/п')){hi=i;break;}}
-  if(hi<0)return work;
-  const header=rows[hi];
-  const weekCol=header.findIndex(h=>h&&h.trim()==='Неделя');
-  const photoCol=header.findIndex(h=>h&&h.trim()==='Сылка на картинки');
-  for(let i=hi+1;i<rows.length;i++){
-    const r=rows[i];
-    if(!r[1]||!r[1].trim())continue;
-    const num=parseInt(r[0]);
-    work.push({num:isNaN(num)?i-hi:num,name:r[1]||'',division:r[2]||'',contact:r[3]||'',
-      deadline:r[5]||'',task:r[6]||'',persons:[r[7],r[8],r[9]].filter(Boolean).join(', '),
-      status:r[10]||'',week:weekCol>=0?(r[weekCol]||''):'',
-      photos:photoCol>=0?parsePhotoUrls(r[photoCol]||''):['','','']});
-  }
-  return work;
-}
+/* ═══════════════════ СОСТОЯНИЕ ═══════════════════ */
+const S = {projects:[], ref:{}, oldSum:{}, days:[], roadMode:'assigned', workFilter:'все'};
+const charts = {};
+const today = midnight(new Date());
 
-// ── AGGREGATES (with Ташкент+Другое → Ташкент / Другое) ─────────────────────
-function buildFromSummary(divSummary){
-  const divs={}, types={}; let total=0, totalVideo=0;
-  Object.entries(divSummary).forEach(([name,vals])=>{
-    const mapped=DN_MAP[name]||name;
-    if(!DN.includes(mapped))return;
-    if(!divs[mapped])divs[mapped]={};
-    Object.entries(vals).forEach(([k,v])=>{divs[mapped][k]=(divs[mapped][k]||0)+v;});
-    total+=vals['Всего']||0;
-    totalVideo+=vals['Видео']||0;
-    TYPE_ORDER.forEach(t=>{types[t]=(types[t]||0)+(vals[t]||0);});
-  });
-  return{divs,types,total,totalVideo};
+/* ═══════════════════ ВСПОМОГАТЕЛЬНОЕ ═══════════════════ */
+function twoWeekWindow(from){
+  const d=midnight(from), dow=(d.getDay()+6)%7;
+  const start=new Date(d); start.setDate(d.getDate()-dow);
+  return Array.from({length:14},(_,i)=>{const x=new Date(start);x.setDate(start.getDate()+i);return x;});
 }
+const dayIdx = (d,days) => Math.round((midnight(d)-days[0])/86400000);
+const isWeekend = d => [0,6].includes(d.getDay());
+const initials = n => n.trim().slice(0,1).toUpperCase();
+function avatarHTML(name){
+  const u=S.ref.avatars&&S.ref.avatars[name];
+  return '<div class="ava">'+(u?'<img src="'+esc(u)+'" alt="'+esc(name)+'" loading="lazy" onerror="this.replaceWith(document.createTextNode(\''+esc(initials(name))+'\'))">':esc(initials(name)))+'</div>';
+}
+function statusPill(s){
+  const st=STATUS_STYLE[s]||['#eef3f9','#5a6a80'];
+  return '<span class="pill" style="background:'+st[0]+';color:'+st[1]+'">'+esc(s||'—')+'</span>';
+}
+function dueClass(d){
+  if(!d) return '';
+  const diff=(midnight(d)-today)/86400000;
+  return diff<0?'late':(diff<=3?'soon':'');
+}
+const activeTasks = p => p.tasks.filter(t=>t.person||t.active);
+const isDone = t => /готов/i.test(t.status||'');
 
-// ── DELTA FORMATTER ───────────────────────────────────────────────────────────
-function fmtDelta(n){
-  if(n===null||n===undefined)return'';
-  if(n===0)return'(±0)';
-  return n>0?`(+${n})`:`(${n})`;
-}
-function fmtDeltaHtml(n){
-  if(n===null||n===undefined)return'';
-  const s=fmtDelta(n);
-  return s;
-}
-
-// ── DONUT FACTORY ─────────────────────────────────────────────────────────────
-function makeDonut(idx, labels, data, colors, total, delta){
-  const id='ch_'+idx;
-  if(charts[id]){charts[id].destroy();delete charts[id];}
-  const el=document.getElementById(id);
-  if(!el)return;
-  const sz=parseInt(el.getAttribute('width'))||120;
-  const hasDelta=delta!==null&&delta!==undefined;
-  charts[id]=new Chart(el.getContext('2d'),{
+/* ═══════════════════ ДИАГРАММЫ ═══════════════════ */
+function donut(host,title,entries,total,onClick,extra){
+  const id='c'+Math.random().toString(36).slice(2,9);
+  const card=document.createElement('div');
+  card.className='chart-card'+(onClick?' clickable':'');
+  card.innerHTML='<div class="cc-title">'+esc(title)+'</div>'+
+    '<div class="cc-canvas"><canvas id="'+id+'" width="112" height="112"></canvas>'+
+    '<div class="cc-center">'+total+'</div></div>'+
+    (extra||'')+
+    '<div class="cc-legend">'+entries.map(e=>
+      '<div class="lg"><i style="background:'+e.color+'"></i>'+esc(e.label)+'<b>'+e.value+'</b></div>').join('')+'</div>';
+  host.appendChild(card);
+  if(onClick) card.onclick=onClick;
+  const data = entries.length?entries:[{label:'Нет данных',value:1,color:'#eef3f9'}];
+  charts[id]=new Chart(document.getElementById(id),{
     type:'doughnut',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:3,borderColor:'#fff'}]},
-    options:{responsive:false,cutout:'67%',devicePixelRatio:Math.max(window.devicePixelRatio||1,2),
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+': '+c.raw}}}},
-    plugins:[{
-      id:'ct_'+idx,
-      afterDraw(chart){
-        const{ctx,chartArea:{width,height,left,top}}=chart;
-        const cx=left+width/2, cy=top+height/2;
-        ctx.save();
-        ctx.textAlign='center';
-        const numSz=sz<=130?20:26;
-        // Shift total up if we have delta
-        const yOff=hasDelta?-8:0;
-        ctx.font=`bold ${numSz}px Segoe UI,Arial,sans-serif`;
-        ctx.fillStyle='#1a2a4a';ctx.textBaseline='middle';
-        ctx.fillText(String(total),cx,cy+yOff);
-        if(hasDelta){
-          ctx.font=`bold ${sz<=130?10:12}px Segoe UI,Arial,sans-serif`;
-          ctx.fillStyle='#00a8cc';
-          ctx.fillText(fmtDelta(delta),cx,cy+yOff+numSz*0.8);
-        }
-        ctx.restore();
-      }
-    }]
+    data:{labels:data.map(e=>e.label),datasets:[{data:data.map(e=>e.value),
+      backgroundColor:data.map(e=>e.color),borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:false,cutout:'66%',devicePixelRatio:Math.max(devicePixelRatio||1,2),
+      plugins:{legend:{display:false},tooltip:{enabled:entries.length>0,
+        callbacks:{label:c=>' '+c.label+': '+c.raw}}}}
   });
 }
-
-// ── CARD HTML — legend list left / donut right ───────────────────────────────
-function cardHTML(idx, title, labels, data, colors, total, clickable, extra){
-  const legs=labels.map((l,i)=>`<div class="leg-row2">
-    <div class="leg-dot" style="background:${colors[i]}"></div>
-    <span class="leg-name2">${l}</span>
-    <span class="leg-num">${data[i]}</span>
-  </div>`).join('');
-  const extraRow=extra?`<div class="leg-row2 leg-extra">
-    <div class="leg-dot" style="background:${extra.color}"></div>
-    <span class="leg-name2">${extra.label}</span>
-    <span class="leg-num">+${extra.value}</span>
-  </div>`:'';
-  const cls=clickable?'chart-card':'chart-card no-click';
-  const oc=clickable?`onclick="openDiv('${title}')"`:'';
-  return`<div class="${cls}" ${oc}>
-    <div class="chart-card-title">${title}</div>
-    <div class="card-inner">
-      <div class="card-leg-col">${legs}${extraRow}</div>
-      <div class="chart-wrap"><canvas id="ch_${idx}" width="120" height="120"></canvas></div>
-    </div>
-  </div>`;
+function clearCharts(host){
+  host.querySelectorAll('canvas').forEach(c=>{ if(charts[c.id]){charts[c.id].destroy();delete charts[c.id];} });
+  host.innerHTML='';
 }
 
-// Type tab uses the same layout
-const typeCardHTML = cardHTML;
-
-// ── RENDER TAB 1 ──────────────────────────────────────────────────────────────
+/* ═══════════════════ ВКЛАДКА: ДИВИЗИОНЫ ═══════════════════ */
 function renderDiv(){
-  const{divs,total,totalVideo,prevDivs,prevTotal}=DATA;
-  const weekDelta=prevTotal!==null?total-prevTotal:null;
-  const q2=total-Q1_BASELINE;
+  const P=S.projects;
+  const inWork=P.filter(p=>/работе/i.test(p.status)).length;
+  const inQueue=P.filter(p=>/очеред/i.test(p.status)).length;
+  const tasks=P.reduce((s,p)=>s+activeTasks(p).length,0);
+  const assigned=P.reduce((s,p)=>s+p.tasks.filter(t=>t.person).length,0);
+  document.getElementById('d-total').textContent=P.length;
+  document.getElementById('d-total-sub').textContent=S.ref.divisions.length+' дивизионов';
+  document.getElementById('d-work').textContent=inWork;
+  document.getElementById('d-work-pct').textContent=P.length?Math.round(inWork/P.length*100)+'% реестра':'';
+  document.getElementById('d-queue').textContent=inQueue;
+  document.getElementById('d-tasks').textContent=tasks;
+  document.getElementById('d-tasks-sub').textContent=assigned+' с исполнителем';
 
-  document.getElementById('s-total').textContent=total||'—';
-  document.getElementById('s-total-delta').textContent=fmtDelta(weekDelta);
-  document.getElementById('s-q2').textContent=q2||'—';
-  document.getElementById('s-q2-delta').textContent=fmtDelta(weekDelta);
-  document.getElementById('s-video').textContent=totalVideo||'—';
-  document.getElementById('s-video-pct').textContent=total?Math.round(totalVideo/total*100)+'% от всех':'';
-
-  const container=document.getElementById('div-charts');
-  container.innerHTML=DN.filter(d=>divs[d]).map((div,i)=>{
-    const vals=divs[div];
-    const labels=[],data=[],colors=[]; let sum=0;
-    TYPE_ORDER.forEach(t=>{if(t!=='Видео'&&vals[t]>0){labels.push(t);data.push(vals[t]);colors.push(TC[t]);sum+=vals[t];}});
-    const noType=(vals['Всего']||0)-sum;
-    if(noType>0){labels.push('Без типа');data.push(noType);colors.push(TC['Без типа']);}
-    const extra=vals['Видео']>0?{label:'Видео',value:vals['Видео'],color:TC['Видео']}:null;
-    return cardHTML(i,div,labels,data,colors,vals['Всего']||0,true,extra);
-  }).join('');
-
-  setTimeout(()=>{
-    DN.filter(d=>divs[d]).forEach((div,i)=>{
-      const vals=divs[div];
-      const labels=[],data=[],colors=[]; let sum=0;
-      TYPE_ORDER.forEach(t=>{if(t!=='Видео'&&vals[t]>0){labels.push(t);data.push(vals[t]);colors.push(TC[t]);sum+=vals[t];}});
-      const noType=(vals['Всего']||0)-sum;
-      if(noType>0){labels.push('Без типа');data.push(noType);colors.push(TC['Без типа']);}
-      const divDelta=prevDivs?((vals['Всего']||0)-((prevDivs[div]||{})['Всего']||0)):null;
-      makeDonut(i,labels,data,colors,vals['Всего']||0,divDelta);
-    });
-  },80);
+  const host=document.getElementById('div-charts'); clearCharts(host);
+  const order=S.ref.divisions.length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
+  order.forEach(d=>{
+    const list=P.filter(p=>p.div===d);
+    const byType={};
+    list.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
+    const entries=Object.entries(byType).sort((a,b)=>b[1]-a[1])
+      .map(([label,value])=>({label,value,color:typeColor(label)}));
+    donut(host,d,entries,list.length,list.length?()=>openDiv(d):null);
+  });
 }
 
-// ── RENDER TAB 2 ──────────────────────────────────────────────────────────────
+/* ═══════════════════ ВКЛАДКА: ТИПЫ ═══════════════════ */
 function renderType(){
-  const{divs,types,total,totalVideo,prevTotal,prevTypes}=DATA;
-  const konc=Object.values(divs).reduce((s,v)=>s+(v['Концепт']||0),0);
-  const weekDelta=prevTotal!==null?total-prevTotal:null;
-  document.getElementById('t-total').textContent=total||'—';
-  document.getElementById('t-total-delta').textContent=fmtDelta(weekDelta);
+  const P=S.projects;
+  const byType={};
+  P.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
+  const konc=byType['Концепт']||0;
+  const oldTotal=Object.values(S.oldSum).reduce((s,v)=>s+(v['Всего']||0),0);
+  document.getElementById('t-total').textContent=P.length;
   document.getElementById('t-konc').textContent=konc;
-  document.getElementById('t-konc-pct').textContent=total?'('+(konc/total*100).toFixed(1)+'%)':'';
-  document.getElementById('t-video').textContent=totalVideo||'—';
-  document.getElementById('t-video-pct').textContent=konc?'('+(totalVideo/konc*100).toFixed(1)+'%)':'';
+  document.getElementById('t-konc-pct').textContent=P.length?Math.round(konc/P.length*100)+'% от всех':'';
+  document.getElementById('t-old').textContent=oldTotal||'—';
 
-  const offset=20;
-  const typeByDiv={};
-  TYPE_ORDER.forEach(t=>{
-    typeByDiv[t]={};
-    DN.forEach(d=>{if(divs[d]&&divs[d][t])typeByDiv[t][d]=divs[d][t];});
+  const oldByType={};
+  Object.values(S.oldSum).forEach(v=>Object.entries(v).forEach(([k,n])=>{
+    if(k!=='Всего') oldByType[k]=(oldByType[k]||0)+n;
+  }));
+
+  const host=document.getElementById('type-charts'); clearCharts(host);
+  const order=(S.ref.types.length?S.ref.types:Object.keys(byType))
+    .filter(t=>byType[t]||oldByType[t]);
+  order.forEach(t=>{
+    const list=P.filter(p=>p.type===t);
+    const byDiv={};
+    list.forEach(p=>byDiv[p.div]=(byDiv[p.div]||0)+1);
+    const entries=Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
+      .map(([label,value])=>({label,value,color:divColor(label)}));
+    const prev=oldByType[t]||0;
+    const extra=prev?'<div class="delta zero" style="margin-top:6px;color:#9aa8b8">было '+prev+' в Q1–Q2</div>':'';
+    donut(host,t,entries,list.length,null,extra);
   });
-
-  function makeTypeCards(types,containerId){
-    document.getElementById(containerId).innerHTML=types.map((t,j)=>{
-      const dm=typeByDiv[t];
-      const labels=[],data=[],colors=[];
-      DN.forEach(d=>{if(dm[d]){labels.push(d);data.push(dm[d]);colors.push(dc(d));}});
-      const tot=data.reduce((a,b)=>a+b,0);
-      const idx=offset+(containerId.includes('top')?j:3+j);
-      return typeCardHTML(idx,t,labels,data,colors,tot,false);
-    }).join('');
-    setTimeout(()=>{
-      types.forEach((t,j)=>{
-        const dm=typeByDiv[t];
-        const labels=[],data=[],colors=[];
-        DN.forEach(d=>{if(dm[d]){labels.push(d);data.push(dm[d]);colors.push(dc(d));}});
-        const tot=data.reduce((a,b)=>a+b,0);
-        const typeDelta=prevTypes?(tot-(prevTypes[t]||0)):null;
-        makeDonut(offset+(containerId.includes('top')?j:3+j),labels,data,colors,tot,typeDelta);
-      });
-    },80);
-  }
-  makeTypeCards(TYPE_ORDER.slice(0,3),'type-charts-top');
-  makeTypeCards(TYPE_ORDER.slice(3),'type-charts-bot');
 }
 
-// ── LOAD CALCULATION ─────────────────────────────────────────────────────────
-function getTaskWeight(taskStr){
-  if(!taskStr)return 1;
-  const lower=taskStr.toLowerCase().trim();
-  for(const{keys,weight}of TASK_WEIGHTS){
-    if(keys.some(k=>lower.includes(k)))return weight;
-  }
-  return 1;
-}
-
-function getTaskLabel(taskStr){
-  if(!taskStr)return '—';
-  const lower=taskStr.toLowerCase().trim();
-  for(const{keys,label}of TASK_WEIGHTS){
-    if(keys.some(k=>lower.includes(k)))return label;
-  }
-  return taskStr;
-}
-
-function calcLoad(workProjects){
-  let curLoad=0, nextLoad=0;
-  const curBreakdown={}, nextBreakdown={};
-  workProjects.forEach(p=>{
-    const isWork=p.status==='в работе';
-    const isQueue=p.status==='в очереди';
-    if(!isWork&&!isQueue)return;
-    const w=getTaskWeight(p.task);
-    const key=p.task||'(без задачи)';
-    if(isWork){
-      curLoad+=w;
-      if(!curBreakdown[key])curBreakdown[key]={count:0,totalW:0};
-      curBreakdown[key].count++;
-      curBreakdown[key].totalW+=w;
-    } else {
-      nextLoad+=w;
-      if(!nextBreakdown[key])nextBreakdown[key]={count:0,totalW:0};
-      nextBreakdown[key].count++;
-      nextBreakdown[key].totalW+=w;
-    }
-  });
-  return{
-    curLoad, curPct:Math.round(curLoad/DEPT_CAPACITY*100), curBreakdown,
-    nextLoad, nextPct:Math.round(nextLoad/DEPT_CAPACITY*100), nextBreakdown
-  };
-}
-
-// ── PER-PERSON LOAD ──────────────────────────────────────────────────────────
-const PERSON_CAPACITY=5; // чел/дней на человека в неделю
-function ruTaskWord(n){const a=Math.abs(n)%100,b=n%10;if(a>10&&a<20)return'задач';if(b===1)return'задача';if(b>=2&&b<=4)return'задачи';return'задач';}
-function computePersonLoad(workProjects){
-  const map={};
-  workProjects.forEach(p=>{
-    if(p.status!=='в работе'&&p.status!=='в очереди')return;
-    const persons=(p.persons||'').split(',').map(x=>x.trim()).filter(Boolean);
-    const list=persons.length?persons:['Без исполнителя'];
-    const w=getTaskWeight(p.task)/list.length; // вес проекта делится между участниками
-    list.forEach(name=>{
-      if(!map[name])map[name]={name,load:0,tasks:0};
-      map[name].load+=w;
-      map[name].tasks++;
-    });
-  });
-  return Object.values(map).sort((a,b)=>b.load-a.load);
-}
-function renderPeopleLoad(){
-  const el=document.getElementById('people-load');
-  if(!el)return;
-  const people=computePersonLoad(DATA.workProjects);
-  if(!people.length){el.innerHTML='<div class="load-empty">Нет активных задач</div>';return;}
-  el.innerHTML=people.map(pl=>{
-    const pct=Math.round(pl.load/PERSON_CAPACITY*100);
-    const c=pct<60?'#22c55e':pct<85?'#f0a030':'#ef4444';
-    return`<div class="pl-row">
-      <div class="pl-name">${pl.name}<div class="pl-sub">${pl.tasks} ${ruTaskWord(pl.tasks)}</div></div>
-      <div class="pl-bar-track"><div class="pl-bar-fill" style="width:${Math.min(pct,100)}%;background:${c}"></div></div>
-      <div class="pl-right"><div class="pl-pct" style="color:${c}">${pct}%</div><div class="pl-pd">${pl.load.toFixed(1)} пд</div></div>
-    </div>`;
-  }).join('');
-}
-
-// ── PHOTO STORAGE (локально в браузере через IndexedDB) ──────────────────────
-const _localPhotoCache={}; // key `${num}_${slot}`: dataURL | ''
-const _projectMap={};      // num → project, built in renderDone
-
-// ── IndexedDB helpers ──
-let _dbPromise=null;
-function _openDB(){
-  if(_dbPromise)return _dbPromise;
-  _dbPromise=new Promise((resolve,reject)=>{
-    const req=indexedDB.open('weeklyReportPhotos',1);
-    req.onupgradeneeded=()=>{req.result.createObjectStore('photos');};
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-  return _dbPromise;
-}
-async function _idbSet(key,val){const db=await _openDB();return new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').put(val,key);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
-async function _idbDel(key){const db=await _openDB();return new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(key);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
-async function _idbAll(){const db=await _openDB();return new Promise((res,rej)=>{const tx=db.transaction('photos','readonly');const store=tx.objectStore('photos');const out={};const cur=store.openCursor();cur.onsuccess=e=>{const c=e.target.result;if(c){out[c.key]=c.value;c.continue();}else res(out);};cur.onerror=()=>rej(cur.error);});}
-
-// Загрузить все сохранённые в браузере фото в кэш и перерисовать
-async function loadStoredPhotos(){
-  if(!('indexedDB' in window))return;
-  try{const all=await _idbAll();Object.assign(_localPhotoCache,all);renderDone();}
-  catch(e){console.warn('Не удалось загрузить сохранённые фото',e);}
-}
-
-// Удалить из браузера фото проектов, которых больше нет в таблице
-async function cleanupOrphanPhotos(){
-  if(!('indexedDB' in window))return;
-  try{
-    const projs=DATA.workProjects||[];
-    if(projs.length===0)return; // данных нет — ничего не трогаем
-    // фото оставляем только для проектов БЕЗ заполненной колонки «Неделя»;
-    // как только «Неделя» заполнена — проект уходит из «Выполненных работ», его фото удаляются
-    const validNums=new Set(projs.filter(p=>!p.week).map(p=>String(p.num)));
-    const all=await _idbAll();
-    let removed=false;
-    for(const key of Object.keys(all)){
-      const num=key.split('_')[0];
-      if(!validNums.has(num)){
-        await _idbDel(key);
-        delete _localPhotoCache[key];
-        removed=true;
+/* ═══════════════════ ВКЛАДКА: ДОРОЖНАЯ КАРТА ═══════════════════ */
+function buildBars(){
+  const days=S.days, bars=[], unassigned=[];
+  S.projects.forEach(p=>{
+    const dated=p.tasks.filter(t=>t.date).sort((a,b)=>a.date-b.date);
+    let prev=p.taken||p.got||null;
+    dated.forEach(t=>{
+      const start = (prev && prev<t.date) ? prev : t.date;
+      prev=t.date;
+      if(!t.person){
+        if(dayIdx(t.date,days)>=0 && dayIdx(t.date,days)<=13)
+          unassigned.push({project:p.name,label:t.label,date:t.date,div:p.div,num:p.num});
+        return;
       }
-    }
-    if(removed)renderDone();
-  }catch(e){console.warn('Очистка неиспользуемых фото не удалась',e);}
-}
-
-function getPhotoUrl(project,slot){
-  const key=`${project.num}_${slot}`;
-  if(_localPhotoCache[key]!==undefined)return _localPhotoCache[key];
-  return(project.photos&&project.photos[slot])||'';
-}
-
-async function uploadPhotoToServer(num,slot,b64){
-  const key=`${num}_${slot}`;
-  try{
-    await _idbSet(key,b64);
-    _localPhotoCache[key]=b64;
-  }catch(e){
-    console.error(e);
-    alert('Не удалось сохранить картинку в браузере (возможно, закончилось место в хранилище).');
-  }
-  renderDone();
-}
-
-function removePhoto(num,slot){
-  const key=`${num}_${slot}`;
-  _localPhotoCache[key]='';
-  renderDone();
-  _idbDel(key).catch(e=>console.warn('delete failed',e));
-}
-
-// ── FILE INPUT SINGLETON ──────────────────────────────────────────────────────
-let _photoTarget=null;
-const _fi=(()=>{const el=document.createElement('input');el.type='file';el.accept='image/*';el.style.display='none';
-  el.addEventListener('change',()=>{
-    const f=el.files[0];if(!f||!_photoTarget)return;
-    const {num,slot}=_photoTarget;
-    el.value='';
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img=new Image();
-      img.onload=()=>{
-        // Resize to max 1200px on longest side, compress to JPEG 0.78
-        const MAX=1200;
-        let w=img.width,h=img.height;
-        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
-        const cv=document.createElement('canvas');cv.width=w;cv.height=h;
-        cv.getContext('2d').drawImage(img,0,0,w,h);
-        const b64=cv.toDataURL('image/jpeg',0.78);
-        uploadPhotoToServer(num,slot,b64);
-      };
-      img.src=ev.target.result;
-    };
-    reader.readAsDataURL(f);
+      let i0=dayIdx(start,days), i1=dayIdx(t.date,days);
+      if(i1<0||i0>13) return;
+      i0=Math.max(0,i0); i1=Math.min(13,i1);
+      bars.push({person:t.person,project:p.name,num:p.num,div:p.div,label:t.label,
+        status:t.status||p.status,active:t.active,date:t.date,i0,i1,done:isDone(t),
+        overdue:midnight(t.date)<today&&!isDone(t)});
+    });
   });
-  document.body.appendChild(el);return el;
-})();
-function triggerPhotoUpload(num,slot){_photoTarget={num,slot};_fi.click();}
-function openLightbox(num,slot){
-  const p=_projectMap[num];if(!p)return;
-  const src=getPhotoUrl(p,slot);if(!src||src==='loading')return;
-  const lb=document.getElementById('lightbox');
-  lb.querySelector('img').src=src;lb.classList.add('open');
+  const byPerson={};
+  bars.forEach(b=>(byPerson[b.person]=byPerson[b.person]||[]).push(b));
+  Object.values(byPerson).forEach(list=>{
+    list.sort((a,b)=>a.i0-b.i0||b.i1-a.i1);
+    const lanes=[];
+    list.forEach(b=>{
+      let l=lanes.findIndex(e=>e<b.i0);
+      if(l<0){ l=lanes.length; lanes.push(-1); }
+      lanes[l]=b.i1; b.lane=l;
+    });
+  });
+  return {byPerson,unassigned};
 }
+function renderRoad(){
+  const days=S.days;
+  document.getElementById('road-range').textContent=
+    dmy(days[0])+' — '+dmy(days[13])+' · текущая и следующая неделя';
 
-// ── RENDER DONE PROJECTS ──────────────────────────────────────────────────────
-function photoZoneHTML(project){
-  const num=project.num;
-  const allSlots=[0,1,2];
-  const slotUrls=allSlots.map(s=>({slot:s,src:getPhotoUrl(project,s)}));
-  const filled=slotUrls.filter(x=>x.src&&x.src!=='loading');
-  const loadingSlots=slotUrls.filter(x=>x.src==='loading');
-  const emptySlots=slotUrls.filter(x=>!x.src).map(x=>x.slot);
-  const count=filled.length+(loadingSlots.length>0?1:0); // treat loading as filled for layout
+  document.getElementById('road-legend').innerHTML=TASK_BLOCKS.map(t=>
+    '<span><i style="background:'+t.color+'"></i>'+t.label+' · '+t.weight+' чел-дн</span>').join('')+
+    '<span style="margin-left:auto"><i style="background:#fff;outline:2px solid #e5533d;outline-offset:-2px"></i>срок прошёл</span>';
 
-  const filledPanel=ph=>`<div class="photo-panel" onclick="openLightbox(${num},${ph.slot})">
-    <img src="${ph.src}" alt="">
-    <button class="slot-del" onclick="event.stopPropagation();removePhoto(${num},${ph.slot})">×</button>
-  </div>`;
-  const loadingPanel=`<div class="photo-panel" style="background:#edf3fa;display:flex;align-items:center;justify-content:center">
-    <div class="spin" style="width:24px;height:24px;border-width:2px"></div>
-  </div>`;
-  const emptyPanel=slot=>`<div class="photo-panel empty" onclick="triggerPhotoUpload(${num},${slot})">
-    <span class="panel-plus">+</span>
-  </div>`;
-  const addBtn=slot=>`<button class="zone-add-btn" onclick="triggerPhotoUpload(${num},${slot})">+ фото</button>`;
-
-  const renderSlot=s=>{
-    if(s.src==='loading')return loadingPanel;
-    if(s.src)return filledPanel(s);
-    return'';
-  };
-
-  const effectiveCount=filled.length+loadingSlots.length;
-  if(effectiveCount===0){
-    return`<div class="photo-zone pz-empty">${emptyPanel(0)}</div>`;
-  }
-  if(effectiveCount===1){
-    const s=filled[0]||loadingSlots[0];
-    return`<div class="photo-zone pz-1">
-      ${renderSlot(s)}
-      ${emptySlots.length?addBtn(emptySlots[0]):''}
-    </div>`;
-  }
-  if(effectiveCount===2){
-    const twoSlots=[...filled,...loadingSlots].slice(0,2);
-    return`<div class="photo-zone pz-2">
-      ${twoSlots.map(renderSlot).join('')}
-      ${emptySlots.length?addBtn(emptySlots[0]):''}
-    </div>`;
-  }
-  // 3: big left + two stacked right
-  const threeSlots=[...filled,...loadingSlots].slice(0,3);
-  return`<div class="photo-zone pz-3">${threeSlots.map(renderSlot).join('')}</div>`;
-}
-
-function renderDone(){
-  const done=DATA.workProjects.filter(p=>p.status==='готово'&&!p.week);
-  // Build project lookup map for openLightbox
-  DATA.workProjects.forEach(p=>{_projectMap[p.num]=p;});
-  const grid=document.getElementById('done-grid');
-  if(!grid)return;
-  if(!done.length){
-    grid.innerHTML='<div class="done-empty">Нет выполненных проектов за эту неделю.<br>Проекты со статусом «готово» и пустой колонкой «Неделя» появятся здесь.</div>';
-    return;
-  }
-  grid.innerHTML=done.map(p=>{
-    const divC=dc(DN_MAP[p.division]||p.division);
-    return`<div class="done-card">
-      <div class="done-card-info">
-        <div class="done-name">${p.name}</div>
-        <div class="done-meta"><span style="color:${divC};font-weight:700">${p.division||'—'}</span>${p.task?' · '+p.task:''}</div>
-      </div>
-      ${photoZoneHTML(p)}
-    </div>`;
+  const wk=document.getElementById('road-weeks');
+  wk.innerHTML='<div class="rd-week">Текущая неделя</div><div class="rd-week">Следующая неделя</div>';
+  const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('road-dates').innerHTML=days.map(d=>{
+    const cls='rd'+(isWeekend(d)?' we':'')+(+d===+today?' today':'');
+    return '<div class="'+cls+'">'+wd[(d.getDay()+6)%7]+'<b>'+d.getDate()+'</b></div>';
   }).join('');
-}
 
-// ── PREVIOUS WEEK HELPERS ─────────────────────────────────────────────────────
+  const {byPerson,unassigned}=buildBars();
+  const persons = S.roadMode==='all'
+    ? [...new Set([...(S.ref.persons||[]),...Object.keys(byPerson)])]
+    : (S.ref.persons||[]).filter(p=>byPerson[p]).concat(Object.keys(byPerson).filter(p=>!(S.ref.persons||[]).includes(p)));
 
-function deltaHtml(delta){
-  if(delta===0)return`<div class="delta-badge delta-zero">±0</div>`;
-  if(delta>0)return`<div class="delta-badge delta-up">+${delta}</div>`;
-  return`<div class="delta-badge delta-dn">${delta}</div>`;
-}
-
-// ── RENDER TAB 3 ──────────────────────────────────────────────────────────────
-function renderWeekly(){
-  const hasPrev=DATA.prevDivs!==null;
-
-  // Info bar
-  document.getElementById('weekly-snap-info').innerHTML=hasPrev
-    ?`<span class="snap-badge">📊 Сравнение с прошлой неделей</span>`
-    :`<span class="snap-badge snap-none">Нет данных — добавьте лист «Прошлая неделя» в таблицу</span>`;
-
-  // ── Load gauge ──
-  const{curLoad,curPct,curBreakdown,nextLoad,nextPct,nextBreakdown}=calcLoad(DATA.workProjects);
-  const inWork=DATA.workProjects.filter(p=>p.status==='в работе').length;
-  const inQueue=DATA.workProjects.filter(p=>p.status==='в очереди').length;
-
-  function gaugeColor(pct){return pct<60?'#22c55e':pct<85?'#f0a030':'#ef4444';}
-  function gaugeLabel(pct){return pct<60?'Низкая':pct<85?'Нормальная':pct<120?'Высокая':'Перегрузка';}
-
-  function breakdownHtml(bd){
-    const rows=Object.entries(bd).sort((a,b)=>b[1].totalW-a[1].totalW)
-      .map(([task,info])=>`<div class="load-row">
-        <div class="load-task">${getTaskLabel(task)}</div>
-        <div class="load-detail">${info.count} задач</div>
-        <div class="load-pd">${info.totalW.toFixed(1)} пд</div>
-      </div>`).join('');
-    return rows||'<div class="load-empty">—</div>';
-  }
-
-  document.getElementById('load-card').innerHTML=`
-    <div class="delta-header">Загруженность отдела</div>
-    <div class="load-two-col">
-      <div class="load-half">
-        <div class="load-half-title">Текущая нагрузка</div>
-        <div class="load-pct" style="color:${gaugeColor(curPct)}">${curPct}%</div>
-        <div class="load-label" style="color:${gaugeColor(curPct)}">${gaugeLabel(curPct)}</div>
-        <div class="gauge-track"><div class="gauge-fill" style="width:${Math.min(curPct,100)}%;background:${gaugeColor(curPct)}"></div></div>
-        <div class="gauge-sub">${curLoad.toFixed(1)} / ${DEPT_CAPACITY} чел/дней · ${inWork} задач</div>
-        <div class="load-breakdown" style="margin:0 -16px">${breakdownHtml(curBreakdown)}</div>
-      </div>
-      <div class="load-half load-half-next">
-        <div class="load-half-title">Работа в очереди</div>
-        <div class="load-pct" style="color:${gaugeColor(nextPct)};font-size:36px">${nextPct}%</div>
-        <div class="load-label" style="color:${gaugeColor(nextPct)}">${gaugeLabel(nextPct)}</div>
-        <div class="gauge-track"><div class="gauge-fill" style="width:${Math.min(nextPct,100)}%;background:${gaugeColor(nextPct)}"></div></div>
-        <div class="gauge-sub">${nextLoad.toFixed(1)} / ${DEPT_CAPACITY} чел/дней · ${inQueue} задач</div>
-        <div class="load-breakdown" style="margin:0 -16px">${breakdownHtml(nextBreakdown)}</div>
-      </div>
-    </div>`;
-
-  // ── Division deltas ──
-  document.getElementById('div-delta').innerHTML=
-    DN.filter(d=>DATA.divs[d]).map(d=>{
-      const cur=(DATA.divs[d]||{})['Всего']||0;
-      const prevVal=hasPrev?((DATA.prevDivs[d]||{})['Всего']||0):null;
-      return`<div class="delta-row">
-        <div class="delta-dot" style="background:${dc(d)}"></div>
-        <div class="delta-name">${d}</div>
-        <div class="delta-val">${cur}</div>
-        ${prevVal!==null?deltaHtml(cur-prevVal):''}
-      </div>`;
-    }).join('')+`<div class="delta-total-row">
-      <div></div>
-      <div class="delta-name" style="font-weight:800;color:#1a2a4a">Итого</div>
-      <div class="delta-val" style="font-weight:800">${DATA.total}</div>
-      ${hasPrev?deltaHtml(DATA.total-(DATA.prevTotal||0)):''}
-    </div>`;
-
-  // ── Type deltas ──
-  document.getElementById('type-delta').innerHTML=
-    TYPE_ORDER.map(t=>{
-      const cur=DATA.types[t]||0;
-      const prevVal=hasPrev?(DATA.prevTypes[t]||0):null;
-      return`<div class="delta-row">
-        <div class="delta-dot" style="background:${TC[t]}"></div>
-        <div class="delta-name">${t}</div>
-        <div class="delta-val">${cur}</div>
-        ${prevVal!==null?deltaHtml(cur-prevVal):''}
-      </div>`;
+  const rows=document.getElementById('road-rows');
+  if(!persons.length){ rows.innerHTML='<div class="road-empty">В этом окне задач с исполнителями нет</div>'; }
+  else rows.innerHTML=persons.map(name=>{
+    const list=byPerson[name]||[];
+    const lanes=list.length?Math.max(...list.map(b=>b.lane))+1:1;
+    const h=lanes*26+8;
+    const weekend=days.map((d,i)=>isWeekend(d)
+      ?'<div class="we-band" style="left:'+(i/14*100)+'%;width:'+(100/14)+'%"></div>':'').join('');
+    const tIdx=dayIdx(today,days);
+    const tLine=(tIdx>=0&&tIdx<=13)?'<div class="today-line" style="left:'+((tIdx+0.5)/14*100)+'%"></div>':'';
+    const bars=list.map(b=>{
+      const span=b.i1-b.i0+1;
+      return '<div class="bar'+(b.overdue?' overdue':'')+((b.active&&!b.done)?'':' pale')+'"'+
+        ' style="left:calc('+(b.i0/14*100)+'% + 2px);width:calc('+(span/14*100)+'% - 4px);'+
+        'top:'+(b.lane*26+4)+'px;background:'+taskColor(b.label)+'"'+
+        ' data-num="'+b.num+'" data-tip="'+esc(b.label+' · '+dmy(b.date)+'||'+b.project+'||'+b.div+' · '+(b.status||'без статуса')+(b.overdue?'||⚠ срок прошёл':''))+'">'+
+        (b.done?'✓ ':'')+esc(b.label)+' <small>'+esc(b.project)+'</small></div>';
     }).join('');
+    const days_=list.reduce((s,b)=>s+(TASK_BLOCKS.find(t=>t.label===b.label)||{weight:0}).weight,0);
+    const sub=list.length?list.length+' задач · '+(+days_.toFixed(1))+' чел-дн'
+                        :'<span class="p-free">свободен</span>';
+    return '<div class="road-row">'+
+      '<div class="road-person">'+avatarHTML(name)+
+        '<div><div class="p-name">'+esc(name)+'</div><div class="p-sub">'+sub+'</div></div></div>'+
+      '<div class="road-lanes" style="height:'+h+'px">'+weekend+tLine+bars+'</div></div>';
+  }).join('');
 
-  renderPeopleLoad();
-  renderDone();
+  const totalBars=Object.values(byPerson).reduce((s,l)=>s+l.length,0);
+  const overdue=Object.values(byPerson).flat().filter(b=>b.overdue).length;
+  document.getElementById('road-stats').innerHTML=
+    'Задач в окне: <b>'+totalBars+'</b> · просрочено: <b style="color:#e5533d">'+overdue+
+    '</b> · без исполнителя: <b>'+unassigned.length+'</b>';
+
+  const un=document.getElementById('unassigned');
+  if(unassigned.length){
+    un.style.display='';
+    document.getElementById('un-grid').innerHTML=unassigned
+      .sort((a,b)=>a.date-b.date)
+      .map(u=>'<div class="un-item" data-num="'+u.num+'"><b>'+esc(u.label)+'</b> <span>· '+
+        esc(u.project)+' · '+dm(u.date)+'</span></div>').join('');
+  } else un.style.display='none';
 }
 
-// ── RENDER TAB 4 ──────────────────────────────────────────────────────────────
+/* ═══════════════════ ВКЛАДКА: НЕДЕЛЯ ═══════════════════ */
+function renderWeek(){
+  const week=S.days.slice(0,7);
+  document.getElementById('week-range').textContent=dmy(week[0])+' — '+dmy(week[6]);
+  const inWeek=[];
+  S.projects.forEach(p=>p.tasks.forEach(t=>{
+    if(!t.date) return;
+    const i=dayIdx(t.date,S.days);
+    if(i>=0&&i<=6) inWeek.push({...t,project:p.name,div:p.div,num:p.num,pstatus:p.status});
+  }));
+
+  const cap=(S.ref.persons||[]).length*WORK_DAYS_PER_WEEK||1;
+  const load=inWeek.filter(t=>t.person||t.active).reduce((s,t)=>s+t.weight,0);
+  const pct=Math.round(load/cap*100);
+  document.getElementById('w-load').innerHTML=(+load.toFixed(1))+'<small> / '+cap+' чел-дн</small>';
+  const fill=document.getElementById('w-fill');
+  fill.style.width=Math.min(pct,100)+'%';
+  fill.style.background=pct>100?'#e5533d':pct>80?'#f0a030':'#2aa87a';
+  document.getElementById('w-note').innerHTML='Загрузка <b>'+pct+'%</b>. Ёмкость: '+
+    (S.ref.persons||[]).length+' чел × '+WORK_DAYS_PER_WEEK+' дн. Нормативы трудоёмкости заданы в коде — блок TASK_BLOCKS.';
+
+  const byPerson={};
+  inWeek.forEach(t=>{ if(t.person) byPerson[t.person]=(byPerson[t.person]||0)+t.weight; });
+  const maxP=Math.max(1,...Object.values(byPerson));
+  document.getElementById('w-persons').innerHTML=(S.ref.persons||Object.keys(byPerson))
+    .map(n=>{ const v=byPerson[n]||0;
+      return '<div class="mini">'+avatarHTML(n).replace('class="ava"','class="ava" style="width:22px;height:22px;flex:0 0 22px;font-size:10px"')+
+        '<span style="width:66px">'+esc(n)+'</span><span class="mbar"><i style="width:'+(v/maxP*100)+
+        '%;background:'+(v>WORK_DAYS_PER_WEEK?'#e5533d':'var(--cyan-d)')+'"></i></span><b>'+(+v.toFixed(1))+'</b></div>';
+    }).join('')||'<div class="load-note">Нет задач</div>';
+
+  const byTask={};
+  inWeek.forEach(t=>byTask[t.label]=(byTask[t.label]||0)+1);
+  const maxT=Math.max(1,...Object.values(byTask));
+  document.getElementById('w-tasks').innerHTML=TASK_BLOCKS.filter(t=>byTask[t.label])
+    .map(t=>'<div class="mini"><span style="width:118px">'+esc(t.label)+
+      '</span><span class="mbar"><i style="width:'+(byTask[t.label]/maxT*100)+'%;background:'+t.color+
+      '"></i></span><b>'+byTask[t.label]+'</b></div>').join('')||'<div class="load-note">Нет задач</div>';
+
+  const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('w-days').innerHTML=week.map((d,i)=>{
+    const items=inWeek.filter(t=>+midnight(t.date)===+d);
+    return '<div class="day-col'+(isWeekend(d)?' we':'')+'">'+
+      '<div class="dc-h'+(+d===+today?' today':'')+'">'+wd[i]+' '+dm(d)+'</div><div class="dc-b">'+
+      (items.map(t=>'<div class="dc-item" data-num="'+t.num+'" style="background:'+taskColor(t.label)+
+        '">'+esc(t.label)+'<span>'+esc(t.person||'без исполнителя')+'</span></div>').join('')
+       ||'<div style="font-size:10.5px;color:#c5cfdc;text-align:center;padding:6px 0">—</div>')+
+      '</div></div>';
+  }).join('');
+
+  const all=[];
+  S.projects.forEach(p=>p.tasks.forEach(t=>{ if(t.date&&!isDone(t)) all.push({...t,project:p.name,div:p.div,num:p.num}); }));
+  all.sort((a,b)=>a.date-b.date);
+  document.getElementById('w-dead').innerHTML=all.slice(0,12).map(t=>
+    '<tr class="prow" data-num="'+t.num+'"><td class="pname">'+esc(t.project)+'</td>'+
+    '<td><span class="dot" style="background:'+divColor(t.div)+'"></span>'+esc(t.div)+'</td>'+
+    '<td><span class="tsk" style="background:'+taskColor(t.label)+'">'+esc(t.label)+'</span></td>'+
+    '<td>'+esc(t.person||'—')+'</td>'+
+    '<td class="due '+dueClass(t.date)+'">'+dmy(t.date)+'</td></tr>').join('')
+    ||'<tr><td colspan="5" style="color:#c5cfdc">Задач с датами нет</td></tr>';
+}
+
+/* ═══════════════════ ВКЛАДКА: ПРОЕКТЫ ═══════════════════ */
 function renderWork(){
-  const all=DATA.workProjects;
-  const inWork=all.filter(p=>p.status==='в работе');
-  const inQueue=all.filter(p=>p.status==='в очереди');
-  const inDone=all.filter(p=>p.status==='готово');
-  document.getElementById('cnt-work').textContent='('+inWork.length+')';
-  document.getElementById('cnt-queue').textContent='('+inQueue.length+')';
-  document.getElementById('cnt-done').textContent='('+inDone.length+')';
-  document.getElementById('cnt-all').textContent='('+all.length+')';
-  fillWorkFilterOptions();
-  drawWorkTable(workFilter);
+  const st={};
+  S.projects.forEach(p=>st[p.status]=(st[p.status]||0)+1);
+  const order=(S.ref.statuses||[]).filter(s=>st[s]).concat(Object.keys(st).filter(s=>!(S.ref.statuses||[]).includes(s)));
+  document.getElementById('work-filters').innerHTML=
+    order.map(s=>'<button class="chip'+(S.workFilter===s?' on':'')+'" data-f="'+esc(s)+'">'+esc(s)+' '+st[s]+'</button>').join('')+
+    '<button class="chip'+(S.workFilter==='все'?' on':'')+'" data-f="все">Все '+S.projects.length+'</button>';
+  drawWork();
+}
+function drawWork(){
+  const list=S.workFilter==='все'?S.projects:S.projects.filter(p=>p.status===S.workFilter);
+  document.getElementById('work-tbody').innerHTML=list.map(p=>{
+    const tasks=p.tasks.length?p.tasks.map(t=>'<span class="tsk'+(t.person||t.active?'':' off')+
+      '" style="background:'+taskColor(t.label)+'" title="'+esc(t.label+(t.person?' — '+t.person:'')+(t.date?' · '+dmy(t.date):''))+'">'+
+      esc(t.label)+(t.person?' · '+esc(t.person):'')+'</span>').join('')
+      :'<span style="color:#c5cfdc;font-size:11px">состав не заполнен</span>';
+    return '<tr class="prow" data-num="'+p.num+'">'+
+      '<td class="num">'+p.num+'</td>'+
+      '<td class="pname">'+esc(p.name)+'</td>'+
+      '<td><span class="dot" style="background:'+divColor(p.div)+'"></span>'+esc(p.div)+'</td>'+
+      '<td>'+esc(p.city&&p.city!=='Нет'?p.city:'—')+'</td>'+
+      '<td><span class="pill" style="background:'+typeColor(p.type)+'22;color:'+typeColor(p.type)+'">'+esc(p.type)+'</span></td>'+
+      '<td>'+tasks+'</td>'+
+      '<td class="due '+dueClass(p.due)+'">'+dmy(p.due)+'</td>'+
+      '<td>'+statusPill(p.status)+'</td></tr>';
+  }).join('')||'<tr><td colspan="8" style="color:#c5cfdc">Нет проектов с этим статусом</td></tr>';
 }
 
-function drawWorkTable(filter){
-  workFilter=filter;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
-  const btns=document.querySelectorAll('.fbtn');
-  if(filter==='в работе')btns[0].classList.add('on');
-  else if(filter==='в очереди')btns[1].classList.add('on');
-  else if(filter==='готово')btns[2].classList.add('on');
-  else btns[3].classList.add('on');
+/* ═══════════════════ МОДАЛЬНОЕ ОКНО ═══════════════════ */
+function openDiv(name){
+  const list=S.projects.filter(p=>p.div===name);
+  const tasks=list.reduce((s,p)=>s+p.tasks.length,0);
+  const persons=new Set(); list.forEach(p=>p.tasks.forEach(t=>t.person&&persons.add(t.person)));
+  show('Дивизион '+name, list.length+' запросов в реестре Q3',
+    [['Запросов',list.length],['Задач',tasks],['Исполнителей',persons.size],
+     ['В работе',list.filter(p=>/работе/i.test(p.status)).length]],
+    '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
+    '<th>Город</th><th>Тип</th><th>Срок</th><th>Статус</th></tr></thead><tbody>'+
+    list.map(p=>'<tr class="prow" data-num="'+p.num+'"><td class="num">'+p.num+'</td><td class="pname">'+esc(p.name)+
+      '</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.type)+'</td><td class="due '+dueClass(p.due)+'">'+
+      dmy(p.due)+'</td><td>'+statusPill(p.status)+'</td></tr>').join('')+'</tbody></table></div>');
+}
+function openProject(num){
+  const p=S.projects.find(x=>x.num===num);
+  if(!p) return;
+  const done=p.tasks.filter(isDone).length;
+  show(p.name, p.div+(p.city&&p.city!=='Нет'?' · '+p.city:'')+' · '+p.type,
+    [['Задач',p.tasks.length],['Готово',done],
+     ['Трудоёмкость',(+p.tasks.filter(t=>t.person||t.active).reduce((s,t)=>s+t.weight,0).toFixed(1))+' чел-дн'],
+     ['Срок',dmy(p.due)]],
+    '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>Вид работ</th><th>Исполнитель</th>'+
+    '<th>Дата</th><th>Статус</th><th>В объёме</th></tr></thead><tbody>'+
+    (p.tasks.length?p.tasks.map(t=>'<tr><td><span class="tsk" style="background:'+taskColor(t.label)+'">'+
+      esc(t.label)+'</span></td><td>'+esc(t.person||'—')+'</td><td class="due '+dueClass(t.date)+'">'+
+      dmy(t.date)+'</td><td>'+(t.status?statusPill(t.status):'—')+'</td><td>'+(t.active?'✔':'—')+'</td></tr>').join('')
+      :'<tr><td colspan="5" style="color:#c5cfdc">Состав работ не заполнен</td></tr>')+
+    '</tbody></table></div>'+
+    '<div class="load-note" style="margin-top:10px">Поступило: '+dmy(p.got)+' · взят в работу: '+dmy(p.taken)+
+    (p.contact?' · инициатор: '+esc(p.contact):'')+'</div>');
+}
+function show(title,sub,stats,body){
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-sub').textContent=sub;
+  document.getElementById('m-stats').innerHTML=stats.map(([l,v])=>
+    '<div class="mstat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>').join('');
+  document.getElementById('m-body').innerHTML=body;
+  document.getElementById('ov').classList.add('open');
+}
+const closeModal=()=>document.getElementById('ov').classList.remove('open');
 
-  const rows=getFilteredWork();
-  const pill=s=>`<span class="status-pill ${s==='в работе'?'sp-work':s==='в очереди'?'sp-queue':'sp-done'}">${s}</span>`;
-  const divBadge=d=>{const c=dc(d);return`<span style="background:${c}20;color:${c};padding:2px 7px;border-radius:4px;font-size:11px;font-weight:700">${d||'—'}</span>`;};
-  const taskBadge=t=>t?`<span style="font-size:11px;color:#555">${t}</span>`:`<span style="color:#ccc">—</span>`;
+/* ═══════════════════ СОБЫТИЯ ═══════════════════ */
+const tip=document.getElementById('tip');
+document.addEventListener('mouseover',e=>{
+  const el=e.target.closest('[data-tip]');
+  if(!el) return;
+  const parts=el.dataset.tip.split('||');
+  tip.innerHTML='<b>'+esc(parts[0])+'</b>'+parts.slice(1).map(p=>'<br>'+esc(p)).join('');
+  tip.classList.add('on');
+});
+document.addEventListener('mousemove',e=>{
+  if(!tip.classList.contains('on')) return;
+  const r=tip.getBoundingClientRect();
+  tip.style.left=Math.min(e.clientX+14,innerWidth-r.width-10)+'px';
+  tip.style.top=Math.max(8,e.clientY-r.height-12)+'px';
+});
+document.addEventListener('mouseout',e=>{ if(e.target.closest('[data-tip]')) tip.classList.remove('on'); });
 
-  document.getElementById('work-tbody').innerHTML=rows.length
-    ?rows.map(p=>`<tr>
-        <td style="color:#ccc;font-size:11px">${p.num}</td>
-        <td style="font-weight:500;color:#1a2a4a">${p.name}</td>
-        <td>${divBadge(p.division)}</td>
-        <td>${taskBadge(p.task)}</td>
-        <td style="font-size:12px;color:#666">${p.persons||'—'}</td>
-        <td style="font-size:12px;color:#888">${p.deadline||'—'}</td>
-        <td>${pill(p.status)}</td>
-      </tr>`).join('')
-    :`<tr><td colspan="7" class="no-data">Нет данных</td></tr>`;
-}
+document.addEventListener('click',e=>{
+  const tab=e.target.closest('.tab');
+  if(tab){ showTab(tab.dataset.tab); return; }
+  const rm=e.target.closest('[data-road]');
+  if(rm){ S.roadMode=rm.dataset.road;
+    document.querySelectorAll('[data-road]').forEach(b=>b.classList.toggle('on',b===rm));
+    renderRoad(); return; }
+  const f=e.target.closest('[data-f]');
+  if(f){ S.workFilter=f.dataset.f; renderWork(); return; }
+  if(e.target.closest('#m-close')||e.target.id==='ov'){ closeModal(); return; }
+  const row=e.target.closest('[data-num]');
+  if(row){ openProject(parseFloat(row.dataset.num)); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+document.getElementById('btn-refresh').onclick=()=>load(true);
 
-function filterWork(f){drawWorkTable(f);}
-
-function getFilteredWork(){
-  const q=(document.getElementById('work-search')?.value||'').toLowerCase().trim();
-  const fd=document.getElementById('f-div')?.value||'';
-  const ft=document.getElementById('f-task')?.value||'';
-  const fp=document.getElementById('f-person')?.value||'';
-  return DATA.workProjects.filter(p=>{
-    if(workFilter!=='все'&&p.status!==workFilter)return false;
-    if(fd&&(p.division||'')!==fd)return false;
-    if(ft&&getTaskLabel(p.task)!==ft)return false;
-    if(fp&&!(p.persons||'').split(',').map(x=>x.trim()).includes(fp))return false;
-    if(q){
-      const hay=`${p.name} ${p.division} ${p.task} ${p.persons}`.toLowerCase();
-      if(!hay.includes(q))return false;
-    }
-    return true;
-  });
-}
-function applyWorkFilters(){drawWorkTable(workFilter);}
-function resetWorkFilters(){
-  const si=document.getElementById('work-search');if(si)si.value='';
-  ['f-div','f-task','f-person'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  drawWorkTable(workFilter);
-}
-function _fillSel(id,allLabel,items){
-  const el=document.getElementById(id);if(!el)return;
-  const cur=el.value;
-  el.innerHTML=`<option value="">${allLabel}</option>`+items.map(v=>`<option value="${v}">${v}</option>`).join('');
-  if(items.includes(cur))el.value=cur;
-}
-function fillWorkFilterOptions(){
-  const all=DATA.workProjects;
-  const divs=[...new Set(all.map(p=>p.division).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
-  const tasks=[...new Set(all.map(p=>getTaskLabel(p.task)).filter(t=>t&&t!=='—'))].sort((a,b)=>a.localeCompare(b,'ru'));
-  const persons=[...new Set(all.flatMap(p=>(p.persons||'').split(',').map(x=>x.trim())).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ru'));
-  _fillSel('f-div','Все дивизионы',divs);
-  _fillSel('f-task','Все задачи',tasks);
-  _fillSel('f-person','Все исполнители',persons);
-}
-
-// ── DYNAMICS (тренд по неделям) ───────────────────────────────────────────────
-function parseDynamics(rows){
-  if(!rows||!rows.length)return null;
-  // Блочный формат: повторяющиеся блоки по дивизионам со строкой ИТОГО и колонкой «Неделя»
-  if(rows.some(r=>r.some(c=>c&&c.trim()==='Дивизион')))return parseDynamicsStacked(rows);
-  return parseDynamicsRows(rows);
-}
-function parseDynamicsStacked(rows){
-  const blocks=[]; let cur=null;
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    if(r.some(c=>c&&c.trim()==='Дивизион')){
-      const hdr=r.map(c=>(c||'').trim());
-      cur={divCol:hdr.findIndex(h=>h==='Дивизион'),totalCol:hdr.findIndex(h=>h==='Всего'),
-           weekCol:hdr.findIndex(h=>h==='Неделя'),
-           typeCols:TYPE_ORDER.map(t=>({t,j:hdr.findIndex(h=>h===t)})).filter(x=>x.j>=0),rows:[]};
-      blocks.push(cur);
-    }else if(cur){cur.rows.push(r);}
-  }
-  const weeks=[];
-  blocks.forEach(b=>{
-    let wk='';
-    if(b.weekCol>=0)for(const r of b.rows){const v=(r[b.weekCol]||'').trim();if(v){wk=v;break;}}
-    if(!wk)wk=String(weeks.length+1);
-    const divTypes={}, vals={}; let itogo=null;
-    b.rows.forEach(r=>{
-      const name=(r[b.divCol]||'').trim();
-      if(!name)return;
-      if(name.toUpperCase()==='ИТОГО'){itogo=r;return;}
-      const mapped=DN_MAP[name]||name;
-      if(!divTypes[mapped])divTypes[mapped]={};
-      b.typeCols.forEach(({t,j})=>{divTypes[mapped][t]=(divTypes[mapped][t]||0)+(parseInt(r[j])||0);});
-    });
-    TYPE_ORDER.forEach(t=>{
-      const jc=b.typeCols.find(x=>x.t===t);
-      if(itogo&&jc)vals[t]=parseInt(itogo[jc.j])||0;
-      else vals[t]=Object.values(divTypes).reduce((a,dt)=>a+(dt[t]||0),0);
-    });
-    if(itogo&&b.totalCol>=0)vals['Всего']=parseInt(itogo[b.totalCol])||0;
-    else if(b.totalCol>=0)vals['Всего']=b.rows.reduce((a,r)=>{const nm=(r[b.divCol]||'').trim();return (nm&&nm.toUpperCase()!=='ИТОГО')?a+(parseInt(r[b.totalCol])||0):a;},0);
-    else vals['Всего']=TYPE_ORDER.filter(t=>t!=='Видео').reduce((a,t)=>a+(vals[t]||0),0);
-    weeks.push({week:wk,vals,divTypes});
-  });
-  if(!weeks.length)return null;
-  return{weeks,columns:['Всего',...TYPE_ORDER,...DN],stacked:true};
-}
-function parseDynamicsRows(rows){
-  let hi=-1;
-  for(let i=0;i<rows.length;i++){if(rows[i].some(c=>c&&c.trim()==='Неделя')){hi=i;break;}}
-  if(hi<0)return null;
-  const hdr=rows[hi].map(h=>(h||'').trim());
-  const weekCol=hdr.findIndex(h=>h==='Неделя');
-  const cols=hdr.map((h,j)=>({name:h,j})).filter(c=>c.name&&c.j!==weekCol);
-  const weeks=[];
-  for(let i=hi+1;i<rows.length;i++){
-    const r=rows[i];
-    const wk=(r[weekCol]||'').trim();
-    if(!wk)continue;
-    const vals={};
-    cols.forEach(c=>{const raw=(r[c.j]||'').toString().replace(',','.').trim();const v=parseFloat(raw);vals[c.name]=isNaN(v)?null:v;});
-    weeks.push({week:wk,vals,divTypes:{}});
-  }
-  if(!weeks.length)return null;
-  let columns=cols.map(c=>c.name);
-  if(!columns.includes('Всего')){
-    const typeCols=TYPE_ORDER.filter(t=>columns.includes(t));
-    if(typeCols.length){weeks.forEach(w=>{w.vals['Всего']=typeCols.reduce((a,t)=>a+(w.vals[t]||0),0);});columns=['Всего',...columns];}
-  }
-  return{weeks,columns};
-}
-
-let dynChart=null, dynView='load';
-const DYN_SLOTS=10; // фиксированное число секций на оси
-// Вес типа задачи в пд (как в датчике загрузки). При необходимости поправьте числа.
-// Вес типа в пд = (часы × люди) / 8. Из таблицы часов: Концепт 40×2/8=10, ЭП 48×2/8=12, Визуализация 24/8=3, Планировки 28/8=3.5, Посадка 4/8=0.5, Видео 8/8=1.
-const TYPE_LOAD_WEIGHTS={Концепт:10,Посадка:0.5,Визуализация:3,'ЭП':12,Планировки:3.5,Видео:1};
-function weekLoad(vals){return TYPE_ORDER.reduce((a,t)=>a+((vals[t]||0)*(TYPE_LOAD_WEIGHTS[t]||0)),0);}
-function weekTotal(vals){return vals['Всего']!=null?vals['Всего']:TYPE_ORDER.reduce((a,t)=>a+(vals[t]||0),0);}
-function divLoad(dt){return dt?TYPE_ORDER.reduce((a,t)=>a+((dt[t]||0)*(TYPE_LOAD_WEIGHTS[t]||0)),0):0;}
-
-function renderDyn(){
-  const dyn=DATA.dynamics;
-  const empty=document.getElementById('dyn-empty');
-  const card=document.querySelector('.dyn-card');
-  const ctrls=document.querySelector('.dyn-controls');
-  if(!dyn||!dyn.weeks||!dyn.weeks.length){
-    if(card)card.style.display='none';
-    if(ctrls)ctrls.style.display='none';
-    empty.style.display='block';
-    empty.innerHTML='Чтобы видеть динамику, добавьте в Google-таблицу лист <b>«Динамика недель»</b>.<br><br>'+
-      'Лист — это блоки по неделям (как ваша сводка). В каждом блоке: шапка <b>Дивизион | Концепт | Посадка | Визуализация | Планировки | ЭП | Видео | Всего | Неделя</b>, строки дивизионов и строка <b>ИТОГО</b>. В колонке <b>Неделя</b> — номер (1, 2, 3…).<br><br>'+
-      '<b>Неделя 1 — отправная точка</b>, на графике не показывается: всё считается как разница с предыдущей неделей, первой идёт неделя 2.<br><br>'+
-      '<b>Нагрузка (пд):</b> типы × удельный вес (Концепт 10, ЭП 12, Визуализация 3, Планировки 3.5, Посадка 0.5, Видео 1), прирост за неделю.<br>'+
-      '<b>Запросов/нед:</b> разница «Всего» между неделями.<br>'+
-      '<b>По дивизионам:</b> взвешенная нагрузка (пд) каждого дивизиона за неделю, своим цветом.';
-    return;
-  }
-  empty.style.display='none';
-  if(card)card.style.display='';
-  if(ctrls)ctrls.style.display='';
-  drawDynChart();
-}
-function setDynView(v){
-  dynView=v;
-  document.querySelectorAll('.fbtn.dyn').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
-  drawDynChart();
-}
-function drawDynChart(){
-  const dyn=DATA.dynamics;if(!dyn)return;
-  const W=dyn.weeks;
-  // Неделя 1 — отправная точка (baseline), в динамике не показывается.
-  // Каждая точка = разница с предыдущей неделей. Слот k -> неделя W[k+1].
-  const diffCount=Math.max(0,W.length-1);
-  const n=Math.max(DYN_SLOTS,diffCount); // минимум 10 секций
-  const labels=[];
-  for(let k=0;k<n;k++){const wi=k+1;labels.push(wi<W.length?W[wi].week:String(wi+1));}
-  let datasets=[], ctype='bar';
-  if(dynView==='load'){
-    ctype='bar';
-    const data=labels.map((_,k)=>{const wi=k+1;return wi<W.length?Math.round((weekLoad(W[wi].vals)-weekLoad(W[wi-1].vals))*10)/10:null;});
-    datasets=[
-      {label:'Нагрузка за неделю, пд',data,backgroundColor:'#00a8cc',borderRadius:4,maxBarThickness:48},
-      {label:'Норма ('+DEPT_CAPACITY+' пд/нед)',type:'line',data:labels.map(()=>DEPT_CAPACITY),borderColor:'#ef4444',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false}
-    ];
-  }else if(dynView==='intake'){
-    ctype='bar';
-    const data=labels.map((_,k)=>{const wi=k+1;return wi<W.length?(weekTotal(W[wi].vals)-weekTotal(W[wi-1].vals)):null;});
-    datasets=[{label:'Запросов за неделю',data,backgroundColor:'#1e3a6b',borderRadius:4,maxBarThickness:48}];
-  }else{ // divs — взвешенная нагрузка (пд) за неделю по каждому дивизиону
-    ctype='line';
-    const divsPresent=DN.filter(d=>W.some(w=>w.divTypes&&w.divTypes[d]));
-    datasets=divsPresent.map(d=>({
-      label:d,data:labels.map((_,k)=>{const wi=k+1;return wi<W.length?Math.round((divLoad(W[wi].divTypes&&W[wi].divTypes[d])-divLoad(W[wi-1].divTypes&&W[wi-1].divTypes[d]))*10)/10:null;}),
-      borderColor:dc(d),backgroundColor:dc(d),borderWidth:2.5,tension:.3,pointRadius:3,pointHoverRadius:5,spanGaps:false,fill:false
-    }));
-  }
-  const el=document.getElementById('dyn-chart');if(!el)return;
-  if(dynChart){dynChart.destroy();dynChart=null;}
-  const multi=datasets.length>1;
-  dynChart=new Chart(el.getContext('2d'),{
-    type:ctype,
-    data:{labels,datasets},
-    options:{responsive:true,maintainAspectRatio:false,
-      devicePixelRatio:Math.max(window.devicePixelRatio||1,2),
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:multi,position:'bottom',labels:{boxWidth:12,font:{size:11},padding:12,usePointStyle:true}}},
-      scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#eef2f7'}},x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,minRotation:0}}}
-    }
-  });
-}
-
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-function openDiv(divName){
-  const vals=DATA.divs[divName];
-  if(!vals)return;
-  document.getElementById('modal-title').textContent=divName;
-  document.getElementById('modal-stats').innerHTML=
-    TYPE_ORDER.map(t=>`<div class="mstat"><div class="mstat-dot" style="background:${TC[t]}"></div><div class="mstat-lbl">${t}</div><div class="mstat-val">${vals[t]||0}</div></div>`).join('')+
-    `<div class="mstat" style="background:#1a2a4a"><div class="mstat-lbl" style="color:rgba(255,255,255,.6)">Всего</div><div class="mstat-val" style="color:#fff">${vals['Всего']||0}</div></div>`;
-  // For merged division, include projects from both original divisions
-  const projects=DATA.projects.filter(p=>p.division===divName||(DN_MAP[p.division]===divName));
-  document.getElementById('modal-tbody').innerHTML=projects.map(p=>`<tr>
-    <td style="color:#ccc;font-size:11px">${p.num}</td>
-    <td style="max-width:260px">${p.name}</td>
-    <td><span class="badge ${bc(p.type)}">${p.type||'—'}</span></td>
-    <td style="font-size:11px;color:#666">${p.persons||'—'}</td>
-  </tr>`).join('')||`<tr><td colspan="4" class="no-data">Нет данных</td></tr>`;
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function closeModal(e){
-  if(!e||e.target===document.getElementById('modal-overlay'))
-    document.getElementById('modal-overlay').classList.remove('open');
-}
-
-// ── TAB SWITCH ─────────────────────────────────────────────────────────────────
-let currentTab='div';
-const tabRendered={};
 function showTab(t){
-  if(currentTab===t)return;
-  currentTab=t;
-  ['div','type','weekly','dyn','work'].forEach(id=>{
-    document.getElementById('tab-'+id).classList.toggle('show',id===t);
-  });
-  document.querySelectorAll('.tab').forEach((b,i)=>{
-    b.classList.toggle('on',['div','type','weekly','dyn','work'][i]===t);
-  });
-  if(!tabRendered[t]){
-    tabRendered[t]=true;
-    if(t==='div')renderDiv();
-    else if(t==='type')renderType();
-    else if(t==='weekly')renderWeekly();
-    else if(t==='dyn')renderDyn();
-    else if(t==='work')renderWork();
-  }
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show',p.id==='tab-'+t));
+  window.scrollTo({top:0});
 }
 
-// ── LOAD DATA ─────────────────────────────────────────────────────────────────
-async function load(){
+/* ═══════════════════ ЗАГРУЗКА ═══════════════════ */
+async function grab(name,required){
+  const r=await fetch(base(name),{cache:'no-store'});
+  if(!r.ok){
+    if(required) throw new Error('Лист «'+name+'»: HTTP '+r.status);
+    return [];
+  }
+  return parseCSV(await r.text());
+}
+async function load(silent){
+  const L=document.getElementById('loading'), E=document.getElementById('errbox');
+  if(!silent){ L.style.display='flex'; }
+  E.style.display='none';
   try{
-    const[sumCsv,kpiCsv,workCsv,prevCsv,dynCsv]=await Promise.all([
-      fetch(URL_SUM).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
-      fetch(URL_KPI).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}),
-      fetch(URL_WORK).then(r=>r.ok?r.text():'').catch(()=>''),
-      fetch(URL_PREV).then(r=>r.ok?r.text():'').catch(()=>''),
-      fetch(URL_DYN).then(r=>r.ok?r.text():'').catch(()=>'')
+    const [main,ref,old]=await Promise.all([
+      grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)
     ]);
-    const{total,totalVideo,divs,types}=buildFromSummary(parseSummary(parseCSV(sumCsv)));
-    const projects=parseKPI(parseCSV(kpiCsv));
-    const workRows=parseCSV(workCsv);
-    const workProjects=workRows.length>1?parseWork(workRows):[];
-    const prevData=prevCsv?buildFromSummary(parseSummary(parseCSV(prevCsv))):null;
-    DATA={divs,types,projects,workProjects,total,totalVideo,
-      dynamics:dynCsv?parseDynamics(parseCSV(dynCsv)):null,
-      prevDivs:prevData?prevData.divs:null,
-      prevTypes:prevData?prevData.types:null,
-      prevTotal:prevData?prevData.total:null};
-    document.getElementById('updated-ts').textContent=
-      new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    document.getElementById('loading').style.display='none';
-    document.getElementById('tab-div').classList.add('show');
-    tabRendered.div=true;
-    renderDiv();
-    cleanupOrphanPhotos();
-  }catch(e){
-    console.error(e);
-    // ── FALLBACK DATA ──
-    DATA={
-      divs:{
-        'Центр':             {Концепт:12,Посадка:20,Визуализация:22,Планировки:4,ЭП:7,Видео:7,Всего:65},
-        'Алматы':            {Концепт:6, Посадка:11,Визуализация:16,Планировки:5,ЭП:5,Видео:2,Всего:43},
-        'Юг':                {Концепт:11,Посадка:13,Визуализация:10,Планировки:10,ЭП:0,Видео:4,Всего:44},
-        'Запад':             {Концепт:9, Посадка:7, Визуализация:16,Планировки:0,ЭП:5,Видео:1,Всего:37},
-        'РДС':               {Концепт:10,Посадка:0, Визуализация:5, Планировки:0,ЭП:0,Видео:8,Всего:15},
-        'Ташкент / Другое':  {Концепт:15,Посадка:4, Визуализация:9, Планировки:2,ЭП:1,Видео:4,Всего:34},
-      },
-      types:{Концепт:63,Посадка:55,Визуализация:78,ЭП:18,Планировки:21},
-      projects:[],
-      workProjects:[
-        {num:1, name:'Реабилитационный центр',       division:'Другое', task:'Разработка концепта',   persons:'Диляра, Рамазан',       deadline:'',    status:'готово'},
-        {num:2, name:'Агро технический колледж',      division:'Другое', task:'Визуализация',          persons:'Нургуль, Арман',        deadline:'28.05',status:'готово'},
-        {num:3, name:'Центр ресоциализации',          division:'Центр',  task:'Разработка концепта',   persons:'Дана, Исахан',          deadline:'27.05',status:'готово'},
-        {num:4, name:'ДШ планировки',                 division:'Юг',     task:'Разработка планировок', persons:'Анель',                 deadline:'',    status:'готово'},
-        {num:5, name:'Футбольная академия Атырау',    division:'Запад',  task:'3D посадка',            persons:'Мадияр',                deadline:'',    status:'готово'},
-        {num:6, name:'Платные парковки Астана',       division:'РДС',    task:'Посадка',               persons:'',                      deadline:'',    status:'готово'},
-        {num:7, name:'АЖК корректировки плана',       division:'Алматы', task:'Разработка планировок', persons:'',                      deadline:'',    status:'готово'},
-        {num:8, name:'3D посадка ДШ',                 division:'Юг',     task:'3D посадка',            persons:'',                      deadline:'',    status:'готово'},
-        {num:9, name:'ЭП СОШ Астана',                 division:'Центр',  task:'',                      persons:'',                      deadline:'',    status:'готово'},
-        {num:10,name:'Prefab завод продукт',           division:'Другое', task:'Разработка концепта',   persons:'Олжас',                 deadline:'',    status:'готово'},
-        {num:11,name:'Медицинские склады Астана',      division:'Центр',  task:'Разработка концепта',   persons:'Олжас',                 deadline:'',    status:'готово'},
-        {num:12,name:'Городской перинатальный центр',  division:'Алматы', task:'Визуализация',          persons:'Диляра',                deadline:'',    status:'готово'},
-        {num:13,name:'Скорая помощь Актобе',           division:'Запад',  task:'Разработка концепта',   persons:'',                      deadline:'',    status:'готово'},
-        {num:14,name:'Аквапарк и ДШ посадка концепт', division:'Юг',     task:'Разработка концепта',   persons:'',                      deadline:'',    status:'готово'},
-        {num:15,name:'Комьюнити центр вариант 4',      division:'Центр',  task:'Разработка концепта',   persons:'',                      deadline:'',    status:'готово'},
-        {num:16,name:'BI БЦ ЭП визы вариант 5',       division:'Центр',  task:'Разработка фасада',     persons:'',                      deadline:'',    status:'готово'},
-        {num:17,name:'Концепт ФОК и ЦРТ',             division:'Запад',  task:'Разработка концепта',   persons:'',                      deadline:'',    status:'готово'},
-        {num:18,name:'Посадка Бином 800-1000',         division:'Центр',  task:'Посадка',               persons:'',                      deadline:'',    status:'готово'},
-        {num:19,name:'Бином Light 2.0 на 1000 и 2500', division:'Другое', task:'Разработка концепта',   persons:'Нургуль, Олжас',        deadline:'',    status:'в работе'},
-        {num:20,name:'Центр сердца Шымкент',           division:'Юг',     task:'Визуализация',          persons:'Диляра, Салтанат, Диаз',deadline:'8.06', status:'в работе'},
-        {num:21,name:'Smallbox фасады',                division:'Центр',  task:'Разработка фасада',     persons:'Диаз',                  deadline:'',    status:'в работе'},
-        {num:22,name:'Школа Аль Фараби Визы Алматы',  division:'Алматы', task:'Визуализация',          persons:'Диаз',                  deadline:'',    status:'в работе'},
-        {num:23,name:'СШИ второй вариант Туркестан',   division:'Юг',     task:'Разработка концепта',   persons:'Олжас, Нургуль',        deadline:'',    status:'в работе'},
-        {num:24,name:'Victory School KSA',             division:'Другое', task:'Разработка концепта',   persons:'Олжас',                 deadline:'',    status:'в работе'},
-        {num:25,name:'Олимпийский центр концепт',      division:'Юг',     task:'Разработка концепта',   persons:'Дана, Исахан, Диана',   deadline:'',    status:'в работе'},
-        {num:26,name:'СШИ третий вариант',             division:'Юг',     task:'Разработка концепта',   persons:'Нургуль, Рамазан, Исахан',deadline:'', status:'в работе'},
-        {num:27,name:'BIART благоустройство',          division:'Центр',  task:'3D посадка',            persons:'Мадияр',                deadline:'',    status:'в работе'},
-        {num:28,name:'Концепт по дому приемов',        division:'Юг',     task:'Разработка концепта',   persons:'Дана',                  deadline:'',    status:'в работе'},
-        {num:29,name:'Видео стадион Уральск и ЦРТ',   division:'Запад',  task:'Разработка видео',      persons:'Диаз, Диана',           deadline:'',    status:'в работе'},
-        {num:33,name:'Теннисный центр корректировки',  division:'Запад',  task:'Разработка фасада',     persons:'Мадияр',                deadline:'',    status:'в работе'},
-        {num:30,name:'Детский лагерь концепт',         division:'Другое', task:'Разработка концепта',   persons:'',                      deadline:'',    status:'в очереди'},
-        {num:31,name:'Школы в Актобе концепты',        division:'Запад',  task:'Разработка концепта',   persons:'',                      deadline:'',    status:'в очереди'},
-        {num:32,name:'Поликлиника Бигвиль фасад',      division:'Алматы', task:'Разработка фасада',     persons:'',                      deadline:'',    status:'в очереди'},
-      ],
-      total:238, totalVideo:26,
-      dynamics:{stacked:true,columns:['Всего','Концепт','Посадка','Визуализация','ЭП','Планировки','Видео','Центр','Алматы','Юг','Запад','РДС','Ташкент / Другое'],weeks:[
-        {week:'1',vals:{'Концепт':66,'Посадка':56,'Визуализация':78,'Планировки':21,'ЭП':18,'Видео':28,'Всего':239},divTypes:{'Центр':{'Концепт':12,'Посадка':20,'Визуализация':22,'Планировки':4,'ЭП':7,'Видео':7},'Алматы':{'Концепт':6,'Посадка':11,'Визуализация':16,'Планировки':5,'ЭП':5,'Видео':2},'Юг':{'Концепт':11,'Посадка':13,'Визуализация':10,'Планировки':10,'ЭП':0,'Видео':4},'Запад':{'Концепт':9,'Посадка':7,'Визуализация':16,'Планировки':0,'ЭП':5,'Видео':3},'РДС':{'Концепт':10,'Посадка':0,'Визуализация':5,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':18,'Посадка':5,'Визуализация':9,'Планировки':2,'ЭП':1,'Видео':4}}},
-        {week:'2',vals:{'Концепт':72,'Посадка':56,'Визуализация':83,'Планировки':22,'ЭП':18,'Видео':30,'Всего':251},divTypes:{'Центр':{'Концепт':12,'Посадка':20,'Визуализация':23,'Планировки':4,'ЭП':7,'Видео':7},'Алматы':{'Концепт':6,'Посадка':11,'Визуализация':17,'Планировки':5,'ЭП':5,'Видео':2},'Юг':{'Концепт':15,'Посадка':13,'Визуализация':12,'Планировки':10,'ЭП':0,'Видео':5},'Запад':{'Концепт':11,'Посадка':7,'Визуализация':17,'Планировки':0,'ЭП':5,'Видео':4},'РДС':{'Концепт':10,'Посадка':0,'Визуализация':5,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':18,'Посадка':5,'Визуализация':9,'Планировки':3,'ЭП':1,'Видео':4}}},
-        {week:'3',vals:{'Концепт':77,'Посадка':62,'Визуализация':89,'Планировки':24,'ЭП':20,'Видео':34,'Всего':272},divTypes:{'Центр':{'Концепт':13,'Посадка':21,'Визуализация':24,'Планировки':4,'ЭП':8,'Видео':8},'Алматы':{'Концепт':7,'Посадка':12,'Визуализация':18,'Планировки':5,'ЭП':5,'Видео':3},'Юг':{'Концепт':16,'Посадка':14,'Визуализация':13,'Планировки':11,'ЭП':1,'Видео':6},'Запад':{'Концепт':12,'Посадка':8,'Визуализация':18,'Планировки':1,'ЭП':5,'Видео':4},'РДС':{'Концепт':10,'Посадка':1,'Визуализация':6,'Планировки':0,'ЭП':0,'Видео':8},'Ташкент / Другое':{'Концепт':19,'Посадка':6,'Визуализация':10,'Планировки':3,'ЭП':1,'Видео':5}}}
-      ]},
-      prevDivs:null, prevTypes:null, prevTotal:null
-    };
-    document.getElementById('loading').style.display='none';
-    document.getElementById('updated-ts').textContent='кэш ·';
-    document.getElementById('tab-div').classList.add('show');
-    tabRendered.div=true;
-    renderDiv();
+    S.ref=parseRef(ref);
+    const fromDrive=await loadDriveAvatars(S.ref.persons||[]);
+    Object.entries(fromDrive).forEach(([k,v])=>{ if(!S.ref.avatars[k]) S.ref.avatars[k]=v; });
+    S.oldSum=parseSummary(old);
+    S.projects=parseMain(main);
+    S.days=twoWeekWindow(new Date());
+    if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
+    L.style.display='none';
+    document.getElementById('ts').textContent=new Date().toLocaleString('ru-RU',
+      {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork();
+    if(!document.querySelector('.page.show')) showTab('road');
+  }catch(err){
+    L.style.display='none';
+    E.style.display='flex';
+    document.getElementById('errtxt').innerHTML=
+      '<b>Не удалось прочитать таблицу.</b><br>'+esc(err.message)+
+      '<br><br>Проверьте, что у таблицы открыт доступ по ссылке для чтения '+
+      '(<code>Настройки доступа → Все, у кого есть ссылка → Читатель</code>) '+
+      'и что названия листов совпадают: <code>'+Object.values(SHEETS).join('</code>, <code>')+'</code>.';
   }
 }
-
 load();
-loadStoredPhotos();
+setInterval(()=>load(true),5*60*1000);
 </script>
 </body>
 </html>
