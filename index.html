@@ -64,8 +64,13 @@ button{font-family:inherit}
 .delta.up{color:#2aa87a}.delta.down{color:#e5533d}.delta.zero{color:var(--faint)}
 
 /* ── ROADMAP (signature) ── */
-.road-legend{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 12px;font-size:11px;color:var(--mute)}
-.road-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px}
+.road-legend{display:flex;flex-wrap:wrap;align-items:center;gap:11px;margin:0 0 12px;font-size:11px;color:var(--mute)}
+.road-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+.lg-sep{width:1px;height:13px;background:var(--line);display:inline-block}
+.road-legend .sw-work{background:#5a6a80}
+.road-legend .sw-queue{background:#5a6a80;background-image:repeating-linear-gradient(115deg,#fff 0 2px,transparent 2px 4px)}
+.road-legend .sw-done{background:#5a6a80;opacity:.45}
+.road-legend .sw-over{background:#fff;outline:2px solid #e5533d;outline-offset:-2px}
 .road-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer;transition:.15s}
 .chip:hover{border-color:var(--cyan)}
@@ -97,12 +102,18 @@ button{font-family:inherit}
 .bar{position:absolute;height:22px;border-radius:5px;padding:0 7px;display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#fff;overflow:hidden;white-space:nowrap;cursor:pointer;z-index:4;box-shadow:0 1px 3px rgba(0,0,0,.16)}
 .bar small{font-weight:500;opacity:.82;overflow:hidden;text-overflow:ellipsis}
 .bar.overdue{outline:2px solid #e5533d;outline-offset:-2px}
-.bar.pale{opacity:.5}
+.bar.k-queue{background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.30) 0 4px,transparent 4px 9px)}
+.bar.k-done{opacity:.45}
+.bar.k-pause{filter:grayscale(.75);opacity:.7}
+.bar.clip-l{border-top-left-radius:0;border-bottom-left-radius:0;box-shadow:inset 3px 0 0 rgba(255,255,255,.6)}
+.bar.clip-r{border-top-right-radius:0;border-bottom-right-radius:0;box-shadow:inset -3px 0 0 rgba(255,255,255,.6)}
 .road-empty{padding:26px;text-align:center;color:var(--faint);font-size:13px}
 .unassigned{margin-top:16px;background:#fff;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.07);padding:14px 16px}
 .un-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#e5533d;margin-bottom:10px}
 .un-grid{display:flex;flex-wrap:wrap;gap:7px}
 .un-item{border:1px dashed #d8c0b8;background:#fff8f6;border-radius:7px;padding:5px 10px;font-size:11.5px}
+.un-item{cursor:pointer}
+.un-item.warn{border-color:#e0d0a0;background:#fffdf3}
 .un-item b{font-weight:700}
 .un-item span{color:var(--mute)}
 
@@ -226,9 +237,9 @@ tr.prow:hover td{background:#f8fbfe}
     </div>
     <div id="road-rows"></div>
   </div></div></div>
-  <div class="unassigned" id="unassigned" style="display:none">
-    <div class="un-title">Задачи с датой, но без исполнителя</div>
-    <div class="un-grid" id="un-grid"></div>
+  <div class="unassigned" id="attention" style="display:none">
+    <div class="un-title" id="att-title"></div>
+    <div class="un-grid" id="att-grid"></div>
   </div>
 </div>
 
@@ -269,7 +280,7 @@ tr.prow:hover td{background:#f8fbfe}
     <div>
       <div class="card">
         <div class="card-h">Загрузка отдела</div>
-        <div class="load-num" id="w-load">—</div>
+        <div class="load-num" id="w-load">—<small> / <span id="w-cap"></span> чел-дн</small></div>
         <div class="load-bar"><div class="load-fill" id="w-fill" style="width:0"></div></div>
         <div class="load-note" id="w-note"></div>
       </div>
@@ -328,37 +339,26 @@ const SHEETS   = {main:'Общий лист', sum:'Сводный лист', old
 const base = n => 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+
                   '/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(n);
 
-/* Нормативы трудоёмкости, человеко-дней на задачу. Правьте под факт отдела. */
+/* Виды работ. В каждом блоке три колонки:
+   верхняя строка — исполнитель | дата начала работы
+   нижняя строка  — статус      | срок исполнения, дней | галочка «в объёме»
+   defDur — сколько дней рисовать, если срок в таблице не заполнен. */
 const TASK_BLOCKS = [
-  {label:'Посадка',           col:10, weight:0.5, color:'#f0a030'},
-  {label:'Генплан',           col:13, weight:1.0, color:'#c99a2e'},
-  {label:'Планировка',        col:16, weight:3.5, color:'#4a80c0'},
-  {label:'Разработка фасада', col:19, weight:3.5, color:'#1e3a6b'},
-  {label:'Визуализация',      col:22, weight:2.0, color:'#4fb3d9'},
-  {label:'Видео',             col:25, weight:1.0, color:'#8e6bc9'},
-  {label:'Сборка',            col:28, weight:2.0, color:'#2aa87a'},
-  {label:'Другое',            col:31, weight:1.0, color:'#9aa8b8'},
+  {label:'Посадка',           col:10, defDur:1, color:'#f0a030'},
+  {label:'Генплан',           col:13, defDur:1, color:'#c99a2e'},
+  {label:'Планировка',        col:16, defDur:2, color:'#4a80c0'},
+  {label:'Разработка фасада', col:19, defDur:2, color:'#1e3a6b'},
+  {label:'Визуализация',      col:22, defDur:2, color:'#4fb3d9'},
+  {label:'Видео',             col:25, defDur:1, color:'#8e6bc9'},
+  {label:'Сборка',            col:28, defDur:2, color:'#2aa87a'},
+  {label:'Другое',            col:31, defDur:1, color:'#9aa8b8'},
 ];
 const WORK_DAYS_PER_WEEK = 5;
 
-/* Фото исполнителей. Проще всего добавить в «Справочник» колонку «Фото»
-   со ссылками на файлы Google Диска — тогда этот блок не нужен.
-   Иначе впишите ссылки здесь: 'Имя':'https://drive.google.com/file/d/ID/view' */
-const AVATARS_MANUAL = {
-  // 'Аружан': '',
-  // 'Дана': '',
-};
+/* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
+const AVATARS_MANUAL = {};
+const DRIVE = { folder:'1tkCmroSmMYKBRFrA1iT5KL5tzv4ijvP_', apiKey:'' };
 
-/* Либо папка Google Диска с фото. Файл должен называться именем исполнителя:
-   «Аружан.jpg», «Рамазан.png». Нужен ключ API Google (Cloud Console →
-   API и сервисы → Учётные данные → Создать ключ → включить Google Drive API).
-   Папку открыть по ссылке для чтения. Без ключа блок игнорируется. */
-const DRIVE = {
-  folder: '1tkCmroSmMYKBRFrA1iT5KL5tzv4ijvP_',
-  apiKey: ''            // ← вставьте ключ, иначе фото берутся только из «Справочника»
-};
-
-/* Колонки «Общего листа» (0-based) */
 const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9,pct:34,status:35,week:36};
 const SKIP_NAMES = ['шаблон'];
 
@@ -369,7 +369,8 @@ const TYPE_COLORS = {'Концепт':'#1e3a6b','Посадка':'#f0a030','Ге
   'Эскизный проект':'#c8dff0','Другое':'#9aa8b8'};
 const STATUS_STYLE = {'Очередь':['#fff8e1','#e65100'],'В работе':['#e0f7fa','#006064'],
   'На паузе':['#f3e5f5','#6a1b9a'],'Готова':['#e8f5e9','#1b5e20'],'Готово':['#e8f5e9','#1b5e20']};
-const taskColor = l => (TASK_BLOCKS.find(t=>t.label===l)||{}).color || '#9aa8b8';
+const blockOf   = l => TASK_BLOCKS.find(t=>t.label===l)||{defDur:1,color:'#9aa8b8'};
+const taskColor = l => blockOf(l).color;
 const divColor  = d => DIV_COLORS[d] || '#c0ccdc';
 const typeColor = t => TYPE_COLORS[t] || '#c0ccdc';
 
@@ -390,34 +391,50 @@ function parseCSV(text){
   if(cur!==''||cells.length){ cells.push(cur); rows.push(cells); }
   return rows.map(r=>r.map(c=>c.replace(/\s+/g,' ').trim()));
 }
+/* Год может быть двузначным: в таблице формат 22.07.26 */
+const fixYear = y => y<100 ? (y<70?2000+y:1900+y) : y;
 function parseDate(v){
   if(!v) return null;
   const s=String(v).trim(); if(!s) return null; let m;
-  if((m=s.match(/^Date\((\d+),(\d+),(\d+)/)))      return new Date(+m[1],+m[2],+m[3]);
-  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))  return new Date(+m[1],+m[2]-1,+m[3]);
-  if((m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/)))return new Date(+m[3],+m[2]-1,+m[1]);
-  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))){
-    const a=+m[1],b=+m[2];
-    return a>12 ? new Date(+m[3],b-1,a) : new Date(+m[3],a-1,b);
+  if((m=s.match(/^Date\((\d+),(\d+),(\d+)/)))            return new Date(+m[1],+m[2],+m[3]);
+  if((m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))         return new Date(+m[1],+m[2]-1,+m[3]);
+  if((m=s.match(/^(\d{1,2})[.\-](\d{1,2})[.\-](\d{2,4})/)))
+    return new Date(fixYear(+m[3]),+m[2]-1,+m[1]);
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))){
+    const a=+m[1],b=+m[2],y=fixYear(+m[3]);
+    return a>12 ? new Date(y,b-1,a) : new Date(y,a-1,b);
   }
   const RU='янв фев мар апр май июн июл авг сен окт ноя дек'.split(' ');
-  if((m=s.toLowerCase().match(/^(\d{1,2})\s+([а-я]{3})[а-я.]*\s+(\d{4})/))){
+  if((m=s.toLowerCase().match(/^(\d{1,2})\s+([а-я]{3})[а-я.]*\s+(\d{2,4})/))){
     const mi=RU.indexOf(m[2]);
-    if(mi>=0) return new Date(+m[3],mi,+m[1]);
+    if(mi>=0) return new Date(fixYear(+m[3]),mi,+m[1]);
   }
   const d=new Date(s); return isNaN(d)?null:d;
 }
-/* 01.01.20xx — служебная заглушка «дата не задана» */
+/* 01.01 любого года — служебная заглушка «не задано» */
 function realDate(v){
   const d=parseDate(v);
   if(!d) return null;
   return (d.getMonth()===0 && d.getDate()===1) ? null : d;
 }
-const truthy = v => ['TRUE','ИСТИНА','1','ДА'].includes(String(v||'').trim().toUpperCase());
+const truthy   = v => ['TRUE','ИСТИНА','1','ДА'].includes(String(v||'').trim().toUpperCase());
 const midnight = d => new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const dmy = d => d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear() : '—';
 const dm  = d => d ? String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0') : '—';
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isWeekend = d => [0,6].includes(d.getDay());
+/* срок исполнения считаем в рабочих днях */
+function addWorkDays(d,extra){
+  const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  let left=Math.max(0,extra);
+  while(left>0){ x.setDate(x.getDate()+1); if(!isWeekend(x)) left--; }
+  return x;
+}
+function workDaysBetween(a,b){
+  let n=0, x=midnight(a), end=midnight(b);
+  while(x<=end){ if(!isWeekend(x))n++; x.setDate(x.getDate()+1); }
+  return n;
+}
 
 function findHeader(rows,probes){
   for(let i=0;i<Math.min(rows.length,15);i++){
@@ -426,7 +443,6 @@ function findHeader(rows,probes){
   }
   return -1;
 }
-/* Записи «Общего листа» занимают по две строки: паспорт сверху, статусы и флаги снизу */
 function parseMain(rows){
   const hi=findHeader(rows,['Наименование','Дивизион']);
   if(hi<0) throw new Error('В листе «'+SHEETS.main+'» не найдена строка заголовков');
@@ -440,9 +456,15 @@ function parseMain(rows){
     const bot = child ? next : [];
     const tasks=[];
     TASK_BLOCKS.forEach(t=>{
-      const person=(top[t.col]||'').trim(), date=realDate(top[t.col+1]);
-      const status=(bot[t.col]||'').trim(), active=truthy(bot[t.col+2]);
-      if(person||date||status||active) tasks.push({label:t.label,weight:t.weight,person,date,status,active});
+      const person=(top[t.col]||'').trim();
+      const start =realDate(top[t.col+1]);
+      const status=(bot[t.col]||'').trim();
+      const dur   =parseFloat(String(bot[t.col+1]||'').replace(',','.'))||0;
+      const active=truthy(bot[t.col+2]);
+      if(!(person||start||status||dur||active)) return;
+      const days=Math.max(1,Math.round(dur||t.defDur));
+      tasks.push({label:t.label,person,start,status,active,
+        dur:dur||0, days, end:start?addWorkDays(start,days-1):null});
     });
     out.push({num:parseFloat(top[C.num])||out.length+1, name,
       div:(top[C.div]||'—').trim(), city:(top[C.city]||'').trim(), contact:(top[C.contact]||'').trim(),
@@ -486,10 +508,7 @@ function parseSummary(rows){
   }
   return res;
 }
-
-/* Фото из папки Диска: сопоставление по имени файла */
-const normName = s => String(s).toLowerCase().replace(/\.[a-z0-9]+$/,'')
-  .replace(/[^a-zа-яё]/g,'');
+const normName = s => String(s).toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-zа-яё]/g,'');
 async function loadDriveAvatars(persons){
   if(!DRIVE.apiKey||!DRIVE.folder) return {};
   const q="'"+DRIVE.folder+"' in parents and mimeType contains 'image/' and trashed=false";
@@ -502,7 +521,7 @@ async function loadDriveAvatars(persons){
     const map={};
     persons.forEach(p=>{
       const n=normName(p);
-      const f=files.find(x=>normName(x.name)===n) || files.find(x=>normName(x.name).startsWith(n));
+      const f=files.find(x=>normName(x.name)===n)||files.find(x=>normName(x.name).startsWith(n));
       if(f) map[p]='https://drive.google.com/thumbnail?id='+f.id+'&sz=w400';
     });
     return map;
@@ -514,18 +533,13 @@ const S = {projects:[], ref:{}, oldSum:{}, days:[], roadMode:'assigned', workFil
 const charts = {};
 const today = midnight(new Date());
 
-/* ═══════════════════ ВСПОМОГАТЕЛЬНОЕ ═══════════════════ */
-function twoWeekWindow(from){
-  const d=midnight(from), dow=(d.getDay()+6)%7;
-  const start=new Date(d); start.setDate(d.getDate()-dow);
-  return Array.from({length:14},(_,i)=>{const x=new Date(start);x.setDate(start.getDate()+i);return x;});
-}
-const dayIdx = (d,days) => Math.round((midnight(d)-days[0])/86400000);
-const isWeekend = d => [0,6].includes(d.getDay());
-const initials = n => n.trim().slice(0,1).toUpperCase();
-function avatarHTML(name){
+const statusKind = s => /готов/i.test(s)?'done':/пауз/i.test(s)?'pause':/очеред/i.test(s)?'queue':'work';
+const activeTasks = p => p.tasks.filter(t=>t.person||t.active);
+function avatarHTML(name,size){
   const u=S.ref.avatars&&S.ref.avatars[name];
-  return '<div class="ava">'+(u?'<img src="'+esc(u)+'" alt="'+esc(name)+'" loading="lazy" onerror="this.replaceWith(document.createTextNode(\''+esc(initials(name))+'\'))">':esc(initials(name)))+'</div>';
+  const st=size?' style="width:'+size+'px;height:'+size+'px;flex:0 0 '+size+'px;font-size:'+Math.round(size*.42)+'px"':'';
+  const ini=esc(name.trim().slice(0,1).toUpperCase());
+  return '<div class="ava"'+st+'>'+(u?'<img src="'+esc(u)+'" alt="'+esc(name)+'" loading="lazy" onerror="this.parentNode.textContent=\''+ini+'\'">':ini)+'</div>';
 }
 function statusPill(s){
   const st=STATUS_STYLE[s]||['#eef3f9','#5a6a80'];
@@ -536,8 +550,6 @@ function dueClass(d){
   const diff=(midnight(d)-today)/86400000;
   return diff<0?'late':(diff<=3?'soon':'');
 }
-const activeTasks = p => p.tasks.filter(t=>t.person||t.active);
-const isDone = t => /готов/i.test(t.status||'');
 
 /* ═══════════════════ ДИАГРАММЫ ═══════════════════ */
 function donut(host,title,entries,total,onClick,extra){
@@ -546,13 +558,12 @@ function donut(host,title,entries,total,onClick,extra){
   card.className='chart-card'+(onClick?' clickable':'');
   card.innerHTML='<div class="cc-title">'+esc(title)+'</div>'+
     '<div class="cc-canvas"><canvas id="'+id+'" width="112" height="112"></canvas>'+
-    '<div class="cc-center">'+total+'</div></div>'+
-    (extra||'')+
+    '<div class="cc-center">'+total+'</div></div>'+(extra||'')+
     '<div class="cc-legend">'+entries.map(e=>
       '<div class="lg"><i style="background:'+e.color+'"></i>'+esc(e.label)+'<b>'+e.value+'</b></div>').join('')+'</div>';
   host.appendChild(card);
   if(onClick) card.onclick=onClick;
-  const data = entries.length?entries:[{label:'Нет данных',value:1,color:'#eef3f9'}];
+  const data=entries.length?entries:[{label:'Нет данных',value:1,color:'#eef3f9'}];
   charts[id]=new Chart(document.getElementById(id),{
     type:'doughnut',
     data:{labels:data.map(e=>e.label),datasets:[{data:data.map(e=>e.value),
@@ -567,37 +578,149 @@ function clearCharts(host){
   host.innerHTML='';
 }
 
-/* ═══════════════════ ВКЛАДКА: ДИВИЗИОНЫ ═══════════════════ */
+/* ═══════════════════ ДОРОЖНАЯ КАРТА ═══════════════════ */
+function twoWeekWindow(from){
+  const d=midnight(from), dow=(d.getDay()+6)%7;
+  const start=new Date(d); start.setDate(d.getDate()-dow);
+  return Array.from({length:14},(_,i)=>{const x=new Date(start);x.setDate(start.getDate()+i);return x;});
+}
+const dayIdx = (d,days) => Math.round((midnight(d)-days[0])/86400000);
+
+function buildBars(){
+  const days=S.days, byPerson={}, noDate=[], noPerson=[];
+  S.projects.forEach(p=>p.tasks.forEach(t=>{
+    if(!t.start){
+      if(t.person||t.active) noDate.push({project:p.name,num:p.num,label:t.label,person:t.person,status:t.status||p.status});
+      return;
+    }
+    if(!t.person){ noPerson.push({project:p.name,num:p.num,label:t.label,start:t.start,end:t.end}); return; }
+    let i0=dayIdx(t.start,days), i1=dayIdx(t.end||t.start,days);
+    if(i1<0||i0>13) return;
+    const bar={person:t.person,project:p.name,num:p.num,div:p.div,label:t.label,
+      status:t.status||p.status,kind:statusKind(t.status||p.status),days:t.days,
+      exact:t.dur>0,start:t.start,end:t.end,
+      clipL:i0<0,clipR:i1>13,i0:Math.max(0,i0),i1:Math.min(13,i1),
+      overdue:midnight(t.end||t.start)<today && !/готов/i.test(t.status||p.status)};
+    (byPerson[bar.person]=byPerson[bar.person]||[]).push(bar);
+  }));
+  Object.values(byPerson).forEach(list=>{
+    list.sort((a,b)=>a.i0-b.i0||b.i1-a.i1);
+    const lanes=[];
+    list.forEach(b=>{
+      let l=lanes.findIndex(e=>e<b.i0);
+      if(l<0){ l=lanes.length; lanes.push(-1); }
+      lanes[l]=b.i1; b.lane=l;
+    });
+  });
+  return {byPerson,noDate,noPerson};
+}
+function renderRoad(){
+  const days=S.days;
+  document.getElementById('road-range').textContent=
+    dmy(days[0])+' — '+dmy(days[13])+' · полоса = дата начала + срок исполнения в рабочих днях';
+  document.getElementById('road-legend').innerHTML=
+    TASK_BLOCKS.map(t=>'<span><i style="background:'+t.color+'"></i>'+t.label+'</span>').join('')+
+    '<span class="lg-sep"></span>'+
+    '<span><i class="sw-work"></i>в работе</span>'+
+    '<span><i class="sw-queue"></i>очередь</span>'+
+    '<span><i class="sw-done"></i>готова</span>'+
+    '<span><i class="sw-over"></i>срок прошёл</span>';
+
+  const wk=document.getElementById('road-weeks');
+  wk.innerHTML='<div class="rd-week">Текущая неделя</div><div class="rd-week">Следующая неделя</div>';
+  const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  document.getElementById('road-dates').innerHTML=days.map(d=>{
+    const cls='rd'+(isWeekend(d)?' we':'')+(+d===+today?' today':'');
+    return '<div class="'+cls+'">'+wd[(d.getDay()+6)%7]+'<b>'+d.getDate()+'</b></div>';
+  }).join('');
+
+  const {byPerson,noDate,noPerson}=buildBars();
+  const known=S.ref.persons||[];
+  const persons = S.roadMode==='all'
+    ? [...new Set([...known,...Object.keys(byPerson)])]
+    : known.filter(p=>byPerson[p]).concat(Object.keys(byPerson).filter(p=>!known.includes(p)));
+
+  const tIdx=dayIdx(today,days);
+  const rows=document.getElementById('road-rows');
+  if(!persons.length) rows.innerHTML='<div class="road-empty">В этом окне нет задач с назначенным исполнителем и датой начала</div>';
+  else rows.innerHTML=persons.map(name=>{
+    const list=byPerson[name]||[];
+    const lanes=list.length?Math.max(...list.map(b=>b.lane))+1:1;
+    const weekend=days.map((d,i)=>isWeekend(d)
+      ?'<div class="we-band" style="left:'+(i/14*100)+'%;width:'+(100/14)+'%"></div>':'').join('');
+    const tLine=(tIdx>=0&&tIdx<=13)?'<div class="today-line" style="left:'+((tIdx+0.5)/14*100)+'%"></div>':'';
+    const bars=list.map(b=>{
+      const span=b.i1-b.i0+1;
+      const tip=[b.label+' · '+b.days+' раб. дн'+(b.exact?'':' (норматив)'),
+                 b.project, b.div+' · '+(b.status||'без статуса'),
+                 dmy(b.start)+' → '+dmy(b.end)];
+      if(b.overdue) tip.push('⚠ срок прошёл');
+      return '<div class="bar k-'+b.kind+(b.overdue?' overdue':'')+(b.clipL?' clip-l':'')+(b.clipR?' clip-r':'')+'"'+
+        ' style="left:calc('+(b.i0/14*100)+'% + 2px);width:calc('+(span/14*100)+'% - 4px);'+
+        'top:'+(b.lane*26+4)+'px;background:'+taskColor(b.label)+'"'+
+        ' data-num="'+b.num+'" data-tip="'+esc(tip.join('||'))+'">'+
+        (b.kind==='done'?'✓ ':'')+esc(b.label)+' <small>'+esc(b.project)+'</small></div>';
+    }).join('');
+    const wdays=list.reduce((s,b)=>s+b.days,0);
+    const sub=list.length ? list.length+' задач · '+wdays+' раб. дн'
+                          : '<span class="p-free">нет задач в окне</span>';
+    return '<div class="road-row">'+
+      '<div class="road-person">'+avatarHTML(name)+
+        '<div><div class="p-name">'+esc(name)+'</div><div class="p-sub">'+sub+'</div></div></div>'+
+      '<div class="road-lanes" style="height:'+(lanes*26+8)+'px">'+weekend+tLine+bars+'</div></div>';
+  }).join('');
+
+  const all=Object.values(byPerson).flat();
+  document.getElementById('road-stats').innerHTML=
+    'Задач в окне: <b>'+all.length+'</b> · просрочено: <b style="color:#e5533d">'+
+    all.filter(b=>b.overdue).length+'</b> · параллельных дорожек: <b>'+
+    Math.max(1,...Object.values(byPerson).map(l=>Math.max(...l.map(b=>b.lane))+1))+'</b>';
+
+  const box=document.getElementById('attention');
+  const items=[
+    ...noDate.map(t=>'<div class="un-item warn" data-num="'+t.num+'"><b>'+esc(t.label)+'</b> <span>· '+
+      esc(t.project)+' · '+esc(t.person||'без исполнителя')+' · нет даты начала</span></div>'),
+    ...noPerson.filter(t=>dayIdx(t.end||t.start,days)>=0&&dayIdx(t.start,days)<=13)
+      .map(t=>'<div class="un-item" data-num="'+t.num+'"><b>'+esc(t.label)+'</b> <span>· '+
+      esc(t.project)+' · '+dm(t.start)+' · не назначен исполнитель</span></div>')
+  ];
+  if(items.length){
+    box.style.display='';
+    document.getElementById('att-grid').innerHTML=items.join('');
+    document.getElementById('att-title').textContent=
+      'Не попадает в план: '+items.length+' задач';
+  } else box.style.display='none';
+}
+
+/* ═══════════════════ ДИВИЗИОНЫ ═══════════════════ */
 function renderDiv(){
   const P=S.projects;
   const inWork=P.filter(p=>/работе/i.test(p.status)).length;
   const inQueue=P.filter(p=>/очеред/i.test(p.status)).length;
   const tasks=P.reduce((s,p)=>s+activeTasks(p).length,0);
-  const assigned=P.reduce((s,p)=>s+p.tasks.filter(t=>t.person).length,0);
+  const planned=P.reduce((s,p)=>s+p.tasks.filter(t=>t.person&&t.start).length,0);
   document.getElementById('d-total').textContent=P.length;
-  document.getElementById('d-total-sub').textContent=S.ref.divisions.length+' дивизионов';
+  document.getElementById('d-total-sub').textContent=(S.ref.divisions||[]).length+' дивизионов';
   document.getElementById('d-work').textContent=inWork;
   document.getElementById('d-work-pct').textContent=P.length?Math.round(inWork/P.length*100)+'% реестра':'';
   document.getElementById('d-queue').textContent=inQueue;
   document.getElementById('d-tasks').textContent=tasks;
-  document.getElementById('d-tasks-sub').textContent=assigned+' с исполнителем';
+  document.getElementById('d-tasks-sub').textContent=planned+' с датой начала';
 
   const host=document.getElementById('div-charts'); clearCharts(host);
-  const order=S.ref.divisions.length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
+  const order=(S.ref.divisions||[]).length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
   order.forEach(d=>{
-    const list=P.filter(p=>p.div===d);
-    const byType={};
+    const list=P.filter(p=>p.div===d), byType={};
     list.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
-    const entries=Object.entries(byType).sort((a,b)=>b[1]-a[1])
-      .map(([label,value])=>({label,value,color:typeColor(label)}));
-    donut(host,d,entries,list.length,list.length?()=>openDiv(d):null);
+    donut(host,d,Object.entries(byType).sort((a,b)=>b[1]-a[1])
+      .map(([label,value])=>({label,value,color:typeColor(label)})),
+      list.length,list.length?()=>openDiv(d):null);
   });
 }
 
-/* ═══════════════════ ВКЛАДКА: ТИПЫ ═══════════════════ */
+/* ═══════════════════ ТИПЫ ═══════════════════ */
 function renderType(){
-  const P=S.projects;
-  const byType={};
+  const P=S.projects, byType={};
   P.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
   const konc=byType['Концепт']||0;
   const oldTotal=Object.values(S.oldSum).reduce((s,v)=>s+(v['Всего']||0),0);
@@ -610,151 +733,51 @@ function renderType(){
   Object.values(S.oldSum).forEach(v=>Object.entries(v).forEach(([k,n])=>{
     if(k!=='Всего') oldByType[k]=(oldByType[k]||0)+n;
   }));
-
   const host=document.getElementById('type-charts'); clearCharts(host);
-  const order=(S.ref.types.length?S.ref.types:Object.keys(byType))
-    .filter(t=>byType[t]||oldByType[t]);
-  order.forEach(t=>{
-    const list=P.filter(p=>p.type===t);
-    const byDiv={};
-    list.forEach(p=>byDiv[p.div]=(byDiv[p.div]||0)+1);
-    const entries=Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
-      .map(([label,value])=>({label,value,color:divColor(label)}));
-    const prev=oldByType[t]||0;
-    const extra=prev?'<div class="delta zero" style="margin-top:6px;color:#9aa8b8">было '+prev+' в Q1–Q2</div>':'';
-    donut(host,t,entries,list.length,null,extra);
-  });
-}
-
-/* ═══════════════════ ВКЛАДКА: ДОРОЖНАЯ КАРТА ═══════════════════ */
-function buildBars(){
-  const days=S.days, bars=[], unassigned=[];
-  S.projects.forEach(p=>{
-    const dated=p.tasks.filter(t=>t.date).sort((a,b)=>a.date-b.date);
-    let prev=p.taken||p.got||null;
-    dated.forEach(t=>{
-      const start = (prev && prev<t.date) ? prev : t.date;
-      prev=t.date;
-      if(!t.person){
-        if(dayIdx(t.date,days)>=0 && dayIdx(t.date,days)<=13)
-          unassigned.push({project:p.name,label:t.label,date:t.date,div:p.div,num:p.num});
-        return;
-      }
-      let i0=dayIdx(start,days), i1=dayIdx(t.date,days);
-      if(i1<0||i0>13) return;
-      i0=Math.max(0,i0); i1=Math.min(13,i1);
-      bars.push({person:t.person,project:p.name,num:p.num,div:p.div,label:t.label,
-        status:t.status||p.status,active:t.active,date:t.date,i0,i1,done:isDone(t),
-        overdue:midnight(t.date)<today&&!isDone(t)});
+  ((S.ref.types||[]).length?S.ref.types:Object.keys(byType))
+    .filter(t=>byType[t]||oldByType[t]).forEach(t=>{
+      const list=P.filter(p=>p.type===t), byDiv={};
+      list.forEach(p=>byDiv[p.div]=(byDiv[p.div]||0)+1);
+      const prev=oldByType[t]||0;
+      donut(host,t,Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
+        .map(([label,value])=>({label,value,color:divColor(label)})),
+        list.length,null,
+        prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' в Q1–Q2</div>':'');
     });
-  });
-  const byPerson={};
-  bars.forEach(b=>(byPerson[b.person]=byPerson[b.person]||[]).push(b));
-  Object.values(byPerson).forEach(list=>{
-    list.sort((a,b)=>a.i0-b.i0||b.i1-a.i1);
-    const lanes=[];
-    list.forEach(b=>{
-      let l=lanes.findIndex(e=>e<b.i0);
-      if(l<0){ l=lanes.length; lanes.push(-1); }
-      lanes[l]=b.i1; b.lane=l;
-    });
-  });
-  return {byPerson,unassigned};
-}
-function renderRoad(){
-  const days=S.days;
-  document.getElementById('road-range').textContent=
-    dmy(days[0])+' — '+dmy(days[13])+' · текущая и следующая неделя';
-
-  document.getElementById('road-legend').innerHTML=TASK_BLOCKS.map(t=>
-    '<span><i style="background:'+t.color+'"></i>'+t.label+' · '+t.weight+' чел-дн</span>').join('')+
-    '<span style="margin-left:auto"><i style="background:#fff;outline:2px solid #e5533d;outline-offset:-2px"></i>срок прошёл</span>';
-
-  const wk=document.getElementById('road-weeks');
-  wk.innerHTML='<div class="rd-week">Текущая неделя</div><div class="rd-week">Следующая неделя</div>';
-  const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  document.getElementById('road-dates').innerHTML=days.map(d=>{
-    const cls='rd'+(isWeekend(d)?' we':'')+(+d===+today?' today':'');
-    return '<div class="'+cls+'">'+wd[(d.getDay()+6)%7]+'<b>'+d.getDate()+'</b></div>';
-  }).join('');
-
-  const {byPerson,unassigned}=buildBars();
-  const persons = S.roadMode==='all'
-    ? [...new Set([...(S.ref.persons||[]),...Object.keys(byPerson)])]
-    : (S.ref.persons||[]).filter(p=>byPerson[p]).concat(Object.keys(byPerson).filter(p=>!(S.ref.persons||[]).includes(p)));
-
-  const rows=document.getElementById('road-rows');
-  if(!persons.length){ rows.innerHTML='<div class="road-empty">В этом окне задач с исполнителями нет</div>'; }
-  else rows.innerHTML=persons.map(name=>{
-    const list=byPerson[name]||[];
-    const lanes=list.length?Math.max(...list.map(b=>b.lane))+1:1;
-    const h=lanes*26+8;
-    const weekend=days.map((d,i)=>isWeekend(d)
-      ?'<div class="we-band" style="left:'+(i/14*100)+'%;width:'+(100/14)+'%"></div>':'').join('');
-    const tIdx=dayIdx(today,days);
-    const tLine=(tIdx>=0&&tIdx<=13)?'<div class="today-line" style="left:'+((tIdx+0.5)/14*100)+'%"></div>':'';
-    const bars=list.map(b=>{
-      const span=b.i1-b.i0+1;
-      return '<div class="bar'+(b.overdue?' overdue':'')+((b.active&&!b.done)?'':' pale')+'"'+
-        ' style="left:calc('+(b.i0/14*100)+'% + 2px);width:calc('+(span/14*100)+'% - 4px);'+
-        'top:'+(b.lane*26+4)+'px;background:'+taskColor(b.label)+'"'+
-        ' data-num="'+b.num+'" data-tip="'+esc(b.label+' · '+dmy(b.date)+'||'+b.project+'||'+b.div+' · '+(b.status||'без статуса')+(b.overdue?'||⚠ срок прошёл':''))+'">'+
-        (b.done?'✓ ':'')+esc(b.label)+' <small>'+esc(b.project)+'</small></div>';
-    }).join('');
-    const days_=list.reduce((s,b)=>s+(TASK_BLOCKS.find(t=>t.label===b.label)||{weight:0}).weight,0);
-    const sub=list.length?list.length+' задач · '+(+days_.toFixed(1))+' чел-дн'
-                        :'<span class="p-free">свободен</span>';
-    return '<div class="road-row">'+
-      '<div class="road-person">'+avatarHTML(name)+
-        '<div><div class="p-name">'+esc(name)+'</div><div class="p-sub">'+sub+'</div></div></div>'+
-      '<div class="road-lanes" style="height:'+h+'px">'+weekend+tLine+bars+'</div></div>';
-  }).join('');
-
-  const totalBars=Object.values(byPerson).reduce((s,l)=>s+l.length,0);
-  const overdue=Object.values(byPerson).flat().filter(b=>b.overdue).length;
-  document.getElementById('road-stats').innerHTML=
-    'Задач в окне: <b>'+totalBars+'</b> · просрочено: <b style="color:#e5533d">'+overdue+
-    '</b> · без исполнителя: <b>'+unassigned.length+'</b>';
-
-  const un=document.getElementById('unassigned');
-  if(unassigned.length){
-    un.style.display='';
-    document.getElementById('un-grid').innerHTML=unassigned
-      .sort((a,b)=>a.date-b.date)
-      .map(u=>'<div class="un-item" data-num="'+u.num+'"><b>'+esc(u.label)+'</b> <span>· '+
-        esc(u.project)+' · '+dm(u.date)+'</span></div>').join('');
-  } else un.style.display='none';
 }
 
-/* ═══════════════════ ВКЛАДКА: НЕДЕЛЯ ═══════════════════ */
+/* ═══════════════════ НЕДЕЛЯ ═══════════════════ */
 function renderWeek(){
-  const week=S.days.slice(0,7);
-  document.getElementById('week-range').textContent=dmy(week[0])+' — '+dmy(week[6]);
+  const week=S.days.slice(0,7), ws=week[0], we=week[6];
+  document.getElementById('week-range').textContent=dmy(ws)+' — '+dmy(we);
   const inWeek=[];
   S.projects.forEach(p=>p.tasks.forEach(t=>{
-    if(!t.date) return;
-    const i=dayIdx(t.date,S.days);
-    if(i>=0&&i<=6) inWeek.push({...t,project:p.name,div:p.div,num:p.num,pstatus:p.status});
+    if(!t.start||!t.end) return;
+    if(midnight(t.end)<ws||midnight(t.start)>we) return;
+    const a=midnight(t.start)<ws?ws:midnight(t.start);
+    const b=midnight(t.end) >we?we:midnight(t.end);
+    inWeek.push({...t,project:p.name,div:p.div,num:p.num,load:workDaysBetween(a,b)});
   }));
 
   const cap=(S.ref.persons||[]).length*WORK_DAYS_PER_WEEK||1;
-  const load=inWeek.filter(t=>t.person||t.active).reduce((s,t)=>s+t.weight,0);
+  const load=inWeek.filter(t=>t.person).reduce((s,t)=>s+t.load,0);
   const pct=Math.round(load/cap*100);
-  document.getElementById('w-load').innerHTML=(+load.toFixed(1))+'<small> / '+cap+' чел-дн</small>';
+  document.getElementById('w-load').innerHTML=load+'<small> / '+cap+' раб. дн</small>';
   const fill=document.getElementById('w-fill');
   fill.style.width=Math.min(pct,100)+'%';
   fill.style.background=pct>100?'#e5533d':pct>80?'#f0a030':'#2aa87a';
   document.getElementById('w-note').innerHTML='Загрузка <b>'+pct+'%</b>. Ёмкость: '+
-    (S.ref.persons||[]).length+' чел × '+WORK_DAYS_PER_WEEK+' дн. Нормативы трудоёмкости заданы в коде — блок TASK_BLOCKS.';
+    (S.ref.persons||[]).length+' чел × '+WORK_DAYS_PER_WEEK+' дн. Считается по фактическим срокам исполнения, '+
+    'обрезанным границами недели.';
 
   const byPerson={};
-  inWeek.forEach(t=>{ if(t.person) byPerson[t.person]=(byPerson[t.person]||0)+t.weight; });
-  const maxP=Math.max(1,...Object.values(byPerson));
-  document.getElementById('w-persons').innerHTML=(S.ref.persons||Object.keys(byPerson))
+  inWeek.forEach(t=>{ if(t.person) byPerson[t.person]=(byPerson[t.person]||0)+t.load; });
+  const maxP=Math.max(1,...Object.values(byPerson),WORK_DAYS_PER_WEEK);
+  document.getElementById('w-persons').innerHTML=((S.ref.persons||[]).length?S.ref.persons:Object.keys(byPerson))
     .map(n=>{ const v=byPerson[n]||0;
-      return '<div class="mini">'+avatarHTML(n).replace('class="ava"','class="ava" style="width:22px;height:22px;flex:0 0 22px;font-size:10px"')+
-        '<span style="width:66px">'+esc(n)+'</span><span class="mbar"><i style="width:'+(v/maxP*100)+
-        '%;background:'+(v>WORK_DAYS_PER_WEEK?'#e5533d':'var(--cyan-d)')+'"></i></span><b>'+(+v.toFixed(1))+'</b></div>';
+      return '<div class="mini">'+avatarHTML(n,22)+'<span style="width:66px">'+esc(n)+
+        '</span><span class="mbar"><i style="width:'+(v/maxP*100)+'%;background:'+
+        (v>WORK_DAYS_PER_WEEK?'#e5533d':'var(--cyan-d)')+'"></i></span><b>'+v+'</b></div>';
     }).join('')||'<div class="load-note">Нет задач</div>';
 
   const byTask={};
@@ -767,7 +790,7 @@ function renderWeek(){
 
   const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   document.getElementById('w-days').innerHTML=week.map((d,i)=>{
-    const items=inWeek.filter(t=>+midnight(t.date)===+d);
+    const items=inWeek.filter(t=>midnight(t.start)<=d&&midnight(t.end)>=d);
     return '<div class="day-col'+(isWeekend(d)?' we':'')+'">'+
       '<div class="dc-h'+(+d===+today?' today':'')+'">'+wd[i]+' '+dm(d)+'</div><div class="dc-b">'+
       (items.map(t=>'<div class="dc-item" data-num="'+t.num+'" style="background:'+taskColor(t.label)+
@@ -777,22 +800,25 @@ function renderWeek(){
   }).join('');
 
   const all=[];
-  S.projects.forEach(p=>p.tasks.forEach(t=>{ if(t.date&&!isDone(t)) all.push({...t,project:p.name,div:p.div,num:p.num}); }));
-  all.sort((a,b)=>a.date-b.date);
+  S.projects.forEach(p=>p.tasks.forEach(t=>{
+    if(t.end&&statusKind(t.status||p.status)!=='done') all.push({...t,project:p.name,div:p.div,num:p.num});
+  }));
+  all.sort((a,b)=>a.end-b.end);
   document.getElementById('w-dead').innerHTML=all.slice(0,12).map(t=>
     '<tr class="prow" data-num="'+t.num+'"><td class="pname">'+esc(t.project)+'</td>'+
     '<td><span class="dot" style="background:'+divColor(t.div)+'"></span>'+esc(t.div)+'</td>'+
     '<td><span class="tsk" style="background:'+taskColor(t.label)+'">'+esc(t.label)+'</span></td>'+
     '<td>'+esc(t.person||'—')+'</td>'+
-    '<td class="due '+dueClass(t.date)+'">'+dmy(t.date)+'</td></tr>').join('')
-    ||'<tr><td colspan="5" style="color:#c5cfdc">Задач с датами нет</td></tr>';
+    '<td class="due '+dueClass(t.end)+'">'+dmy(t.end)+'</td></tr>').join('')
+    ||'<tr><td colspan="5" style="color:#c5cfdc">Задач со сроками нет</td></tr>';
 }
 
-/* ═══════════════════ ВКЛАДКА: ПРОЕКТЫ ═══════════════════ */
+/* ═══════════════════ ПРОЕКТЫ ═══════════════════ */
 function renderWork(){
   const st={};
   S.projects.forEach(p=>st[p.status]=(st[p.status]||0)+1);
-  const order=(S.ref.statuses||[]).filter(s=>st[s]).concat(Object.keys(st).filter(s=>!(S.ref.statuses||[]).includes(s)));
+  const order=(S.ref.statuses||[]).filter(s=>st[s])
+    .concat(Object.keys(st).filter(s=>!(S.ref.statuses||[]).includes(s)));
   document.getElementById('work-filters').innerHTML=
     order.map(s=>'<button class="chip'+(S.workFilter===s?' on':'')+'" data-f="'+esc(s)+'">'+esc(s)+' '+st[s]+'</button>').join('')+
     '<button class="chip'+(S.workFilter==='все'?' on':'')+'" data-f="все">Все '+S.projects.length+'</button>';
@@ -801,13 +827,13 @@ function renderWork(){
 function drawWork(){
   const list=S.workFilter==='все'?S.projects:S.projects.filter(p=>p.status===S.workFilter);
   document.getElementById('work-tbody').innerHTML=list.map(p=>{
-    const tasks=p.tasks.length?p.tasks.map(t=>'<span class="tsk'+(t.person||t.active?'':' off')+
-      '" style="background:'+taskColor(t.label)+'" title="'+esc(t.label+(t.person?' — '+t.person:'')+(t.date?' · '+dmy(t.date):''))+'">'+
+    const tasks=p.tasks.length?p.tasks.map(t=>'<span class="tsk'+(t.start?'':' off')+
+      '" style="background:'+taskColor(t.label)+'" title="'+
+      esc(t.label+(t.person?' — '+t.person:'')+(t.start?' · '+dm(t.start)+'→'+dm(t.end)+', '+t.days+' дн':' · дата не задана'))+'">'+
       esc(t.label)+(t.person?' · '+esc(t.person):'')+'</span>').join('')
       :'<span style="color:#c5cfdc;font-size:11px">состав не заполнен</span>';
     return '<tr class="prow" data-num="'+p.num+'">'+
-      '<td class="num">'+p.num+'</td>'+
-      '<td class="pname">'+esc(p.name)+'</td>'+
+      '<td class="num">'+p.num+'</td><td class="pname">'+esc(p.name)+'</td>'+
       '<td><span class="dot" style="background:'+divColor(p.div)+'"></span>'+esc(p.div)+'</td>'+
       '<td>'+esc(p.city&&p.city!=='Нет'?p.city:'—')+'</td>'+
       '<td><span class="pill" style="background:'+typeColor(p.type)+'22;color:'+typeColor(p.type)+'">'+esc(p.type)+'</span></td>'+
@@ -820,34 +846,35 @@ function drawWork(){
 /* ═══════════════════ МОДАЛЬНОЕ ОКНО ═══════════════════ */
 function openDiv(name){
   const list=S.projects.filter(p=>p.div===name);
-  const tasks=list.reduce((s,p)=>s+p.tasks.length,0);
   const persons=new Set(); list.forEach(p=>p.tasks.forEach(t=>t.person&&persons.add(t.person)));
   show('Дивизион '+name, list.length+' запросов в реестре Q3',
-    [['Запросов',list.length],['Задач',tasks],['Исполнителей',persons.size],
-     ['В работе',list.filter(p=>/работе/i.test(p.status)).length]],
+    [['Запросов',list.length],['Задач',list.reduce((s,p)=>s+p.tasks.length,0)],
+     ['Исполнителей',persons.size],['В работе',list.filter(p=>/работе/i.test(p.status)).length]],
     '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
     '<th>Город</th><th>Тип</th><th>Срок</th><th>Статус</th></tr></thead><tbody>'+
-    list.map(p=>'<tr class="prow" data-num="'+p.num+'"><td class="num">'+p.num+'</td><td class="pname">'+esc(p.name)+
-      '</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.type)+'</td><td class="due '+dueClass(p.due)+'">'+
-      dmy(p.due)+'</td><td>'+statusPill(p.status)+'</td></tr>').join('')+'</tbody></table></div>');
+    list.map(p=>'<tr class="prow" data-num="'+p.num+'"><td class="num">'+p.num+'</td><td class="pname">'+
+      esc(p.name)+'</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.type)+'</td><td class="due '+
+      dueClass(p.due)+'">'+dmy(p.due)+'</td><td>'+statusPill(p.status)+'</td></tr>').join('')+
+    '</tbody></table></div>');
 }
 function openProject(num){
   const p=S.projects.find(x=>x.num===num);
   if(!p) return;
-  const done=p.tasks.filter(isDone).length;
+  const done=p.tasks.filter(t=>statusKind(t.status)==='done').length;
   show(p.name, p.div+(p.city&&p.city!=='Нет'?' · '+p.city:'')+' · '+p.type,
     [['Задач',p.tasks.length],['Готово',done],
-     ['Трудоёмкость',(+p.tasks.filter(t=>t.person||t.active).reduce((s,t)=>s+t.weight,0).toFixed(1))+' чел-дн'],
+     ['Трудоёмкость',p.tasks.filter(t=>t.person).reduce((s,t)=>s+t.days,0)+' раб. дн'],
      ['Срок',dmy(p.due)]],
     '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>Вид работ</th><th>Исполнитель</th>'+
-    '<th>Дата</th><th>Статус</th><th>В объёме</th></tr></thead><tbody>'+
+    '<th>Начало</th><th>Срок</th><th>Окончание</th><th>Статус</th></tr></thead><tbody>'+
     (p.tasks.length?p.tasks.map(t=>'<tr><td><span class="tsk" style="background:'+taskColor(t.label)+'">'+
-      esc(t.label)+'</span></td><td>'+esc(t.person||'—')+'</td><td class="due '+dueClass(t.date)+'">'+
-      dmy(t.date)+'</td><td>'+(t.status?statusPill(t.status):'—')+'</td><td>'+(t.active?'✔':'—')+'</td></tr>').join('')
-      :'<tr><td colspan="5" style="color:#c5cfdc">Состав работ не заполнен</td></tr>')+
-    '</tbody></table></div>'+
-    '<div class="load-note" style="margin-top:10px">Поступило: '+dmy(p.got)+' · взят в работу: '+dmy(p.taken)+
-    (p.contact?' · инициатор: '+esc(p.contact):'')+'</div>');
+      esc(t.label)+'</span></td><td>'+esc(t.person||'—')+'</td><td class="due">'+dmy(t.start)+
+      '</td><td>'+(t.dur?t.dur+' дн':'<span style="color:#c5cfdc">'+t.days+' дн норматив</span>')+
+      '</td><td class="due '+dueClass(t.end)+'">'+dmy(t.end)+'</td><td>'+
+      (t.status?statusPill(t.status):'—')+'</td></tr>').join('')
+      :'<tr><td colspan="6" style="color:#c5cfdc">Состав работ не заполнен</td></tr>')+
+    '</tbody></table></div><div class="load-note" style="margin-top:10px">Поступило: '+dmy(p.got)+
+    ' · взят в работу: '+dmy(p.taken)+(p.contact?' · инициатор: '+esc(p.contact):'')+'</div>');
 }
 function show(title,sub,stats,body){
   document.getElementById('m-title').textContent=title;
@@ -875,23 +902,18 @@ document.addEventListener('mousemove',e=>{
   tip.style.top=Math.max(8,e.clientY-r.height-12)+'px';
 });
 document.addEventListener('mouseout',e=>{ if(e.target.closest('[data-tip]')) tip.classList.remove('on'); });
-
 document.addEventListener('click',e=>{
-  const tab=e.target.closest('.tab');
-  if(tab){ showTab(tab.dataset.tab); return; }
+  const tab=e.target.closest('.tab');            if(tab){ showTab(tab.dataset.tab); return; }
   const rm=e.target.closest('[data-road]');
   if(rm){ S.roadMode=rm.dataset.road;
     document.querySelectorAll('[data-road]').forEach(b=>b.classList.toggle('on',b===rm));
     renderRoad(); return; }
-  const f=e.target.closest('[data-f]');
-  if(f){ S.workFilter=f.dataset.f; renderWork(); return; }
+  const f=e.target.closest('[data-f]');          if(f){ S.workFilter=f.dataset.f; renderWork(); return; }
   if(e.target.closest('#m-close')||e.target.id==='ov'){ closeModal(); return; }
-  const row=e.target.closest('[data-num]');
-  if(row){ openProject(parseFloat(row.dataset.num)); }
+  const row=e.target.closest('[data-num]');      if(row) openProject(parseFloat(row.dataset.num));
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 document.getElementById('btn-refresh').onclick=()=>load(true);
-
 function showTab(t){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('show',p.id==='tab-'+t));
@@ -901,20 +923,16 @@ function showTab(t){
 /* ═══════════════════ ЗАГРУЗКА ═══════════════════ */
 async function grab(name,required){
   const r=await fetch(base(name),{cache:'no-store'});
-  if(!r.ok){
-    if(required) throw new Error('Лист «'+name+'»: HTTP '+r.status);
-    return [];
-  }
+  if(!r.ok){ if(required) throw new Error('Лист «'+name+'»: HTTP '+r.status); return []; }
   return parseCSV(await r.text());
 }
 async function load(silent){
   const L=document.getElementById('loading'), E=document.getElementById('errbox');
-  if(!silent){ L.style.display='flex'; }
+  if(!silent) L.style.display='flex';
   E.style.display='none';
   try{
     const [main,ref,old]=await Promise.all([
-      grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)
-    ]);
+      grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)]);
     S.ref=parseRef(ref);
     const fromDrive=await loadDriveAvatars(S.ref.persons||[]);
     Object.entries(fromDrive).forEach(([k,v])=>{ if(!S.ref.avatars[k]) S.ref.avatars[k]=v; });
@@ -928,13 +946,10 @@ async function load(silent){
     renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork();
     if(!document.querySelector('.page.show')) showTab('road');
   }catch(err){
-    L.style.display='none';
-    E.style.display='flex';
-    document.getElementById('errtxt').innerHTML=
-      '<b>Не удалось прочитать таблицу.</b><br>'+esc(err.message)+
-      '<br><br>Проверьте, что у таблицы открыт доступ по ссылке для чтения '+
-      '(<code>Настройки доступа → Все, у кого есть ссылка → Читатель</code>) '+
-      'и что названия листов совпадают: <code>'+Object.values(SHEETS).join('</code>, <code>')+'</code>.';
+    L.style.display='none'; E.style.display='flex';
+    document.getElementById('errtxt').innerHTML='<b>Не удалось прочитать таблицу.</b><br>'+esc(err.message)+
+      '<br><br>Проверьте доступ по ссылке для чтения и названия листов: <code>'+
+      Object.values(SHEETS).join('</code>, <code>')+'</code>.';
   }
 }
 load();
