@@ -357,7 +357,7 @@ const base = n => 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+
    исполнения, числа приходят пустыми и срок подменяется нормативом.
    Чтобы читать ячейки как они выглядят в таблице, вставьте сюда ссылку
    веб-приложения Apps Script (код — в файле apps-script.gs). */
-const SCRIPT_URL = '';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDUHxbsADNOohvIBO543QOBx2ONpBEFnXMqwRpKo7Z92It2JTKNsFjHJEQ-rX5h2Nx/exec';
 
 /* Виды работ. В каждом блоке три колонки:
    верхняя строка — исполнитель | дата начала работы
@@ -580,7 +580,7 @@ async function loadDriveAvatars(persons){
 }
 
 /* ═══════════════════ СОСТОЯНИЕ ═══════════════════ */
-const S = {projects:[], ref:{}, oldSum:{}, days:[], roadMode:'assigned', workFilter:'все'};
+const S = {projects:[], ref:{}, oldSum:{}, days:[], roadMode:'assigned', workFilter:'все', src:'', srcNote:''};
 const charts = {};
 const today = midnight(new Date());
 
@@ -993,20 +993,26 @@ function checkDurations(){
     if(!(t.person&&t.start)) return;
     if(t.dur>0) got++; else miss++;
   }));
-  if(!miss){ box.style.display='none'; return; }
+  const head=S.srcNote?'<div style="margin-bottom:6px;color:#a03a2a"><b>'+esc(S.srcNote)+'</b></div>':'';
+  if(!miss && !head){ box.style.display='none'; return; }
   box.style.display='';
-  box.innerHTML = (got===0 && !SCRIPT_URL)
+  box.innerHTML = head + ((!miss) ? '' : (got===0 && S.src!=='script')
     ? '<b>Сроки исполнения не читаются — на карте стоят нормативы.</b> '+
       'Дата начала и срок лежат в одном столбце, а gviz присваивает тип данных всему столбцу сразу: '+
       'дат больше, поэтому числа приходят пустыми. Лечится источником данных — см. <code>SCRIPT_URL</code> '+
       'и файл <code>apps-script.gs</code>. Задач на нормативе: <b>'+miss+'</b>.'
     : 'Срок исполнения не заполнен у <b>'+miss+'</b> задач из '+(miss+got)+
-      ' — для них взят норматив, такие полосы помечены знаком ≈.';
+      ' — для них взят норматив, такие полосы помечены знаком ≈.');
 }
 async function grabViaScript(){
   const r=await fetch(SCRIPT_URL,{cache:'no-store',redirect:'follow'});
-  if(!r.ok) throw new Error('Веб-приложение Apps Script: HTTP '+r.status);
-  const j=await r.json();
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const txt=await r.text();
+  if(/^\s*</.test(txt))
+    throw new Error('скрипт вернул HTML вместо JSON — в развёртывании нужен доступ «Все», а не «Все, у кого есть аккаунт Google»');
+  let j;
+  try{ j=JSON.parse(txt); }
+  catch(e){ throw new Error('ответ скрипта не является JSON'); }
   const norm=o=>(o||[]).map(row=>(row||[]).map(c=>String(c==null?'':c).replace(/\s+/g,' ').trim()));
   const pick=n=>norm(j[n]||j[n.replace(/\s+/g,'')]||[]);
   const main=pick(SHEETS.main);
@@ -1023,10 +1029,20 @@ async function load(silent){
   if(!silent) L.style.display='flex';
   E.style.display='none';
   try{
-    let main,ref,old;
-    if(SCRIPT_URL){ ({main,ref,old}=await grabViaScript()); }
-    else { [main,ref,old]=await Promise.all([
-      grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)]); }
+    let main=null,ref=[],old=[];
+    S.srcNote='';
+    if(SCRIPT_URL){
+      try{ ({main,ref,old}=await grabViaScript()); S.src='script'; }
+      catch(err){
+        S.srcNote='Источник Apps Script недоступен: '+err.message+'. Читаю через gviz, сроки будут нормативными.';
+        main=null;
+      }
+    }
+    if(!main){
+      [main,ref,old]=await Promise.all([
+        grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)]);
+      S.src='gviz';
+    }
     S.ref=parseRef(ref);
     HOLIDAYS.clear();
     (S.ref.holidays||[]).forEach(d=>HOLIDAYS.add(dkey(d)));
