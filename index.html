@@ -277,6 +277,19 @@ th.sortable.act{color:var(--cyan-d)}
   .page{padding:16px 12px 40px}
   .road-head{top:0}
 }
+.src-fix{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:6px}
+.src-fix input{flex:1;min-width:260px;border:1px solid #e0d3a8;border-radius:7px;padding:5px 10px;font-size:11.5px;font-family:inherit;outline:none}
+.src-fix input:focus{border-color:var(--cyan)}
+.src-fix span{font-size:11px;color:#9a8a60}
+table.mtx{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.mtx th{background:#f4f8fc;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--mute);padding:6px 7px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+table.mtx th:first-child{text-align:left}
+table.mtx td{padding:5px 7px;text-align:center;border-bottom:1px solid #f2f6fa;font-variant-numeric:tabular-nums}
+table.mtx td.mh{text-align:left;font-weight:700;white-space:nowrap}
+table.mtx td.z{color:#d3dbe5}
+table.mtx td.tot,table.mtx th.tot{font-weight:800;background:#f8fbfe}
+table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;background:#f4f8fc}
 @media print{
   @page{size:A4 landscape;margin:10mm}
   .topbar,.notice,#loading,#errbox,.road-toolbar,.tip,.overlay,.lightbox,.ph-empty,.ph-x{display:none!important}
@@ -322,6 +335,7 @@ th.sortable.act{color:var(--cyan-d)}
   <div class="road-toolbar">
     <button class="chip on" data-road="assigned">С исполнителем</button>
     <button class="chip" data-road="all">Все, включая свободных</button>
+    <button class="chip" id="road-hide">Скрыть завершённые</button>
     <span style="flex:1"></span>
     <span class="load-note" id="road-stats"></span>
   </div>
@@ -722,6 +736,7 @@ async function loadDriveAvatars(persons){
 
 /* ═══════════════════ СОСТОЯНИЕ ═══════════════════ */
 const S = {projects:[], ref:{}, oldSum:{}, blocks:[], sumDone:null, sumCum:null, sumPers:null,
+  loaded:false, cacheTs:null, scriptUrl:'', hideDone:false,
   days:[], weekOffset:0, roadMode:'assigned', workFilter:'все', src:'', srcNote:'',
   aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),q:''},
   aSort:{key:'num',dir:1}, aGroup:'div'};
@@ -784,6 +799,7 @@ const dayIdx = (d,days) => Math.round((midnight(d)-days[0])/86400000);
 function buildBars(){
   const days=S.days, byPerson={}, noDate=[], noPerson=[];
   S.projects.forEach(p=>p.tasks.forEach(t=>{
+    if(S.hideDone && statusKind(t.status||p.status)==='done') return;
     if(!t.start){
       if(t.person||t.active) noDate.push({project:p.name,num:p.num,label:t.label,person:t.person,status:t.status||p.status});
       return;
@@ -977,10 +993,39 @@ function renderSummary(hostId,mode){
     '<div class="sum-grid">'+
       '<div class="card"><div class="card-h">'+esc(S.sumDone?S.sumDone.title:'Закрыто за период')+
         '<b class="card-n">'+sum(cur)+'</b></div>'+barRows(cur||{},null,colorFn)+'</div>'+
-      '<div class="card"><div class="card-h">'+esc(S.sumCum?S.sumCum.title:'Накопительный итог')+
-        '<b class="card-n">'+sum(cum)+'</b></div>'+barRows(cum||{},prev,colorFn)+
-        '<div class="load-note" style="margin-top:8px">Дельта — прирост к прошлому периоду (лист «Старый свод»).</div></div>'+
-    '</div>';
+      '<div class="card"><div class="card-h">Прирост к прошлому периоду'+
+        '<b class="card-n">'+(sum(cum)-sum(prev))+'</b></div>'+barRows(cum||{},prev,colorFn)+
+        '<div class="load-note" style="margin-top:8px">Дельта — разница с листом «Старый свод».</div></div>'+
+    '</div>'+
+    matrixCard(S.sumCum,mode==='type')+
+    matrixCard(S.sumDone,mode==='type');
+}
+/* Матрица «дивизион × тип» как в таблице; transpose — строки становятся типами */
+function matrixCard(blk,transpose){
+  if(!blk||!Object.keys(blk.rows).length) return '';
+  const divs=Object.keys(blk.rows);
+  const types=blk.cols.filter(c=>c!=='Всего');
+  const head=transpose?'Тип задачи':'Дивизион';
+  const rows=transpose?types:divs, cols=transpose?divs:types;
+  const val=(r,c)=>transpose?(blk.rows[c]||{})[r]||0:(blk.rows[r]||{})[c]||0;
+  const rowSum=r=>transpose?cols.reduce((s,c)=>s+val(r,c),0):(blk.rows[r]||{})['Всего']||0;
+  const colSum=c=>transpose?(blk.rows[c]||{})['Всего']||0:(blk.total||{})[c]||0;
+  const grand=rows.reduce((s,r)=>s+rowSum(r),0);
+  const max=Math.max(1,...rows.flatMap(r=>cols.map(c=>val(r,c))));
+  const cellColor=transpose?typeColor:divColor;
+  return '<div class="card" style="margin-top:12px;overflow-x:auto">'+
+    '<div class="card-h">'+esc(blk.title)+'<b class="card-n">'+grand+'</b></div>'+
+    '<table class="mtx"><thead><tr><th>'+head+'</th>'+
+      cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'<th class="tot">Всего</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td class="mh"><span class="dot" style="background:'+cellColor(r)+'"></span>'+esc(r)+'</td>'+
+      cols.map(c=>{const v=val(r,c);
+        return '<td'+(v?' style="background:rgba(0,194,224,'+(0.06+0.34*v/max).toFixed(3)+')"':' class="z"')+'>'+
+          (v||'·')+'</td>';}).join('')+
+      '<td class="tot">'+rowSum(r)+'</td></tr>').join('')+
+    '<tr class="mtot"><td class="mh">ИТОГО</td>'+
+      cols.map(c=>'<td>'+(colSum(c)||'·')+'</td>').join('')+
+      '<td class="tot">'+grand+'</td></tr>'+
+    '</tbody></table></div>';
 }
 
 /* ═══════════════════ ФОТО ЗАКРЫТЫХ ПРОЕКТОВ (IndexedDB) ═══════════════════ */
@@ -988,8 +1033,12 @@ const PHOTO={cache:{},db:null,MAX:1200,Q:0.78};
 function pdb(){
   if(PHOTO.db) return PHOTO.db;
   PHOTO.db=new Promise((res,rej)=>{
-    const q=indexedDB.open('oipWeeklyPhotos',1);
-    q.onupgradeneeded=()=>q.result.createObjectStore('photos');
+    const q=indexedDB.open('oipWeeklyPhotos',2);
+    q.onupgradeneeded=e=>{
+      const db=q.result;
+      if(!db.objectStoreNames.contains('photos')) db.createObjectStore('photos');
+      if(!db.objectStoreNames.contains('cache'))  db.createObjectStore('cache');
+    };
     q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error);
   });
   return PHOTO.db;
@@ -999,6 +1048,15 @@ const pTx=(mode,fn)=>pdb().then(db=>new Promise((res,rej)=>{
   const out=fn(st,res); t.oncomplete=()=>res(out); t.onerror=()=>rej(t.error);
 }));
 const pSet=(k,v)=>pTx('readwrite',st=>st.put(v,k));
+/* ── кэш выгрузки и пользовательские настройки ── */
+const cacheSet=(k,v)=>pdb().then(db=>new Promise((res,rej)=>{
+  const t=db.transaction('cache','readwrite'); t.objectStore('cache').put(v,k);
+  t.oncomplete=()=>res(); t.onerror=()=>rej(t.error);
+}));
+const cacheGet=k=>pdb().then(db=>new Promise((res,rej)=>{
+  const r=db.transaction('cache','readonly').objectStore('cache').get(k);
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+}));
 const pDel=k    =>pTx('readwrite',st=>st.delete(k));
 const pAll=()   =>pdb().then(db=>new Promise((res,rej)=>{
   const st=db.transaction('photos','readonly').objectStore('photos'), out={};
@@ -1083,12 +1141,17 @@ function weekWindow(offset){
 }
 /* Неделю закрытия берём из колонки «Начало недели» (раздел «Продвижение»).
    Если она пуста — падаем на окончание последней задачи проекта. */
-const closeDate = p => p.weekStart || p.finish || null;
-const closedIn=(from,to)=>S.projects.filter(p=>{
-  if(!p.closed) return false;
-  const d=closeDate(p);
-  return d && midnight(d)>=from && midnight(d)<=to;
-});
+/* Как только колонка «Начало недели» заполнена хотя бы у одного проекта,
+   она становится единственным источником: расчётные догадки больше не добавляются. */
+const useWeekCol = () => S.projects.some(p=>p.closed && p.weekStart);
+const closedIn=(from,to)=>{
+  const strict=useWeekCol();
+  return S.projects.filter(p=>{
+    if(!p.closed) return false;
+    const d = strict ? p.weekStart : p.finish;
+    return d && midnight(d)>=from && midnight(d)<=to;
+  });
+};
 function kpiCard(label,value,sub,delta,tone){
   const d=(delta===undefined||delta===null)?'' :
     '<span class="kpi-d '+(delta>0?'up':delta<0?'down':'zero')+'">'+(delta>0?'+':'')+delta+'</span>';
@@ -1175,13 +1238,16 @@ function renderWeek(){
   }).join('');
 
   document.getElementById('w-done-count').textContent=done.length?'· '+done.length:'';
-  const byCol=done.filter(p=>p.weekStart).length;
   const wsrc=document.getElementById('w-src');
-  if(wsrc) wsrc.textContent = done.length
-    ? (byCol===done.length ? 'Неделя закрытия взята из колонки «Начало недели».'
-      : byCol===0 ? 'Колонка «Начало недели» пуста — неделя рассчитана по последней задаче проекта.'
-      : 'Из колонки «Начало недели»: '+byCol+' из '+done.length+', остальные рассчитаны по последней задаче.')
-    : '';
+  if(wsrc){
+    const strict=useWeekCol();
+    const orphan=S.projects.filter(p=>p.closed&&!p.weekStart).length;
+    wsrc.innerHTML = strict
+      ? 'Неделя закрытия берётся из колонки «Начало недели».'+
+        (orphan?' <b style="color:#b06a10">Без заполненной колонки: '+orphan+
+          ' закрытых проектов — они не попадают ни в одну неделю.</b>':'')
+      : 'Колонка «Начало недели» пока пуста — неделя рассчитана по последней задаче проекта.';
+  }
   document.getElementById('w-done').innerHTML=done.length?done.map(p=>
     '<div class="done-card">'+photoZone(p)+
       '<div class="dc-body">'+
@@ -1191,7 +1257,7 @@ function renderWeek(){
         '<div class="dc-tags"><span class="pill" style="background:'+typeColor(p.type)+'22;color:'+
           typeColor(p.type)+'">'+esc(p.type)+'</span>'+
           '<span class="pill" style="background:#e8f5e9;color:#1b5e20">закрыт '+dm(p.finish||p.weekStart)+'</span>'+
-          (p.weekStart?'':'<span class="pill" title="Колонка «Начало недели» не заполнена — неделя определена по последней задаче" style="background:#fff8e1;color:#8a6a1a">≈ неделя</span>')+
+          (p.weekStart?'':'<span class="pill" title="Неделя определена расчётом по последней задаче" style="background:#fff8e1;color:#8a6a1a">≈ неделя</span>')+
           '</div>'+
         (p.persons.length?'<div class="dc-team">'+p.persons.map(n=>avatarHTML(n,20)).join('')+
           '<span>'+esc(p.persons.join(', '))+'</span></div>':'')+
@@ -1438,6 +1504,15 @@ document.addEventListener('click',e=>{
   }
   if(e.target.closest('#a-csv')){ exportCSV(); return; }
   if(e.target.closest('#w-export')){ exportReport(); return; }
+  if(e.target.closest('#src-save')){
+    const v=(document.getElementById('src-url').value||'').trim();
+    S.scriptUrl=v; cacheSet('scriptUrl',v).catch(()=>{}); load(true); return;
+  }
+  if(e.target.closest('#src-clear')){
+    S.scriptUrl=''; cacheSet('scriptUrl','').catch(()=>{}); load(true); return;
+  }
+  const hd=e.target.closest('#road-hide');
+  if(hd){ S.hideDone=!S.hideDone; hd.classList.toggle('on',S.hideDone); renderRoad(); return; }
   const gr=e.target.closest('[data-group]');
   if(gr){ S.aGroup=gr.dataset.group;
     document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('on',b===gr));
@@ -1472,7 +1547,13 @@ function checkDurations(){
     if(!(t.person&&t.start)) return;
     if(t.dur>0) got++; else miss++;
   }));
-  const head=S.srcNote?'<div style="margin-bottom:6px;color:#a03a2a"><b>'+esc(S.srcNote)+'</b></div>':'';
+  const head=S.srcNote
+    ? '<div style="margin-bottom:6px;color:#a03a2a"><b>'+esc(S.srcNote)+'</b></div>'+
+      '<div class="src-fix"><input id="src-url" placeholder="https://script.google.com/macros/s/.../exec" value="'+
+      esc(S.scriptUrl||'')+'"><button class="chip sm" id="src-save">Подключить</button>'+
+      (S.scriptUrl?'<button class="chip sm clear" id="src-clear">Сбросить</button>':'')+
+      '<span>Новая ссылка веб-приложения сохранится в этом браузере.</span></div>'
+    : '';
   if(!miss && !head){ box.style.display='none'; return; }
   box.style.display='';
   box.innerHTML = head + ((!miss) ? '' : (got===0 && S.src!=='script')
@@ -1483,8 +1564,8 @@ function checkDurations(){
     : 'Срок исполнения не заполнен у <b>'+miss+'</b> задач из '+(miss+got)+
       ' — для них взят норматив, такие полосы помечены знаком ≈.');
 }
-async function grabViaScript(){
-  const r=await fetch(SCRIPT_URL,{cache:'no-store',redirect:'follow'});
+async function grabViaScript(url){
+  const r=await fetch(url,{cache:'no-store',redirect:'follow'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   const txt=await r.text();
   if(/^\s*</.test(txt))
@@ -1504,48 +1585,69 @@ async function grab(name,required){
   if(!r.ok){ if(required) throw new Error('Лист «'+name+'»: HTTP '+r.status); return []; }
   return parseCSV(await r.text());
 }
+function applyData(d){
+  S.ref=parseRef(d.ref||[]);
+  HOLIDAYS.clear();
+  (S.ref.holidays||[]).forEach(x=>HOLIDAYS.add(dkey(x)));
+  S.oldSum=parseSummary(d.old||[]);
+  S.blocks=parseBlocks(d.sum||[]);
+  const wk=parseBlocks(d.week||[]).find(b=>b.kind==='div');
+  S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн/i.test(b.title)) || null;
+  S.sumCum  = S.blocks.find(b=>b.kind==='div'&&/накопительн/i.test(b.title)) || null;
+  S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
+  S.projects=parseMain(d.main||[]);
+  S.days=twoWeekWindow(new Date());
+  if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
+  S.loaded=true;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('ts').innerHTML = S.cacheTs
+    ? '<span style="color:#f0a030">кэш ' + new Date(S.cacheTs).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</span>'
+    : new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  checkDurations();
+  renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork(); renderAnalytics();
+  if(!document.querySelector('.page.show')) showTab('road');
+}
+async function fetchAll(){
+  let main=null,ref=[],old=[],sum=[],week=[];
+  S.srcNote='';
+  const url=S.scriptUrl||SCRIPT_URL;
+  if(url){
+    try{ ({main,ref,old,sum,week}=await grabViaScript(url)); S.src='script'; }
+    catch(err){ S.srcNote='Источник Apps Script недоступен: '+err.message+'.'; main=null; }
+  }
+  if(!main){
+    [main,ref,old,sum,week]=await Promise.all([
+      grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false),
+      grab(SHEETS.sum,false), grab('Сводная неделя',false)]);
+    S.src='gviz';
+    if(S.srcNote) S.srcNote+=' Читаю через gviz — сроки будут нормативными.';
+  }
+  return {main,ref,old,sum,week};
+}
 async function load(silent){
   const L=document.getElementById('loading'), E=document.getElementById('errbox');
-  if(!silent) L.style.display='flex';
+  if(!silent && !S.loaded) L.style.display='flex';
   E.style.display='none';
+  /* сначала отрисовываем последнюю сохранённую выгрузку, потом идём в сеть */
+  if(!S.loaded){
+    try{
+      S.scriptUrl=await cacheGet('scriptUrl')||'';
+      const c=await cacheGet('data');
+      if(c&&c.main&&c.main.length){ S.cacheTs=c.ts; applyData(c); }
+    }catch(e){}
+  }
   try{
-    let main=null,ref=[],old=[],sum=[],week=[];
-    S.srcNote='';
-    if(SCRIPT_URL){
-      try{ ({main,ref,old,sum,week}=await grabViaScript()); S.src='script'; }
-      catch(err){
-        S.srcNote='Источник Apps Script недоступен: '+err.message+'. Читаю через gviz, сроки будут нормативными.';
-        main=null;
-      }
-    }
-    if(!main){
-      [main,ref,old,sum,week]=await Promise.all([
-        grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false),
-        grab(SHEETS.sum,false), grab('Сводная неделя',false)]);
-      S.src='gviz';
-    }
-    S.ref=parseRef(ref);
-    HOLIDAYS.clear();
-    (S.ref.holidays||[]).forEach(d=>HOLIDAYS.add(dkey(d)));
-    const fromDrive=await loadDriveAvatars(S.ref.persons||[]);
-    Object.entries(fromDrive).forEach(([k,v])=>{ if(!S.ref.avatars[k]) S.ref.avatars[k]=v; });
-    S.oldSum=parseSummary(old);
-    S.blocks=parseBlocks(sum);
-    const wk=parseBlocks(week).find(b=>b.kind==='div');
-    S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн/i.test(b.title)) || null;
-    S.sumCum  = S.blocks.find(b=>b.kind==='div'&&/накопительн/i.test(b.title)) || null;
-    S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
-    S.projects=parseMain(main);
-    S.days=twoWeekWindow(new Date());
-    if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
-    L.style.display='none';
-    document.getElementById('ts').textContent=new Date().toLocaleString('ru-RU',
-      {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    checkDurations();
-    renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork(); renderAnalytics();
+    const fresh=await fetchAll();
+    S.cacheTs=null;
+    applyData(fresh);
+    cacheSet('data',{...fresh,ts:Date.now()}).catch(()=>{});
     photoInit();
-    if(!document.querySelector('.page.show')) showTab('road');
   }catch(err){
+    if(S.loaded){                       // кэш уже показан — не гасим экран
+      S.srcNote=(S.srcNote||'')+' Обновление не удалось: '+err.message+'. Показаны сохранённые данные.';
+      checkDurations();
+      return;
+    }
     L.style.display='none'; E.style.display='flex';
     document.getElementById('errtxt').innerHTML='<b>Не удалось прочитать таблицу.</b><br>'+esc(err.message)+
       '<br><br>Проверьте доступ по ссылке для чтения и названия листов: <code>'+
