@@ -188,6 +188,81 @@ tr.prow:hover td{background:#f8fbfe}
 .mstat .v{font-size:21px;font-weight:900}
 .mstat .l{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mute)}
 
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:12px;padding:12px 15px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.kpi-l{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mute)}
+.kpi-v{font-size:31px;font-weight:900;line-height:1.15;display:flex;align-items:baseline;gap:8px}
+.kpi-v.good{color:#2aa87a}.kpi-v.warn{color:#e08a20}.kpi-v.bad{color:#e5533d}
+.kpi-s{font-size:11px;color:var(--faint)}
+.kpi-d{font-size:12px;font-weight:800;padding:1px 7px;border-radius:10px}
+.kpi-d.up{background:#e6f6ee;color:#2aa87a}.kpi-d.down{background:#fdeceb;color:#e5533d}
+.kpi-d.zero{background:#eef3f9;color:#9aa8b8}
+
+/* ── горизонтальные полосы ── */
+.brow{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:12px}
+.brow .bl{width:126px;display:flex;align-items:center;gap:6px;flex:0 0 126px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brow .bl i{width:9px;height:9px;border-radius:2px;flex:0 0 9px}
+.brow .bbar{flex:1;height:9px;background:#eef3f9;border-radius:5px;overflow:hidden;position:relative}
+.brow .bbar i{display:block;height:100%;border-radius:5px}
+.brow .bbar u{position:absolute;left:0;top:0;height:100%;background:rgba(26,42,74,.55);border-radius:5px}
+.brow b{width:32px;text-align:right;font-variant-numeric:tabular-nums}
+.brow .bsub{font-size:10.5px;color:var(--faint);width:96px;text-align:right}
+.brow-t{border-top:1px solid var(--line);margin-top:4px;padding-top:7px;font-weight:800}
+.card-n{float:right;color:var(--ink);font-size:15px}
+
+.week-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.anal-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px}
+
+/* ── выполненные работы ── */
+.done-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:20px 0 10px;flex-wrap:wrap}
+.done-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:12px}
+.done-card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07);display:flex;flex-direction:column}
+.ph-zone{height:168px;display:grid;gap:2px;background:#dde8f4}
+.pz-1{grid-template-columns:1fr}
+.pz-2{grid-template-columns:1fr 1fr}
+.pz-3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.pz-3 .ph:nth-child(1){grid-row:1/3}
+.ph{position:relative;overflow:hidden;cursor:pointer}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph-empty{background:#eef4fa;border:2px dashed #b8d0e8;display:flex;align-items:center;justify-content:center;
+  color:#8fa8c4;font-size:11px;font-weight:700;text-align:center;line-height:1.5;transition:.15s}
+.ph-empty:hover{border-color:var(--cyan);background:#e2f5fb;color:var(--cyan-d)}
+.ph-x{position:absolute;top:5px;right:5px;width:21px;height:21px;border:none;border-radius:6px;
+  background:rgba(16,26,46,.6);color:#fff;font-size:11px;cursor:pointer;opacity:0;transition:.15s}
+.ph:hover .ph-x{opacity:1}
+.dc-body{padding:11px 13px 13px}
+.dc-name{font-size:13px;font-weight:800;line-height:1.3;cursor:pointer}
+.dc-name:hover{color:var(--cyan-d)}
+.dc-meta{font-size:11.5px;color:var(--mute);margin:3px 0 7px}
+.dc-tags{display:flex;gap:5px;flex-wrap:wrap}
+.dc-team{display:flex;align-items:center;gap:5px;margin-top:9px;font-size:11px;color:var(--mute)}
+.dc-done{background:#e8f5e9!important;color:#1b5e20!important;font-weight:700}
+.dc-none{font-size:10.5px;color:#c5cfdc;text-align:center;padding:6px 0}
+.lightbox{display:none;position:fixed;inset:0;background:rgba(10,18,32,.9);z-index:900;align-items:center;justify-content:center;padding:26px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* ── фильтры аналитики ── */
+.filters{background:#fff;border-radius:12px;padding:11px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:14px}
+.frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 0}
+.flab{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mute);width:82px;flex:0 0 82px}
+.chip.sm{padding:3px 10px;font-size:11.5px}
+.chip.clear{color:#e5533d;border-color:#f0cfc9}
+.fsearch{flex:1;min-width:210px;border:1px solid var(--line);border-radius:20px;padding:5px 13px;font-size:12px;font-family:inherit;outline:none}
+.fsearch:focus{border-color:var(--cyan)}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{color:var(--cyan-d)}
+th.sortable.act{color:var(--cyan-d)}
+.arw{font-size:8px;margin-left:3px}
+
+@media(max-width:1080px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .week-grid2,.anal-grid,.sum-grid{grid-template-columns:1fr}
+}
+
 @media(max-width:1080px){
   .charts-grid{grid-template-columns:repeat(3,1fr)}
   .week-grid{grid-template-columns:1fr}
@@ -202,6 +277,17 @@ tr.prow:hover td{background:#f8fbfe}
   .page{padding:16px 12px 40px}
   .road-head{top:0}
 }
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  .topbar,.notice,#loading,#errbox,.road-toolbar,.tip,.overlay,.lightbox,.ph-empty,.ph-x{display:none!important}
+  body{background:#fff}
+  .page{display:none!important}
+  .page.print-me{display:block!important;padding:0}
+  .card,.kpi,.done-card,.tbl-wrap{box-shadow:none!important;border:1px solid #dde8f4}
+  .done-grid{grid-template-columns:repeat(3,1fr)}
+  .done-card,.card,.kpi{break-inside:avoid}
+  .week-grid2{grid-template-columns:repeat(3,1fr)}
+}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:.01ms!important}}
 </style>
 </head>
@@ -215,6 +301,7 @@ tr.prow:hover td{background:#f8fbfe}
     <button class="tab" data-tab="type">По типам</button>
     <button class="tab" data-tab="week">Неделя</button>
     <button class="tab" data-tab="work">Проекты</button>
+    <button class="tab" data-tab="anal">Аналитика</button>
   </div>
   <div class="topbar-right"><b id="ts">—</b>обновлено</div>
   <button class="refresh" id="btn-refresh" title="Обновить">⟳</button>
@@ -268,6 +355,7 @@ tr.prow:hover td{background:#f8fbfe}
     </div>
     <div class="charts-grid" id="div-charts"></div>
   </div>
+  <div id="div-summary"></div>
 </div>
 
 <!-- ═══ ПО ТИПАМ ═══ -->
@@ -282,43 +370,35 @@ tr.prow:hover td{background:#f8fbfe}
     </div>
     <div class="charts-grid" id="type-charts"></div>
   </div>
+  <div id="type-summary"></div>
 </div>
 
 <!-- ═══ НЕДЕЛЯ ═══ -->
 <div id="tab-week" class="page">
-  <div class="page-title">Отчёт <span>за неделю</span></div>
+  <div class="page-title">Недельный отчёт <span>ОИП</span></div>
   <div class="page-subtitle" id="week-range">—</div>
-  <div class="week-grid">
-    <div>
-      <div class="card">
-        <div class="card-h">Загрузка отдела</div>
-        <div class="load-num" id="w-load">—<small> / <span id="w-cap"></span> чел-дн</small></div>
-        <div class="load-bar"><div class="load-fill" id="w-fill" style="width:0"></div></div>
-        <div class="load-note" id="w-note"></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="card-h">Нагрузка по исполнителям</div>
-        <div id="w-persons"></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="card-h">Задачи по видам</div>
-        <div id="w-tasks"></div>
-      </div>
-    </div>
-    <div>
-      <div class="card" style="padding:15px 17px 8px">
-        <div class="card-h">Календарь текущей недели</div>
-        <div class="day-cols" id="w-days"></div>
-      </div>
-      <div class="card" style="margin-top:14px">
-        <div class="card-h">Ближайшие дедлайны</div>
-        <div class="tbl-wrap" style="box-shadow:none">
-          <table><thead><tr><th>Проект</th><th>Дивизион</th><th>Задача</th><th>Исполнитель</th><th>Срок</th></tr></thead>
-          <tbody id="w-dead"></tbody></table>
-        </div>
-      </div>
-    </div>
+  <div class="road-toolbar">
+    <button class="chip" data-wk="-1">◀ Прошлая</button>
+    <button class="chip on" data-wk="0">Текущая</button>
+    <button class="chip" data-wk="1">Следующая ▶</button>
+    <span style="flex:1"></span>
+    <button class="chip" id="w-export">⭳ Выгрузить отчёт</button>
   </div>
+  <div class="kpi-row" id="w-kpi"></div>
+  <div class="week-grid2">
+    <div class="card"><div class="card-h">Закрыто по дивизионам</div><div id="w-bydiv"></div></div>
+    <div class="card"><div class="card-h">Закрыто по типам</div><div id="w-bytype"></div></div>
+    <div class="card"><div class="card-h">Загрузка исполнителей</div><div id="w-persons"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px;padding-bottom:8px">
+    <div class="card-h">Календарь недели</div>
+    <div class="day-cols" id="w-days"></div>
+  </div>
+  <div class="done-head">
+    <div class="card-h" style="margin:0">Выполненные работы <span id="w-done-count" style="color:var(--cyan-d)"></span></div>
+    <div class="load-note">Нажмите на пустую рамку, чтобы приложить изображение. Файлы хранятся в этом браузере.<br><span id="w-src"></span></div>
+  </div>
+  <div class="done-grid" id="w-done"></div>
 </div>
 
 <!-- ═══ ПРОЕКТЫ ═══ -->
@@ -336,6 +416,38 @@ tr.prow:hover td{background:#f8fbfe}
     </table>
   </div>
 </div>
+
+<!-- ═══ АНАЛИТИКА ═══ -->
+<div id="tab-anal" class="page">
+  <div class="page-title">Аналитика <span>реестра</span></div>
+  <div class="page-subtitle">Фильтры действуют на все блоки вкладки сразу</div>
+  <div class="filters" id="a-filters"></div>
+  <div class="kpi-row" id="a-kpi"></div>
+  <div class="anal-grid">
+    <div class="card">
+      <div class="card-h">Разрез</div>
+      <div class="road-toolbar" style="margin-bottom:10px">
+        <button class="chip sm on" data-group="div">Дивизион</button>
+        <button class="chip sm" data-group="type">Тип</button>
+        <button class="chip sm" data-group="person">Исполнитель</button>
+        <button class="chip sm" data-group="city">Город</button>
+        <button class="chip sm" data-group="month">Месяц</button>
+      </div>
+      <div id="a-group-body"></div>
+      <div class="load-note" style="margin-top:8px">Тёмная часть полосы — доля закрытых.</div>
+    </div>
+    <div class="card"><div class="card-h">Статусы</div><div id="a-status"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-h">Проекты <span id="a-count" style="color:var(--cyan-d)"></span>
+      <button class="chip sm" id="a-csv" style="float:right">Выгрузить CSV</button></div>
+    <div class="tbl-wrap" style="box-shadow:none">
+      <table><thead id="a-thead"></thead><tbody id="a-tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img alt=""></div>
 
 <div class="overlay" id="ov"><div class="modal">
   <div class="modal-head"><div><h2 id="m-title">—</h2><div class="ms" id="m-sub"></div></div>
@@ -383,10 +495,10 @@ const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9
 const SKIP_NAMES = ['шаблон'];
 
 const DIV_COLORS  = {'Центр':'#1e3a6b','Астана':'#2f5fa0','Алматы':'#4a80c0','Юг':'#f0a030',
-  'Запад':'#f5d8a8','РДС':'#9ab8cc','In-house':'#4fb3d9','Другое':'#d0d8e8'};
+  'Запад':'#f5d8a8','РДС':'#9ab8cc','In-house':'#4fb3d9','Другое':'#d0d8e8','Доп. задачи':'#8e6bc9'};
 const TYPE_COLORS = {'Концепт':'#1e3a6b','Посадка':'#f0a030','Генплан':'#c99a2e','Планировки':'#4a80c0',
   'Разработка фасада':'#6b7fa8','Визуализация':'#4fb3d9','Видео':'#8e6bc9',
-  'Эскизный проект':'#c8dff0','Другое':'#9aa8b8'};
+  'Эскизный проект':'#c8dff0','Другое':'#9aa8b8','Доп. задача':'#a88fd0'};
 const STATUS_STYLE = {'Очередь':['#fff8e1','#e65100'],'В работе':['#e0f7fa','#006064'],
   'На паузе':['#f3e5f5','#6a1b9a'],'Готова':['#e8f5e9','#1b5e20'],'Готово':['#e8f5e9','#1b5e20']};
 const blockOf   = l => TASK_BLOCKS.find(t=>t.label===l)||{defDur:1,color:'#9aa8b8'};
@@ -507,7 +619,14 @@ function parseMain(rows){
         dur:dur||0, days,
         end: start ? (calendar?addCalDays(from,days-1):addWorkDays(from,days-1)) : null});
     });
-    out.push({num:parseFloat(top[C.num])||out.length+1, name,
+    const dated=tasks.filter(t=>t.end);
+    const finish=dated.length?new Date(Math.max(...dated.map(t=>+t.end))):null;
+    const begin =dated.length?new Date(Math.min(...dated.map(t=>+t.start))):null;
+    out.push({num:parseFloat(top[C.num])||out.length+1, name, finish, begin,
+      weekStart:realDate(top[C.week]),
+      closed:/готов/i.test((top[C.status]||'')),
+      persons:[...new Set(tasks.map(t=>t.person).filter(Boolean))],
+      load:tasks.filter(t=>t.person).reduce((s,t)=>s+t.days,0),
       div:(top[C.div]||'—').trim(), city:(top[C.city]||'').trim(), contact:(top[C.contact]||'').trim(),
       got:realDate(top[C.got]), due:realDate(top[C.due]), taken:realDate(top[C.taken]),
       type:(top[C.type]||'—').trim(), status:(top[C.status]||'—').trim(), tasks});
@@ -559,6 +678,28 @@ function parseSummary(rows){
   }
   return res;
 }
+/* «Сводный лист» состоит из нескольких таблиц подряд; режем по строкам-заголовкам */
+function parseBlocks(rows){
+  const out=[];
+  for(let i=0;i<rows.length;i++){
+    const hdr=rows[i]||[], first=(hdr[0]||'').trim();
+    if(first!=='Дивизион'&&first!=='Исполнитель') continue;
+    const title=(((rows[i-1]||[])[0])||'').trim();
+    const cols=hdr.map(x=>(x||'').trim());
+    const body={}; let total=null;
+    for(let j=i+1;j<rows.length;j++){
+      const name=(((rows[j]||[])[0])||'').trim();
+      if(!name) break;
+      const rec={};
+      cols.forEach((c,k)=>{ if(c&&k>0) rec[c]=parseFloat(String((rows[j]||[])[k]||'').replace(',','.'))||0; });
+      if(/^ИТОГО/i.test(name)){ total=rec; break; }
+      body[name]=rec;
+    }
+    out.push({title,kind:first==='Дивизион'?'div':'person',
+      cols:cols.filter((c,k)=>c&&k>0),rows:body,total:total||{}});
+  }
+  return out;
+}
 const normName = s => String(s).toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-zа-яё]/g,'');
 async function loadDriveAvatars(persons){
   if(!DRIVE.apiKey||!DRIVE.folder) return {};
@@ -580,7 +721,10 @@ async function loadDriveAvatars(persons){
 }
 
 /* ═══════════════════ СОСТОЯНИЕ ═══════════════════ */
-const S = {projects:[], ref:{}, oldSum:{}, days:[], roadMode:'assigned', workFilter:'все', src:'', srcNote:''};
+const S = {projects:[], ref:{}, oldSum:{}, blocks:[], sumDone:null, sumCum:null, sumPers:null,
+  days:[], weekOffset:0, roadMode:'assigned', workFilter:'все', src:'', srcNote:'',
+  aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),q:''},
+  aSort:{key:'num',dir:1}, aGroup:'div'};
 const charts = {};
 const today = midnight(new Date());
 
@@ -777,6 +921,7 @@ function renderDiv(){
       .map(([label,value])=>({label,value,color:typeColor(label)})),
       list.length,list.length?()=>openDiv(d):null);
   });
+  renderSummary('div-summary','div');
 }
 
 /* ═══════════════════ ТИПЫ ═══════════════════ */
@@ -803,78 +948,380 @@ function renderType(){
       donut(host,t,Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
         .map(([label,value])=>({label,value,color:divColor(label)})),
         list.length,null,
-        prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' в Q1–Q2</div>':'');
+        prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' ранее</div>':'');
     });
+  renderSummary('type-summary','type');
+}
+
+/* Закрытые запросы из «Сводного листа»: за период и накопительно */
+function renderSummary(hostId,mode){
+  const host=document.getElementById(hostId);
+  if(!host) return;
+  if(!S.sumDone&&!S.sumCum){ host.innerHTML=''; return; }
+  const colorFn=mode==='div'?divColor:typeColor;
+  const pull=(blk)=>{
+    if(!blk) return null;
+    const o={};
+    if(mode==='div') Object.entries(blk.rows).forEach(([k,v])=>o[k]=v['Всего']||0);
+    else Object.entries(blk.total||{}).forEach(([k,v])=>{ if(k!=='Всего') o[k]=v; });
+    return o;
+  };
+  const cur=pull(S.sumDone), cum=pull(S.sumCum);
+  const prev={};
+  Object.entries(S.oldSum||{}).forEach(([d,rec])=>{
+    if(mode==='div') prev[d]=rec['Всего']||0;
+    else Object.entries(rec).forEach(([t,v])=>{ if(t!=='Всего') prev[t]=(prev[t]||0)+v; });
+  });
+  const sum=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
+  host.innerHTML=
+    '<div class="sum-grid">'+
+      '<div class="card"><div class="card-h">'+esc(S.sumDone?S.sumDone.title:'Закрыто за период')+
+        '<b class="card-n">'+sum(cur)+'</b></div>'+barRows(cur||{},null,colorFn)+'</div>'+
+      '<div class="card"><div class="card-h">'+esc(S.sumCum?S.sumCum.title:'Накопительный итог')+
+        '<b class="card-n">'+sum(cum)+'</b></div>'+barRows(cum||{},prev,colorFn)+
+        '<div class="load-note" style="margin-top:8px">Дельта — прирост к прошлому периоду (лист «Старый свод»).</div></div>'+
+    '</div>';
+}
+
+/* ═══════════════════ ФОТО ЗАКРЫТЫХ ПРОЕКТОВ (IndexedDB) ═══════════════════ */
+const PHOTO={cache:{},db:null,MAX:1200,Q:0.78};
+function pdb(){
+  if(PHOTO.db) return PHOTO.db;
+  PHOTO.db=new Promise((res,rej)=>{
+    const q=indexedDB.open('oipWeeklyPhotos',1);
+    q.onupgradeneeded=()=>q.result.createObjectStore('photos');
+    q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error);
+  });
+  return PHOTO.db;
+}
+const pTx=(mode,fn)=>pdb().then(db=>new Promise((res,rej)=>{
+  const t=db.transaction('photos',mode), st=t.objectStore('photos');
+  const out=fn(st,res); t.oncomplete=()=>res(out); t.onerror=()=>rej(t.error);
+}));
+const pSet=(k,v)=>pTx('readwrite',st=>st.put(v,k));
+const pDel=k    =>pTx('readwrite',st=>st.delete(k));
+const pAll=()   =>pdb().then(db=>new Promise((res,rej)=>{
+  const st=db.transaction('photos','readonly').objectStore('photos'), out={};
+  const c=st.openCursor();
+  c.onsuccess=e=>{const cur=e.target.result; if(cur){out[cur.key]=cur.value;cur.continue();} else res(out);};
+  c.onerror=()=>rej(c.error);
+}));
+async function photoInit(){
+  if(!('indexedDB' in window)) return;
+  try{
+    const all=await pAll();
+    const live=new Set(S.projects.map(p=>String(p.num)));
+    for(const k of Object.keys(all)){
+      if(live.size && !live.has(k.split('_')[0])){ await pDel(k); delete all[k]; }
+    }
+    Object.assign(PHOTO.cache,all);
+    renderWeek();
+  }catch(e){ console.warn('фото:',e); }
+}
+const photoKey=(num,slot)=>num+'_'+slot;
+const photoOf=(p,slot)=>{
+  const k=photoKey(p.num,slot);
+  if(PHOTO.cache[k]!==undefined) return PHOTO.cache[k];
+  return (p.photos&&p.photos[slot])||'';
+};
+let _target=null;
+const _input=(()=>{
+  const el=document.createElement('input');
+  el.type='file'; el.accept='image/*'; el.style.display='none';
+  el.addEventListener('change',()=>{
+    const f=el.files[0]; if(!f||!_target) return;
+    const {num,slot}=_target; el.value='';
+    const fr=new FileReader();
+    fr.onload=ev=>{
+      const img=new Image();
+      img.onload=async()=>{
+        let w=img.width,h=img.height;
+        if(w>PHOTO.MAX||h>PHOTO.MAX){
+          if(w>h){h=Math.round(h*PHOTO.MAX/w);w=PHOTO.MAX;} else {w=Math.round(w*PHOTO.MAX/h);h=PHOTO.MAX;}
+        }
+        const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        const b64=cv.toDataURL('image/jpeg',PHOTO.Q);
+        PHOTO.cache[photoKey(num,slot)]=b64;
+        renderWeek();
+        try{ await pSet(photoKey(num,slot),b64); }
+        catch(e){ alert('Не удалось сохранить изображение — вероятно, закончилось место в хранилище браузера.'); }
+      };
+      img.src=ev.target.result;
+    };
+    fr.readAsDataURL(f);
+  });
+  document.body.appendChild(el); return el;
+})();
+function addPhoto(num,slot){ _target={num,slot}; _input.click(); }
+function dropPhoto(num,slot){
+  PHOTO.cache[photoKey(num,slot)]='';
+  renderWeek();
+  pDel(photoKey(num,slot)).catch(()=>{});
+}
+function openLightbox(src){
+  const lb=document.getElementById('lightbox');
+  lb.querySelector('img').src=src; lb.classList.add('open');
+}
+function photoZone(p){
+  const shots=[0,1,2].map(s=>({slot:s,src:photoOf(p,s)})).filter(x=>x.src);
+  const free=[0,1,2].find(s=>!photoOf(p,s));
+  const cell=x=>'<div class="ph" data-shot="'+esc(x.src)+'">'+
+    '<img src="'+esc(x.src)+'" alt="">'+
+    '<button class="ph-x" data-drop="'+p.num+'_'+x.slot+'" title="Удалить">✕</button></div>';
+  const empty=slot=>'<div class="ph ph-empty" data-add="'+p.num+'_'+slot+'">'+
+    '<span>＋<br>фото</span></div>';
+  const cells=shots.map(cell).concat(free!==undefined?[empty(free)]:[]);
+  return '<div class="ph-zone pz-'+cells.length+'">'+cells.join('')+'</div>';
 }
 
 /* ═══════════════════ НЕДЕЛЯ ═══════════════════ */
+function weekWindow(offset){
+  const d=midnight(new Date()); const dow=(d.getDay()+6)%7;
+  const mon=new Date(d); mon.setDate(d.getDate()-dow+7*(offset||0));
+  return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return x;});
+}
+/* Неделю закрытия берём из колонки «Начало недели» (раздел «Продвижение»).
+   Если она пуста — падаем на окончание последней задачи проекта. */
+const closeDate = p => p.weekStart || p.finish || null;
+const closedIn=(from,to)=>S.projects.filter(p=>{
+  if(!p.closed) return false;
+  const d=closeDate(p);
+  return d && midnight(d)>=from && midnight(d)<=to;
+});
+function kpiCard(label,value,sub,delta,tone){
+  const d=(delta===undefined||delta===null)?'' :
+    '<span class="kpi-d '+(delta>0?'up':delta<0?'down':'zero')+'">'+(delta>0?'+':'')+delta+'</span>';
+  return '<div class="kpi"><div class="kpi-l">'+esc(label)+'</div>'+
+    '<div class="kpi-v'+(tone?' '+tone:'')+'">'+value+d+'</div>'+
+    (sub?'<div class="kpi-s">'+sub+'</div>':'')+'</div>';
+}
+function barRows(map,prev,colorFn,total){
+  const keys=Object.keys(map).filter(k=>map[k]||(prev&&prev[k]));
+  if(!keys.length) return '<div class="load-note">Закрытых запросов нет</div>';
+  const max=Math.max(1,...keys.map(k=>map[k]||0));
+  return keys.sort((a,b)=>(map[b]||0)-(map[a]||0)).map(k=>{
+    const v=map[k]||0, d=prev?v-(prev[k]||0):null;
+    return '<div class="brow"><span class="bl">'+
+      '<i style="background:'+colorFn(k)+'"></i>'+esc(k)+'</span>'+
+      '<span class="bbar"><i style="width:'+(v/max*100)+'%;background:'+colorFn(k)+'"></i></span>'+
+      '<b>'+v+'</b>'+(d===null?'':'<span class="delta '+(d>0?'up':d<0?'down':'zero')+'">'+
+        (d>0?'+':'')+d+'</span>')+'</div>';
+  }).join('')+(total!==undefined?'<div class="brow brow-t"><span class="bl">Итого</span>'+
+      '<span class="bbar"></span><b>'+total+'</b></div>':'');
+}
 function renderWeek(){
-  const week=S.days.slice(0,7), ws=week[0], we=week[6];
-  document.getElementById('week-range').textContent=dmy(ws)+' — '+dmy(we);
+  const week=weekWindow(S.weekOffset), ws=week[0], we=week[6];
+  const prev=weekWindow(S.weekOffset-1);
+  document.getElementById('week-range').textContent=
+    dmy(ws)+' — '+dmy(we)+(S.weekOffset===0?' · текущая неделя':'');
+  document.querySelectorAll('[data-wk]').forEach(b=>
+    b.classList.toggle('on',+b.dataset.wk===S.weekOffset));
+
+  const done=closedIn(ws,we), donePrev=closedIn(prev[0],prev[6]);
+  const byDiv={}, byType={}, byDivPrev={}, byTypePrev={};
+  (S.ref.divisions||[]).forEach(d=>byDiv[d]=0);
+  done.forEach(p=>{ byDiv[p.div]=(byDiv[p.div]||0)+1; byType[p.type]=(byType[p.type]||0)+1; });
+  donePrev.forEach(p=>{ byDivPrev[p.div]=(byDivPrev[p.div]||0)+1; byTypePrev[p.type]=(byTypePrev[p.type]||0)+1; });
+
+  /* нагрузка недели по фактическим срокам */
   const inWeek=[];
   S.projects.forEach(p=>p.tasks.forEach(t=>{
     if(!t.start||!t.end) return;
     if(midnight(t.end)<ws||midnight(t.start)>we) return;
-    const a=midnight(t.start)<ws?ws:midnight(t.start);
-    const b=midnight(t.end) >we?we:midnight(t.end);
+    const a=midnight(t.start)<ws?ws:midnight(t.start), b=midnight(t.end)>we?we:midnight(t.end);
     inWeek.push({...t,project:p.name,div:p.div,num:p.num,load:workDaysBetween(a,b)});
   }));
-
   const wdInWeek=workDaysBetween(ws,we);
   const cap=(S.ref.persons||[]).length*wdInWeek||1;
   const load=inWeek.filter(t=>t.person).reduce((s,t)=>s+t.load,0);
   const pct=Math.round(load/cap*100);
-  document.getElementById('w-load').innerHTML=load+'<small> / '+cap+' раб. дн</small>';
-  const fill=document.getElementById('w-fill');
-  fill.style.width=Math.min(pct,100)+'%';
-  fill.style.background=pct>100?'#e5533d':pct>80?'#f0a030':'#2aa87a';
-  document.getElementById('w-note').innerHTML='Загрузка <b>'+pct+'%</b>. Ёмкость: '+
-    (S.ref.persons||[]).length+' чел × '+wdInWeek+' раб. дн'+
-    (wdInWeek<WORK_DAYS_PER_WEEK?' (в неделе праздник)':'')+
-    '. Считается по фактическим срокам, обрезанным границами недели, без выходных и праздников.';
+  const overdue=S.projects.reduce((s,p)=>s+p.tasks.filter(t=>
+    t.end&&midnight(t.end)<today&&statusKind(t.status||p.status)!=='done'&&t.person).length,0);
+
+  document.getElementById('w-kpi').innerHTML=
+    kpiCard('Закрыто запросов',done.length,'из '+S.projects.filter(p=>p.closed).length+' за всё время',
+      done.length-donePrev.length)+
+    kpiCard('Загрузка отдела',pct+'%',load+' из '+cap+' раб. дн',null,
+      pct>100?'bad':pct>80?'warn':'good')+
+    kpiCard('Задач в работе',inWeek.filter(t=>t.person).length,
+      (S.ref.persons||[]).length+' исполнителей')+
+    kpiCard('Просрочено',overdue,overdue?'требует внимания':'сроки соблюдены',null,overdue?'bad':'good');
+
+  document.getElementById('w-bydiv').innerHTML=barRows(byDiv,byDivPrev,divColor,done.length);
+  document.getElementById('w-bytype').innerHTML=barRows(byType,byTypePrev,typeColor,done.length);
 
   const byPerson={};
   inWeek.forEach(t=>{ if(t.person) byPerson[t.person]=(byPerson[t.person]||0)+t.load; });
   const maxP=Math.max(1,...Object.values(byPerson),wdInWeek);
   document.getElementById('w-persons').innerHTML=((S.ref.persons||[]).length?S.ref.persons:Object.keys(byPerson))
     .map(n=>{ const v=byPerson[n]||0;
-      return '<div class="mini">'+avatarHTML(n,22)+'<span style="width:66px">'+esc(n)+
+      return '<div class="mini">'+avatarHTML(n,22)+'<span style="width:62px">'+esc(n)+
         '</span><span class="mbar"><i style="width:'+(v/maxP*100)+'%;background:'+
         (v>wdInWeek?'#e5533d':'var(--cyan-d)')+'"></i></span><b>'+v+'</b></div>';
     }).join('')||'<div class="load-note">Нет задач</div>';
 
-  const byTask={};
-  inWeek.forEach(t=>byTask[t.label]=(byTask[t.label]||0)+1);
-  const maxT=Math.max(1,...Object.values(byTask));
-  document.getElementById('w-tasks').innerHTML=TASK_BLOCKS.filter(t=>byTask[t.label])
-    .map(t=>'<div class="mini"><span style="width:118px">'+esc(t.label)+
-      '</span><span class="mbar"><i style="width:'+(byTask[t.label]/maxT*100)+'%;background:'+t.color+
-      '"></i></span><b>'+byTask[t.label]+'</b></div>').join('')||'<div class="load-note">Нет задач</div>';
-
   const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   document.getElementById('w-days').innerHTML=week.map((d,i)=>{
     const items=inWeek.filter(t=>midnight(t.start)<=d&&midnight(t.end)>=d);
+    const fin=done.filter(p=>+midnight(p.finish)===+d);
     return '<div class="day-col'+(isFree(d)?' we':'')+(isHoliday(d)?' hol':'')+'">'+
       '<div class="dc-h'+(+d===+today?' today':'')+(isHoliday(d)?' hol':'')+'">'+wd[i]+' '+dm(d)+
       (isHoliday(d)?' ★':'')+'</div><div class="dc-b">'+
+      fin.map(p=>'<div class="dc-item dc-done" data-num="'+p.num+'">✓ '+esc(p.name)+'</div>').join('')+
       (items.map(t=>'<div class="dc-item" data-num="'+t.num+'" style="background:'+taskColor(t.label)+
         '">'+esc(t.label)+'<span>'+esc(t.person||'без исполнителя')+'</span></div>').join('')
-       ||'<div style="font-size:10.5px;color:#c5cfdc;text-align:center;padding:6px 0">—</div>')+
-      '</div></div>';
+       ||(fin.length?'':'<div class="dc-none">—</div>'))+'</div></div>';
   }).join('');
 
-  const all=[];
-  S.projects.forEach(p=>p.tasks.forEach(t=>{
-    if(t.end&&statusKind(t.status||p.status)!=='done') all.push({...t,project:p.name,div:p.div,num:p.num});
+  document.getElementById('w-done-count').textContent=done.length?'· '+done.length:'';
+  const byCol=done.filter(p=>p.weekStart).length;
+  const wsrc=document.getElementById('w-src');
+  if(wsrc) wsrc.textContent = done.length
+    ? (byCol===done.length ? 'Неделя закрытия взята из колонки «Начало недели».'
+      : byCol===0 ? 'Колонка «Начало недели» пуста — неделя рассчитана по последней задаче проекта.'
+      : 'Из колонки «Начало недели»: '+byCol+' из '+done.length+', остальные рассчитаны по последней задаче.')
+    : '';
+  document.getElementById('w-done').innerHTML=done.length?done.map(p=>
+    '<div class="done-card">'+photoZone(p)+
+      '<div class="dc-body">'+
+        '<div class="dc-name" data-num="'+p.num+'">'+esc(p.name)+'</div>'+
+        '<div class="dc-meta"><span class="dot" style="background:'+divColor(p.div)+'"></span>'+
+          esc(p.div)+(p.city&&p.city!=='Нет'?' · '+esc(p.city):'')+'</div>'+
+        '<div class="dc-tags"><span class="pill" style="background:'+typeColor(p.type)+'22;color:'+
+          typeColor(p.type)+'">'+esc(p.type)+'</span>'+
+          '<span class="pill" style="background:#e8f5e9;color:#1b5e20">закрыт '+dm(p.finish||p.weekStart)+'</span>'+
+          (p.weekStart?'':'<span class="pill" title="Колонка «Начало недели» не заполнена — неделя определена по последней задаче" style="background:#fff8e1;color:#8a6a1a">≈ неделя</span>')+
+          '</div>'+
+        (p.persons.length?'<div class="dc-team">'+p.persons.map(n=>avatarHTML(n,20)).join('')+
+          '<span>'+esc(p.persons.join(', '))+'</span></div>':'')+
+      '</div></div>').join('')
+    : '<div class="road-empty">За эту неделю закрытых запросов нет</div>';
+}
+
+/* ═══════════════════ АНАЛИТИКА ═══════════════════ */
+const A_COLS=[
+  {k:'num',   t:'№',          w:'42px', get:p=>p.num,  cell:p=>'<span class="num">'+p.num+'</span>'},
+  {k:'name',  t:'Наименование',get:p=>p.name, cell:p=>'<span class="pname">'+esc(p.name)+'</span>'},
+  {k:'div',   t:'Дивизион',   get:p=>p.div,  cell:p=>'<span class="dot" style="background:'+divColor(p.div)+'"></span>'+esc(p.div)},
+  {k:'city',  t:'Город',      get:p=>p.city, cell:p=>esc(p.city&&p.city!=='Нет'?p.city:'—')},
+  {k:'type',  t:'Тип',        get:p=>p.type, cell:p=>'<span class="pill" style="background:'+typeColor(p.type)+'22;color:'+typeColor(p.type)+'">'+esc(p.type)+'</span>'},
+  {k:'status',t:'Статус',     get:p=>p.status, cell:p=>statusPill(p.status)},
+  {k:'tasks', t:'Задач',      get:p=>p.tasks.length, cell:p=>p.tasks.length},
+  {k:'load',  t:'Раб. дн',    get:p=>p.load, cell:p=>p.load||'—'},
+  {k:'team',  t:'Исполнители',get:p=>p.persons.join(', '), cell:p=>p.persons.length?esc(p.persons.join(', ')):'—'},
+  {k:'begin', t:'Начало',     get:p=>p.begin?+p.begin:0, cell:p=>'<span class="due">'+dmy(p.begin)+'</span>'},
+  {k:'finish',t:'Финиш',      get:p=>p.finish?+p.finish:0, cell:p=>'<span class="due '+(p.closed?'':dueClass(p.finish))+'">'+dmy(p.finish)+'</span>'},
+];
+const A_GROUPS={div:'Дивизион',type:'Тип задачи',status:'Статус',city:'Город',person:'Исполнитель',month:'Месяц закрытия'};
+function aFiltered(){
+  const f=S.aFilter, q=f.q.trim().toLowerCase();
+  return S.projects.filter(p=>
+    (!f.div.size    || f.div.has(p.div)) &&
+    (!f.type.size   || f.type.has(p.type)) &&
+    (!f.status.size || f.status.has(p.status)) &&
+    (!f.person.size || p.persons.some(n=>f.person.has(n))) &&
+    (!q || (p.name+' '+p.div+' '+p.city+' '+p.type+' '+p.persons.join(' ')).toLowerCase().includes(q)));
+}
+function chipRow(title,key,values){
+  const sel=S.aFilter[key];
+  return '<div class="frow"><span class="flab">'+title+'</span>'+
+    values.map(v=>'<button class="chip sm'+(sel.has(v)?' on':'')+'" data-fk="'+key+'" data-fv="'+
+      esc(v)+'">'+esc(v)+'</button>').join('')+
+    (sel.size?'<button class="chip sm clear" data-fk="'+key+'" data-fv="__all">сбросить</button>':'')+
+    '</div>';
+}
+function groupOf(p,g){
+  if(g==='person') return p.persons.length?p.persons:['— не назначен'];
+  if(g==='month')  return [p.finish?['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][p.finish.getMonth()]+' '+p.finish.getFullYear():'— без даты'];
+  if(g==='city')   return [p.city&&p.city!=='Нет'?p.city:'— не указан'];
+  return [p[g]||'—'];
+}
+function renderAnalytics(skipFilters){
+  const div=[...new Set([...(S.ref.divisions||[]),...S.projects.map(p=>p.div)])];
+  const typ=[...new Set([...(S.ref.types||[]),...S.projects.map(p=>p.type)])];
+  const sta=[...new Set([...(S.ref.statuses||[]),...S.projects.map(p=>p.status)])];
+  const per=[...new Set([...(S.ref.persons||[]),...S.projects.flatMap(p=>p.persons)])];
+  if(!skipFilters) document.getElementById('a-filters').innerHTML=
+    '<div class="frow"><span class="flab">Поиск</span>'+
+    '<input id="a-q" class="fsearch" placeholder="название, город, исполнитель…" value="'+esc(S.aFilter.q)+'"></div>'+
+    chipRow('Дивизион','div',div)+chipRow('Тип','type',typ)+
+    chipRow('Статус','status',sta)+chipRow('Исполнитель','person',per);
+
+  const L=aFiltered();
+  const closed=L.filter(p=>p.closed).length;
+  const days=L.reduce((s,p)=>s+p.load,0);
+  const durs=L.filter(p=>p.begin&&p.finish).map(p=>workDaysBetween(p.begin,p.finish));
+  const avg=durs.length?(durs.reduce((a,b)=>a+b,0)/durs.length).toFixed(1):'—';
+  document.getElementById('a-kpi').innerHTML=
+    kpiCard('Проектов',L.length,'из '+S.projects.length+' в реестре')+
+    kpiCard('Закрыто',closed,L.length?Math.round(closed/L.length*100)+'% выборки':'')+
+    kpiCard('Трудоёмкость',days,'раб. дней назначено')+
+    kpiCard('Средний цикл',avg,'раб. дней от старта до финиша');
+
+  const g=S.aGroup, agg={};
+  L.forEach(p=>groupOf(p,g).forEach(k=>{
+    agg[k]=agg[k]||{n:0,closed:0,load:0};
+    agg[k].n++; if(p.closed)agg[k].closed++; agg[k].load+=p.load;
   }));
-  all.sort((a,b)=>a.end-b.end);
-  document.getElementById('w-dead').innerHTML=all.slice(0,12).map(t=>
-    '<tr class="prow" data-num="'+t.num+'"><td class="pname">'+esc(t.project)+'</td>'+
-    '<td><span class="dot" style="background:'+divColor(t.div)+'"></span>'+esc(t.div)+'</td>'+
-    '<td><span class="tsk" style="background:'+taskColor(t.label)+'">'+esc(t.label)+'</span></td>'+
-    '<td>'+esc(t.person||'—')+'</td>'+
-    '<td class="due '+dueClass(t.end)+'">'+dmy(t.end)+'</td></tr>').join('')
-    ||'<tr><td colspan="5" style="color:#c5cfdc">Задач со сроками нет</td></tr>';
+  const max=Math.max(1,...Object.values(agg).map(v=>v.n));
+  const col=k=>g==='div'?divColor(k):g==='type'?typeColor(k):'#4a80c0';
+  document.getElementById('a-group-body').innerHTML=Object.entries(agg)
+    .sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>
+      '<div class="brow"><span class="bl"><i style="background:'+col(k)+'"></i>'+esc(k)+'</span>'+
+      '<span class="bbar"><i style="width:'+(v.n/max*100)+'%;background:'+col(k)+'"></i>'+
+      '<u style="width:'+(v.closed/max*100)+'%"></u></span>'+
+      '<b>'+v.n+'</b><span class="bsub">'+v.closed+' закр · '+v.load+' дн</span></div>').join('')
+      ||'<div class="load-note">Ничего не найдено</div>';
+
+  const st={}; L.forEach(p=>st[p.status]=(st[p.status]||0)+1);
+  const stMax=Math.max(1,...Object.values(st));
+  document.getElementById('a-status').innerHTML=Object.entries(st).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>{ const c=(STATUS_STYLE[k]||['#eef3f9','#5a6a80'])[1];
+      return '<div class="brow"><span class="bl"><i style="background:'+c+'"></i>'+esc(k)+'</span>'+
+        '<span class="bbar"><i style="width:'+(v/stMax*100)+'%;background:'+c+'"></i></span><b>'+v+'</b></div>';
+    }).join('')||'<div class="load-note">Ничего не найдено</div>';
+
+  document.getElementById('a-thead').innerHTML='<tr>'+A_COLS.map(c=>
+    '<th data-sort="'+c.k+'"'+(c.w?' style="width:'+c.w+'"':'')+' class="sortable'+
+    (S.aSort.key===c.k?' act':'')+'">'+c.t+
+    (S.aSort.key===c.k?'<span class="arw">'+(S.aSort.dir>0?'▲':'▼')+'</span>':'')+'</th>').join('')+'</tr>';
+  const col2=A_COLS.find(c=>c.k===S.aSort.key)||A_COLS[0];
+  const sorted=[...L].sort((a,b)=>{
+    const x=col2.get(a), y=col2.get(b);
+    if(typeof x==='number'&&typeof y==='number') return (x-y)*S.aSort.dir;
+    return String(x).localeCompare(String(y),'ru')*S.aSort.dir;
+  });
+  document.getElementById('a-count').textContent='· '+sorted.length;
+  document.getElementById('a-tbody').innerHTML=sorted.map(p=>'<tr class="prow" data-num="'+p.num+'">'+
+    A_COLS.map(c=>'<td>'+c.cell(p)+'</td>').join('')+'</tr>').join('')
+    ||'<tr><td colspan="'+A_COLS.length+'" style="color:#c5cfdc">Под фильтры ничего не подошло</td></tr>';
+}
+/* Печать недельного отчёта: временно показываем только эту вкладку */
+function exportReport(){
+  const page=document.getElementById('tab-week');
+  const restore=document.querySelector('.page.show');
+  page.classList.add('print-me');
+  document.body.classList.add('printing');
+  const done=()=>{
+    page.classList.remove('print-me');
+    document.body.classList.remove('printing');
+    window.removeEventListener('afterprint',done);
+  };
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>{ window.print(); setTimeout(done,1500); },60);
+}
+function exportCSV(){
+  const L=aFiltered();
+  const esc2=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const head=A_COLS.map(c=>c.t);
+  const body=L.map(p=>[p.num,p.name,p.div,p.city,p.type,p.status,p.tasks.length,p.load,
+    p.persons.join(', '),dmy(p.begin),dmy(p.finish)]);
+  const csv='\ufeff'+[head,...body].map(r=>r.map(esc2).join(';')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='ОИП_аналитика_'+dmy(today).replace(/\./g,'-')+'.csv';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
 /* ═══════════════════ ПРОЕКТЫ ═══════════════════ */
@@ -968,6 +1415,33 @@ document.addEventListener('mousemove',e=>{
 document.addEventListener('mouseout',e=>{ if(e.target.closest('[data-tip]')) tip.classList.remove('on'); });
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');            if(tab){ showTab(tab.dataset.tab); return; }
+  const lb=e.target.closest('#lightbox');        if(lb){ lb.classList.remove('open'); return; }
+  const wk=e.target.closest('[data-wk]');
+  if(wk){ S.weekOffset=+wk.dataset.wk; renderWeek(); return; }
+  const ad=e.target.closest('[data-add]');
+  if(ad){ const [n,s]=ad.dataset.add.split('_'); addPhoto(n,+s); return; }
+  const dp=e.target.closest('[data-drop]');
+  if(dp){ const [n,s]=dp.dataset.drop.split('_'); dropPhoto(n,+s); return; }
+  const sh=e.target.closest('[data-shot]');      if(sh){ openLightbox(sh.dataset.shot); return; }
+  const fk=e.target.closest('[data-fk]');
+  if(fk){
+    const set=S.aFilter[fk.dataset.fk];
+    if(fk.dataset.fv==='__all') set.clear();
+    else set.has(fk.dataset.fv)?set.delete(fk.dataset.fv):set.add(fk.dataset.fv);
+    renderAnalytics(); return;
+  }
+  const so=e.target.closest('[data-sort]');
+  if(so){
+    if(S.aSort.key===so.dataset.sort) S.aSort.dir*=-1;
+    else { S.aSort.key=so.dataset.sort; S.aSort.dir=1; }
+    renderAnalytics(); return;
+  }
+  if(e.target.closest('#a-csv')){ exportCSV(); return; }
+  if(e.target.closest('#w-export')){ exportReport(); return; }
+  const gr=e.target.closest('[data-group]');
+  if(gr){ S.aGroup=gr.dataset.group;
+    document.querySelectorAll('[data-group]').forEach(b=>b.classList.toggle('on',b===gr));
+    renderAnalytics(); return; }
   const rm=e.target.closest('[data-road]');
   if(rm){ S.roadMode=rm.dataset.road;
     document.querySelectorAll('[data-road]').forEach(b=>b.classList.toggle('on',b===rm));
@@ -976,7 +1450,12 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#m-close')||e.target.id==='ov'){ closeModal(); return; }
   const row=e.target.closest('[data-num]');      if(row) openProject(parseFloat(row.dataset.num));
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ closeModal(); document.getElementById('lightbox').classList.remove('open'); }
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='a-q'){ S.aFilter.q=e.target.value; renderAnalytics(true); }
+});
 document.getElementById('btn-refresh').onclick=()=>load(true);
 function showTab(t){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
@@ -1017,7 +1496,8 @@ async function grabViaScript(){
   const pick=n=>norm(j[n]||j[n.replace(/\s+/g,'')]||[]);
   const main=pick(SHEETS.main);
   if(!main.length) throw new Error('Скрипт не вернул лист «'+SHEETS.main+'»');
-  return {main,ref:pick(SHEETS.ref),old:pick(SHEETS.old)};
+  return {main,ref:pick(SHEETS.ref),old:pick(SHEETS.old),sum:pick(SHEETS.sum),
+          week:pick('Сводная неделя')};
 }
 async function grab(name,required){
   const r=await fetch(base(name),{cache:'no-store'});
@@ -1029,18 +1509,19 @@ async function load(silent){
   if(!silent) L.style.display='flex';
   E.style.display='none';
   try{
-    let main=null,ref=[],old=[];
+    let main=null,ref=[],old=[],sum=[],week=[];
     S.srcNote='';
     if(SCRIPT_URL){
-      try{ ({main,ref,old}=await grabViaScript()); S.src='script'; }
+      try{ ({main,ref,old,sum,week}=await grabViaScript()); S.src='script'; }
       catch(err){
         S.srcNote='Источник Apps Script недоступен: '+err.message+'. Читаю через gviz, сроки будут нормативными.';
         main=null;
       }
     }
     if(!main){
-      [main,ref,old]=await Promise.all([
-        grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false)]);
+      [main,ref,old,sum,week]=await Promise.all([
+        grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false),
+        grab(SHEETS.sum,false), grab('Сводная неделя',false)]);
       S.src='gviz';
     }
     S.ref=parseRef(ref);
@@ -1049,6 +1530,11 @@ async function load(silent){
     const fromDrive=await loadDriveAvatars(S.ref.persons||[]);
     Object.entries(fromDrive).forEach(([k,v])=>{ if(!S.ref.avatars[k]) S.ref.avatars[k]=v; });
     S.oldSum=parseSummary(old);
+    S.blocks=parseBlocks(sum);
+    const wk=parseBlocks(week).find(b=>b.kind==='div');
+    S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн/i.test(b.title)) || null;
+    S.sumCum  = S.blocks.find(b=>b.kind==='div'&&/накопительн/i.test(b.title)) || null;
+    S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
     S.projects=parseMain(main);
     S.days=twoWeekWindow(new Date());
     if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
@@ -1056,7 +1542,8 @@ async function load(silent){
     document.getElementById('ts').textContent=new Date().toLocaleString('ru-RU',
       {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
     checkDurations();
-    renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork();
+    renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork(); renderAnalytics();
+    photoInit();
     if(!document.querySelector('.page.show')) showTab('road');
   }catch(err){
     L.style.display='none'; E.style.display='flex';
