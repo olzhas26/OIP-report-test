@@ -307,7 +307,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v7</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -362,10 +362,10 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
   <div class="page-subtitle">Запросы по дивизионам</div>
   <div class="report-body">
     <div class="stats-panel">
-      <div><div class="stat-lbl">Всего<br>запросов</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
-      <div><div class="stat-lbl">В работе</div><div class="stat-val" id="d-work" style="font-size:30px">—</div><div class="stat-sub" id="d-work-pct"></div></div>
-      <div><div class="stat-lbl">В очереди</div><div class="stat-val" id="d-queue" style="font-size:30px">—</div><div class="stat-hint">ждут запуска</div></div>
-      <div><div class="stat-lbl">Активных<br>задач</div><div class="stat-val" id="d-tasks" style="font-size:30px">—</div><div class="stat-hint" id="d-tasks-sub"></div></div>
+      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
+      <div><div class="stat-lbl">За этот<br>квартал</div><div class="stat-val" id="d-work" style="font-size:32px">—</div><div class="stat-sub" id="d-work-pct"></div></div>
+      <div><div class="stat-lbl">Закрыто<br>в неделю</div><div class="stat-val" id="d-queue" style="font-size:32px">—</div><div class="stat-hint">текущая неделя</div></div>
+      <div><div class="stat-lbl">Кол-во<br>концептов</div><div class="stat-val" id="d-tasks" style="font-size:32px">—</div><div class="stat-hint" id="d-tasks-sub"></div></div>
     </div>
     <div class="charts-grid" id="div-charts"></div>
   </div>
@@ -378,9 +378,10 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
   <div class="page-subtitle">Запросы по типам · сравнение с предыдущим периодом</div>
   <div class="report-body">
     <div class="stats-panel">
-      <div><div class="stat-lbl">Всего<br>запросов</div><div class="stat-val" id="t-total">—</div></div>
-      <div><div class="stat-lbl">Доля<br>концептов</div><div class="stat-val" id="t-konc" style="font-size:30px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
-      <div><div class="stat-lbl">Прошлый<br>период</div><div class="stat-val" id="t-old" style="font-size:30px">—</div><div class="stat-hint">Q1–Q2, справочно</div></div>
+      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="t-total">—</div><div class="stat-hint" id="t-total-sub"></div></div>
+      <div><div class="stat-lbl">Концептов</div><div class="stat-val" id="t-konc" style="font-size:32px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
+      <div><div class="stat-lbl">Визуализаций</div><div class="stat-val" id="t-vis" style="font-size:32px">—</div><div class="stat-sub" id="t-vis-pct"></div></div>
+      <div><div class="stat-lbl">С видео</div><div class="stat-val" id="t-old" style="font-size:32px">—</div><div class="stat-hint" id="t-old-sub"></div></div>
     </div>
     <div class="charts-grid" id="type-charts"></div>
   </div>
@@ -500,6 +501,11 @@ const TASK_BLOCKS = [
   {label:'Другое',            col:31, defDur:1, color:'#9aa8b8'},
 ];
 const WORK_DAYS_PER_WEEK = 5;
+
+/* Если счёт закрытых за квартал должен включать работы, которых нет в реестре
+   (как было в старом отчёте — там Q3 показывал 49), впишите сюда стартовое
+   значение: оно прибавится к посчитанному по таблице. 0 — считать только по реестру. */
+const Q_BASELINE = 0;
 
 /* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
 const AVATARS_MANUAL = {};
@@ -914,19 +920,25 @@ function renderRoad(){
 }
 
 /* ═══════════════════ ДИВИЗИОНЫ ═══════════════════ */
+const cumTotal = () => S.sumCum ? Object.values(S.sumCum.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
+const prevTotal= () => Object.values(S.oldSum||{}).reduce((s,r)=>s+(r['Всего']||0),0);
+const cumType  = t => S.sumCum ? (S.sumCum.total||{})[t]||0 : 0;
+const qName    = () => 'Q'+(Math.floor(new Date().getMonth()/3)+1)+' '+new Date().getFullYear();
 function renderDiv(){
   const P=S.projects;
-  const inWork=P.filter(p=>/работе/i.test(p.status)).length;
-  const inQueue=P.filter(p=>/очеред/i.test(p.status)).length;
-  const tasks=P.reduce((s,p)=>s+activeTasks(p).length,0);
-  const planned=P.reduce((s,p)=>s+p.tasks.filter(t=>t.person&&t.start).length,0);
-  document.getElementById('d-total').textContent=P.length;
-  document.getElementById('d-total-sub').textContent=(S.ref.divisions||[]).length+' дивизионов';
-  document.getElementById('d-work').textContent=inWork;
-  document.getElementById('d-work-pct').textContent=P.length?Math.round(inWork/P.length*100)+'% реестра':'';
-  document.getElementById('d-queue').textContent=inQueue;
-  document.getElementById('d-tasks').textContent=tasks;
-  document.getElementById('d-tasks-sub').textContent=planned+' с датой начала';
+  const total=cumTotal(), prev=prevTotal();
+  const wk=weekWindow(0), week=closedIn(wk[0],wk[6]).length;
+  const q=closedThisQuarter().length+Q_BASELINE;
+  const konc=cumType('Концепт');
+  document.getElementById('d-total').textContent=total||P.length;
+  document.getElementById('d-total-sub').innerHTML=prev
+    ? '<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду' : (S.ref.divisions||[]).length+' дивизионов';
+  document.getElementById('d-work').textContent=q;
+  document.getElementById('d-work-pct').textContent='закрыто в '+qName()+
+    (Q_BASELINE?' (вкл. '+Q_BASELINE+' до реестра)':'');
+  document.getElementById('d-queue').textContent=week;
+  document.getElementById('d-tasks').textContent=konc;
+  document.getElementById('d-tasks-sub').textContent=total?Math.round(konc/total*100)+'% от всех':'';
 
   const host=document.getElementById('div-charts'); clearCharts(host);
   const order=(S.ref.divisions||[]).length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
@@ -944,12 +956,16 @@ function renderDiv(){
 function renderType(){
   const P=S.projects, byType={};
   P.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
-  const konc=byType['Концепт']||0;
-  const oldTotal=Object.values(S.oldSum).reduce((s,v)=>s+(v['Всего']||0),0);
-  document.getElementById('t-total').textContent=P.length;
+  const total=cumTotal(), prev=prevTotal();
+  const konc=cumType('Концепт'), vis=cumType('Визуализация'), vid=cumType('Видео');
+  document.getElementById('t-total').textContent=total||P.length;
+  document.getElementById('t-total-sub').innerHTML=prev?'<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду':'';
   document.getElementById('t-konc').textContent=konc;
-  document.getElementById('t-konc-pct').textContent=P.length?Math.round(konc/P.length*100)+'% от всех':'';
-  document.getElementById('t-old').textContent=oldTotal||'—';
+  document.getElementById('t-konc-pct').textContent=total?Math.round(konc/total*100)+'% от всех':'';
+  document.getElementById('t-vis').textContent=vis;
+  document.getElementById('t-vis-pct').textContent=total?Math.round(vis/total*100)+'% от всех':'';
+  document.getElementById('t-old').textContent=vid;
+  document.getElementById('t-old-sub').textContent=total?Math.round(vid/total*100)+'% от всех':'';
 
   const oldByType={};
   Object.values(S.oldSum).forEach(v=>Object.entries(v).forEach(([k,n])=>{
@@ -1144,14 +1160,35 @@ function weekWindow(offset){
 /* Как только колонка «Начало недели» заполнена хотя бы у одного проекта,
    она становится единственным источником: расчётные догадки больше не добавляются. */
 const useWeekCol = () => S.projects.some(p=>p.closed && p.weekStart);
-const closedIn=(from,to)=>{
+/* «Начало недели» обязано быть понедельником — иначе это опечатка или остаток от заглушки */
+const isMonday = d => d && d.getDay()===1;
+const badWeekCells = () => S.projects.filter(p=>p.weekStart && !isMonday(p.weekStart));
+const dedupe=list=>{
+  const seen=new Map();
+  list.forEach(p=>{
+    const k=(p.name+'|'+p.div).toLowerCase().replace(/\s+/g,' ').trim();
+    if(!seen.has(k)) seen.set(k,p);
+  });
+  return {list:[...seen.values()], dropped:list.length-seen.size};
+};
+function closedRaw(from,to){
   const strict=useWeekCol();
   return S.projects.filter(p=>{
     if(!p.closed) return false;
     const d = strict ? p.weekStart : p.finish;
     return d && midnight(d)>=from && midnight(d)<=to;
   });
-};
+}
+const closedIn=(from,to)=>dedupe(closedRaw(from,to)).list;
+/* закрытые за квартал — по той же логике, что и за неделю */
+function quarterRange(d){
+  const q=Math.floor(d.getMonth()/3);
+  return [new Date(d.getFullYear(),q*3,1), new Date(d.getFullYear(),q*3+3,0)];
+}
+function closedThisQuarter(){
+  const [a,b]=quarterRange(new Date());
+  return closedIn(midnight(a),midnight(b));
+}
 function kpiCard(label,value,sub,delta,tone){
   const d=(delta===undefined||delta===null)?'' :
     '<span class="kpi-d '+(delta>0?'up':delta<0?'down':'zero')+'">'+(delta>0?'+':'')+delta+'</span>';
@@ -1241,12 +1278,17 @@ function renderWeek(){
   const wsrc=document.getElementById('w-src');
   if(wsrc){
     const strict=useWeekCol();
+    const raw=closedRaw(ws,we), dd=dedupe(raw), bad=badWeekCells();
     const orphan=S.projects.filter(p=>p.closed&&!p.weekStart).length;
-    wsrc.innerHTML = strict
+    wsrc.innerHTML = (strict
       ? 'Неделя закрытия берётся из колонки «Начало недели».'+
-        (orphan?' <b style="color:#b06a10">Без заполненной колонки: '+orphan+
-          ' закрытых проектов — они не попадают ни в одну неделю.</b>':'')
-      : 'Колонка «Начало недели» пока пуста — неделя рассчитана по последней задаче проекта.';
+        (orphan?' <b style="color:#b06a10">Без заполненной колонки: '+orphan+' закрытых проектов.</b>':'')
+      : 'Колонка «Начало недели» пока пуста — неделя рассчитана по последней задаче проекта.')+
+      (dd.dropped?' <b style="color:#b06a10">Отброшено дублей: '+dd.dropped+'.</b>':'')+
+      (bad.length?' <b style="color:#e5533d">Не понедельник: '+bad.length+' ('+
+        bad.slice(0,3).map(p=>esc(p.name)+' — '+dmy(p.weekStart)).join('; ')+
+        (bad.length>3?' и ещё '+(bad.length-3):'')+').</b>':'')+
+      (raw.length?' <a href="#" id="w-list">показать состав ('+done.length+')</a>':'');
   }
   document.getElementById('w-done').innerHTML=done.length?done.map(p=>
     '<div class="done-card">'+photoZone(p)+
@@ -1503,6 +1545,23 @@ document.addEventListener('click',e=>{
     renderAnalytics(); return;
   }
   if(e.target.closest('#a-csv')){ exportCSV(); return; }
+  if(e.target.closest('#w-list')){
+    e.preventDefault();
+    const wk=weekWindow(S.weekOffset), L=closedIn(wk[0],wk[6]);
+    show('Закрыто за неделю', dmy(wk[0])+' — '+dmy(wk[6]),
+      [['Проектов',L.length],['Дивизионов',new Set(L.map(p=>p.div)).size],
+       ['Типов',new Set(L.map(p=>p.type)).size],['Из колонки',L.filter(p=>p.weekStart).length]],
+      '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
+      '<th>Дивизион</th><th>Тип</th><th>Начало недели</th><th>Посл. задача</th></tr></thead><tbody>'+
+      L.map(p=>'<tr class="prow" data-num="'+p.num+'"><td class="num">'+p.num+'</td>'+
+        '<td class="pname">'+esc(p.name)+'</td><td>'+esc(p.div)+'</td><td>'+esc(p.type)+'</td>'+
+        '<td class="due">'+(p.weekStart
+          ? (isMonday(p.weekStart)?dmy(p.weekStart)
+             :'<span style="color:#e5533d" title="Не понедельник">'+dmy(p.weekStart)+' ⚠</span>')
+          : '<span style="color:#e5533d">не заполнено</span>')+'</td>'+
+        '<td class="due">'+dmy(p.finish)+'</td></tr>').join('')+'</tbody></table></div>');
+    return;
+  }
   if(e.target.closest('#w-export')){ exportReport(); return; }
   if(e.target.closest('#src-save')){
     const v=(document.getElementById('src-url').value||'').trim();
