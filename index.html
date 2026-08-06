@@ -307,7 +307,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v7</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v8</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -502,9 +502,9 @@ const TASK_BLOCKS = [
 ];
 const WORK_DAYS_PER_WEEK = 5;
 
-/* Если счёт закрытых за квартал должен включать работы, которых нет в реестре
-   (как было в старом отчёте — там Q3 показывал 49), впишите сюда стартовое
-   значение: оно прибавится к посчитанному по таблице. 0 — считать только по реестру. */
+/* Показатель «За этот квартал» берётся из первой таблицы «Сводного листа»
+   («Общее количество запросов по дивизионам за 2026») — это то, что ведётся в этом файле.
+   Если нужно добавить закрытое до перехода на этот формат, впишите число сюда. */
 const Q_BASELINE = 0;
 
 /* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
@@ -928,14 +928,15 @@ function renderDiv(){
   const P=S.projects;
   const total=cumTotal(), prev=prevTotal();
   const wk=weekWindow(0), week=closedIn(wk[0],wk[6]).length;
-  const q=closedThisQuarter().length+Q_BASELINE;
+  const sheetYear=S.sumDone?((S.sumDone.total||{})['Всего']||0):closedThisQuarter().length;
+  const q=sheetYear+Q_BASELINE;
   const konc=cumType('Концепт');
   document.getElementById('d-total').textContent=total||P.length;
   document.getElementById('d-total-sub').innerHTML=prev
     ? '<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду' : (S.ref.divisions||[]).length+' дивизионов';
   document.getElementById('d-work').textContent=q;
-  document.getElementById('d-work-pct').textContent='закрыто в '+qName()+
-    (Q_BASELINE?' (вкл. '+Q_BASELINE+' до реестра)':'');
+  document.getElementById('d-work-pct').textContent='закрыто, свод за 2026'+
+    (Q_BASELINE?' + '+Q_BASELINE+' до файла':'');
   document.getElementById('d-queue').textContent=week;
   document.getElementById('d-tasks').textContent=konc;
   document.getElementById('d-tasks-sub').textContent=total?Math.round(konc/total*100)+'% от всех':'';
@@ -1240,16 +1241,17 @@ function renderWeek(){
     t.end&&midnight(t.end)<today&&statusKind(t.status||p.status)!=='done'&&t.person).length,0);
 
   document.getElementById('w-kpi').innerHTML=
-    kpiCard('Закрыто запросов',done.length,'из '+S.projects.filter(p=>p.closed).length+' за всё время',
-      done.length-donePrev.length)+
+    kpiCard('Закрыто запросов',done.length,
+      (S.sumDone?'из '+((S.sumDone.total||{})['Всего']||0)+' в этом файле за 2026'
+               :'из '+S.projects.filter(p=>p.closed).length+' закрытых'))+
     kpiCard('Загрузка отдела',pct+'%',load+' из '+cap+' раб. дн',null,
       pct>100?'bad':pct>80?'warn':'good')+
     kpiCard('Задач в работе',inWeek.filter(t=>t.person).length,
       (S.ref.persons||[]).length+' исполнителей')+
     kpiCard('Просрочено',overdue,overdue?'требует внимания':'сроки соблюдены',null,overdue?'bad':'good');
 
-  document.getElementById('w-bydiv').innerHTML=barRows(byDiv,byDivPrev,divColor,done.length);
-  document.getElementById('w-bytype').innerHTML=barRows(byType,byTypePrev,typeColor,done.length);
+  document.getElementById('w-bydiv').innerHTML=done.length?barRows(byDiv,null,divColor,done.length):barRows({},null,divColor);
+  document.getElementById('w-bytype').innerHTML=done.length?barRows(byType,null,typeColor,done.length):barRows({},null,typeColor);
 
   const byPerson={};
   inWeek.forEach(t=>{ if(t.person) byPerson[t.person]=(byPerson[t.person]||0)+t.load; });
