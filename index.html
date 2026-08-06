@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v9</title>
+<title>ОИП — Проекты Q3 2026 · v11</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -310,7 +310,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v9 · 06.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v11 · 06.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -362,7 +362,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <!-- ═══ ПО ДИВИЗИОНАМ ═══ -->
 <div id="tab-div" class="page">
   <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
-  <div class="page-subtitle">Запросы по дивизионам</div>
+  <div class="page-subtitle">Запросы по дивизионам · накопительно за 2026 год</div>
   <div class="report-body">
     <div class="stats-panel">
       <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
@@ -378,12 +378,11 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <!-- ═══ ПО ТИПАМ ═══ -->
 <div id="tab-type" class="page">
   <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
-  <div class="page-subtitle">Запросы по типам · сравнение с предыдущим периодом</div>
+  <div class="page-subtitle">Запросы по типам · накопительно за 2026 год</div>
   <div class="report-body">
     <div class="stats-panel">
       <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="t-total">—</div><div class="stat-hint" id="t-total-sub"></div></div>
       <div><div class="stat-lbl">Концептов</div><div class="stat-val" id="t-konc" style="font-size:32px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
-      <div><div class="stat-lbl">Визуализаций</div><div class="stat-val" id="t-vis" style="font-size:32px">—</div><div class="stat-sub" id="t-vis-pct"></div></div>
       <div><div class="stat-lbl">С видео</div><div class="stat-val" id="t-old" style="font-size:32px">—</div><div class="stat-hint" id="t-old-sub"></div></div>
     </div>
     <div class="charts-grid" id="type-charts"></div>
@@ -508,7 +507,7 @@ const WORK_DAYS_PER_WEEK = 5;
 /* Показатель «За этот квартал» берётся из первой таблицы «Сводного листа»
    («Общее количество запросов по дивизионам за 2026») — это то, что ведётся в этом файле.
    Если нужно добавить закрытое до перехода на этот формат, впишите число сюда. */
-const Q_BASELINE = 0;
+const Q_BASELINE = 21;
 
 /* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
 const AVATARS_MANUAL = {};
@@ -938,21 +937,33 @@ function renderDiv(){
   document.getElementById('d-total-sub').innerHTML=prev
     ? '<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду' : (S.ref.divisions||[]).length+' дивизионов';
   document.getElementById('d-work').textContent=q;
-  document.getElementById('d-work-pct').textContent='закрыто, свод за 2026'+
-    (Q_BASELINE?' + '+Q_BASELINE+' до файла':'');
+  document.getElementById('d-work-pct').textContent='закрыто в '+qName()+
+    (Q_BASELINE?' ('+sheetYear+' в файле + '+Q_BASELINE+' до него)':'');
   document.getElementById('d-queue').textContent=week;
   document.getElementById('d-tasks').textContent=konc;
   document.getElementById('d-tasks-sub').textContent=total?Math.round(konc/total*100)+'% от всех':'';
 
   const host=document.getElementById('div-charts'); clearCharts(host);
-  const order=(S.ref.divisions||[]).length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
-  order.forEach(d=>{
-    const list=P.filter(p=>p.div===d), byType={};
-    list.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
-    donut(host,d,Object.entries(byType).sort((a,b)=>b[1]-a[1])
-      .map(([label,value])=>({label,value,color:typeColor(label)})),
-      list.length,list.length?()=>openDiv(d):null);
-  });
+  const cum=S.sumCum;
+  if(cum){
+    const known=S.ref.divisions||[];
+    const order=known.filter(d=>cum.rows[d]).concat(Object.keys(cum.rows).filter(d=>!known.includes(d)));
+    order.forEach(d=>{
+      const rec=cum.rows[d]||{};
+      const entries=Object.entries(rec).filter(([k,v])=>k!=='Всего'&&v>0)
+        .sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value,color:typeColor(label)}));
+      donut(host,d,entries,rec['Всего']||0,()=>openDivSum(d));
+    });
+  } else {
+    const order=(S.ref.divisions||[]).length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
+    order.forEach(d=>{
+      const list=P.filter(p=>p.div===d), byType={};
+      list.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
+      donut(host,d,Object.entries(byType).sort((a,b)=>b[1]-a[1])
+        .map(([label,value])=>({label,value,color:typeColor(label)})),
+        list.length,list.length?()=>openDiv(d):null);
+    });
+  }
   renderSummary('div-summary','div');
 }
 
@@ -961,13 +972,11 @@ function renderType(){
   const P=S.projects, byType={};
   P.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
   const total=cumTotal(), prev=prevTotal();
-  const konc=cumType('Концепт'), vis=cumType('Визуализация'), vid=cumType('Видео');
+  const konc=cumType('Концепт'), vid=cumType('Видео');
   document.getElementById('t-total').textContent=total||P.length;
   document.getElementById('t-total-sub').innerHTML=prev?'<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду':'';
   document.getElementById('t-konc').textContent=konc;
   document.getElementById('t-konc-pct').textContent=total?Math.round(konc/total*100)+'% от всех':'';
-  document.getElementById('t-vis').textContent=vis;
-  document.getElementById('t-vis-pct').textContent=total?Math.round(vis/total*100)+'% от всех':'';
   document.getElementById('t-old').textContent=vid;
   document.getElementById('t-old-sub').textContent=total?Math.round(vid/total*100)+'% от всех':'';
 
@@ -976,16 +985,25 @@ function renderType(){
     if(k!=='Всего') oldByType[k]=(oldByType[k]||0)+n;
   }));
   const host=document.getElementById('type-charts'); clearCharts(host);
-  ((S.ref.types||[]).length?S.ref.types:Object.keys(byType))
-    .filter(t=>byType[t]||oldByType[t]).forEach(t=>{
-      const list=P.filter(p=>p.type===t), byDiv={};
-      list.forEach(p=>byDiv[p.div]=(byDiv[p.div]||0)+1);
-      const prev=oldByType[t]||0;
-      donut(host,t,Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
-        .map(([label,value])=>({label,value,color:divColor(label)})),
-        list.length,null,
+  const cum=S.sumCum;
+  if(cum){
+    cum.cols.filter(c=>c!=='Всего').forEach(t=>{
+      const tot=(cum.total||{})[t]||0, prev=oldByType[t]||0;
+      if(!tot&&!prev) return;
+      const entries=Object.entries(cum.rows).map(([d,rec])=>({label:d,value:rec[t]||0,color:divColor(d)}))
+        .filter(e=>e.value>0).sort((a,b)=>b.value-a.value);
+      donut(host,t,entries,tot,()=>openTypeSum(t),
         prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' ранее</div>':'');
     });
+  } else {
+    ((S.ref.types||[]).length?S.ref.types:Object.keys(byType))
+      .filter(t=>byType[t]||oldByType[t]).forEach(t=>{
+        const list=P.filter(p=>p.type===t), byDiv={};
+        list.forEach(p=>byDiv[p.div]=(byDiv[p.div]||0)+1);
+        donut(host,t,Object.entries(byDiv).sort((a,b)=>b[1]-a[1])
+          .map(([label,value])=>({label,value,color:divColor(label)})),list.length,null,'');
+      });
+  }
   renderSummary('type-summary','type');
 }
 
@@ -1017,8 +1035,7 @@ function renderSummary(hostId,mode){
         '<b class="card-n">'+(sum(cum)-sum(prev))+'</b></div>'+barRows(cum||{},prev,colorFn)+
         '<div class="load-note" style="margin-top:8px">Дельта — разница с листом «Старый свод».</div></div>'+
     '</div>'+
-    matrixCard(S.sumCum,mode==='type')+
-    matrixCard(S.sumDone,mode==='type');
+    matrixCard(S.sumCum,mode==='type');
 }
 /* Матрица «дивизион × тип» как в таблице; transpose — строки становятся типами */
 function matrixCard(blk,transpose){
@@ -1480,6 +1497,45 @@ function openDiv(name){
       esc(p.name)+'</td><td>'+esc(p.city||'—')+'</td><td>'+esc(p.type)+'</td><td class="due '+
       dueClass(p.due)+'">'+dmy(p.due)+'</td><td>'+statusPill(p.status)+'</td></tr>').join('')+
     '</tbody></table></div>');
+}
+function openDivSum(d){
+  const rec=(S.sumCum&&S.sumCum.rows[d])||{};
+  const cur=(S.sumDone&&S.sumDone.rows[d])||{};
+  const list=S.projects.filter(p=>p.div===d);
+  show('Дивизион '+d, 'накопительно за 2026 год',
+    [['Всего',rec['Всего']||0],['В этом файле',cur['Всего']||0],
+     ['В реестре',list.length],['Закрыто',list.filter(p=>p.closed).length]],
+    breakdownTable('Тип задачи',rec,cur,typeColor)+
+    (list.length?'<div class="card-h" style="margin:14px 0 6px">Текущий реестр</div>'+
+      '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
+      '<th>Тип</th><th>Статус</th></tr></thead><tbody>'+
+      list.map(p=>'<tr class="prow" data-num="'+p.num+'"><td class="num">'+p.num+'</td><td class="pname">'+
+        esc(p.name)+'</td><td>'+esc(p.type)+'</td><td>'+statusPill(p.status)+'</td></tr>').join('')+
+      '</tbody></table></div>':''));
+}
+function openTypeSum(t){
+  const rec={},cur={};
+  if(S.sumCum)  Object.entries(S.sumCum.rows).forEach(([d,r])=>{ if(r[t]) rec[d]=r[t]; });
+  if(S.sumDone) Object.entries(S.sumDone.rows).forEach(([d,r])=>{ if(r[t]) cur[d]=r[t]; });
+  const tot=(S.sumCum&&(S.sumCum.total||{})[t])||0;
+  show(t, 'накопительно за 2026 год',
+    [['Всего',tot],['В этом файле',(S.sumDone&&(S.sumDone.total||{})[t])||0],
+     ['Дивизионов',Object.keys(rec).length],
+     ['Доля',cumTotal()?Math.round(tot/cumTotal()*100)+'%':'—']],
+    breakdownTable('Дивизион',rec,cur,divColor));
+}
+function breakdownTable(head,rec,cur,colorFn){
+  const keys=Object.keys(rec).filter(k=>k!=='Всего'&&rec[k]);
+  if(!keys.length) return '<div class="load-note">Данных нет</div>';
+  const max=Math.max(...keys.map(k=>rec[k]));
+  return '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>'+head+
+    '</th><th style="width:52%">Накопительно</th><th>Всего</th><th>В файле</th></tr></thead><tbody>'+
+    keys.sort((a,b)=>rec[b]-rec[a]).map(k=>
+      '<tr><td><span class="dot" style="background:'+colorFn(k)+'"></span>'+esc(k)+'</td>'+
+      '<td><span class="mbar" style="display:block"><i style="width:'+(rec[k]/max*100)+
+        '%;background:'+colorFn(k)+'"></i></span></td>'+
+      '<td><b>'+rec[k]+'</b></td><td>'+(cur[k]||'—')+'</td></tr>').join('')+
+    '</tbody></table></div>';
 }
 function openProject(num){
   const p=S.projects.find(x=>x.num===num);
