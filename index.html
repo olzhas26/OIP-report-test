@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ОИП — Проекты Q3 2026</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ОИП — Проекты Q3 2026 · v9</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -307,7 +310,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v8</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v9 · 06.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -1689,23 +1692,19 @@ async function load(silent){
   const L=document.getElementById('loading'), E=document.getElementById('errbox');
   if(!silent && !S.loaded) L.style.display='flex';
   E.style.display='none';
-  /* сначала отрисовываем последнюю сохранённую выгрузку, потом идём в сеть */
+  /* кэш данных отключён: каждый заход читает таблицу заново.
+     В хранилище остаётся только адрес веб-приложения, если он был задан вручную. */
   if(!S.loaded){
-    try{
-      S.scriptUrl=await cacheGet('scriptUrl')||'';
-      const c=await cacheGet('data');
-      if(c&&c.main&&c.main.length){ S.cacheTs=c.ts; applyData(c); }
-    }catch(e){}
+    try{ S.scriptUrl=await cacheGet('scriptUrl')||''; }catch(e){}
   }
   try{
     const fresh=await fetchAll();
     S.cacheTs=null;
     applyData(fresh);
-    cacheSet('data',{...fresh,ts:Date.now()}).catch(()=>{});
     photoInit();
   }catch(err){
-    if(S.loaded){                       // кэш уже показан — не гасим экран
-      S.srcNote=(S.srcNote||'')+' Обновление не удалось: '+err.message+'. Показаны сохранённые данные.';
+    if(S.loaded){
+      S.srcNote=(S.srcNote||'')+' Обновление не удалось: '+err.message+'.';
       checkDurations();
       return;
     }
