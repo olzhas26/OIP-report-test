@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v11</title>
+<title>ОИП — Проекты Q3 2026 · v12</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -261,20 +261,38 @@ th.sortable:hover{color:var(--cyan-d)}
 th.sortable.act{color:var(--cyan-d)}
 .arw{font-size:8px;margin-left:3px}
 
+
+/* ── круговые карточки: круг слева, подписи справа ── */
+.chart-card{text-align:left}
+.cc-title{text-align:left;font-size:12.5px;margin-bottom:8px}
+.cc-row{display:flex;align-items:center;gap:15px}
+.cc-left{flex:0 0 auto;text-align:center}
+.cc-center{font-size:30px;font-weight:900;letter-spacing:-.5px}
+.cc-legend{flex:1;min-width:0;margin-top:0;gap:4px}
+.lg{gap:7px;font-size:11.5px}
+.lg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums;padding-left:6px}
+.charts-grid{grid-template-columns:repeat(auto-fill,minmax(304px,1fr))}
+/* кнопка добавления второго снимка поверх заполненной плитки */
+.ph-add{position:absolute;right:7px;bottom:7px;width:26px;height:26px;border:none;border-radius:8px;
+  background:rgba(16,26,46,.62);color:#fff;font-size:15px;line-height:1;cursor:pointer;z-index:3;transition:.15s}
+.ph-add:hover{background:var(--cyan);color:var(--navy)}
+.ph-zone{position:relative}
+
 @media(max-width:1080px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .week-grid2,.anal-grid,.sum-grid{grid-template-columns:1fr}
 }
 
 @media(max-width:1080px){
-  .charts-grid{grid-template-columns:repeat(3,1fr)}
+  .charts-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
   .week-grid{grid-template-columns:1fr}
   .day-cols{grid-template-columns:repeat(4,1fr)}
 }
 @media(max-width:820px){
   .report-body{grid-template-columns:1fr}
   .stats-panel{border-right:none;border-bottom:1px solid var(--line);padding:0 0 14px;flex-direction:row;flex-wrap:wrap;gap:18px}
-  .charts-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
   .day-cols{grid-template-columns:repeat(2,1fr)}
   .mstats{grid-template-columns:repeat(2,1fr)}
   .page{padding:16px 12px 40px}
@@ -310,7 +328,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v11 · 06.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v12 · 11.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -775,10 +793,15 @@ function donut(host,title,entries,total,onClick,extra){
   const card=document.createElement('div');
   card.className='chart-card'+(onClick?' clickable':'');
   card.innerHTML='<div class="cc-title">'+esc(title)+'</div>'+
-    '<div class="cc-canvas"><canvas id="'+id+'" width="112" height="112"></canvas>'+
-    '<div class="cc-center">'+total+'</div></div>'+(extra||'')+
-    '<div class="cc-legend">'+entries.map(e=>
-      '<div class="lg"><i style="background:'+e.color+'"></i>'+esc(e.label)+'<b>'+e.value+'</b></div>').join('')+'</div>';
+    '<div class="cc-row">'+
+      '<div class="cc-left">'+
+        '<div class="cc-canvas"><canvas id="'+id+'" width="128" height="128"></canvas>'+
+        '<div class="cc-center">'+total+'</div></div>'+(extra||'')+
+      '</div>'+
+      '<div class="cc-legend">'+entries.map(e=>
+        '<div class="lg"><i style="background:'+e.color+'"></i><span>'+esc(e.label)+
+        '</span><b>'+e.value+'</b></div>').join('')+'</div>'+
+    '</div>';
   host.appendChild(card);
   if(onClick) card.onclick=onClick;
   const data=entries.length?entries:[{label:'Нет данных',value:1,color:'#eef3f9'}];
@@ -821,6 +844,15 @@ function buildBars(){
       start:t.start,end:t.end,work:workDaysBetween(t.start,t.end),
       clipL:i0<0,clipR:i1>13,i0:Math.max(0,i0),i1:Math.min(13,i1),
       overdue:midnight(t.end||t.start)<today && !/готов/i.test(t.status||p.status)};
+    /* рабочий срок не расходуется в выходные и праздники — рвём полосу на отрезки */
+    const dd=S.days, keep=[];
+    for(let i=bar.i0;i<=bar.i1;i++) if(bar.calendar||!isFree(dd[i])) keep.push(i);
+    bar.segments=[];
+    keep.forEach(i=>{
+      const last=bar.segments[bar.segments.length-1];
+      if(last&&last[1]===i-1) last[1]=i; else bar.segments.push([i,i]);
+    });
+    if(!bar.segments.length) bar.segments=[[bar.i0,bar.i1]];
     (byPerson[bar.person]=byPerson[bar.person]||[]).push(bar);
   }));
   Object.values(byPerson).forEach(list=>{
@@ -875,18 +907,22 @@ function renderRoad(){
        '%;width:'+(100/14)+'%"></div>':'').join('');
     const tLine=(tIdx>=0&&tIdx<=13)?'<div class="today-line" style="left:'+((tIdx+0.5)/14*100)+'%"></div>':'';
     const bars=list.map(b=>{
-      const span=b.i1-b.i0+1;
       const tip=[b.label+' · '+b.days+(b.calendar?' кал. дн':' раб. дн')+(b.exact?'':' (норматив)'),
                  b.project, b.div+' · '+(b.status||'без статуса'),
                  dmy(b.start)+' → '+dmy(b.end)+' · '+b.work+' раб. дн'];
       if(b.shifted) tip.push('начало сдвинуто с '+dmy(b.startRaw)+': нерабочий день');
       if(b.overdue) tip.push('⚠ срок прошёл');
-      return '<div class="bar k-'+b.kind+(b.overdue?' overdue':'')+(b.exact?'':' approx')+
-        (b.clipL?' clip-l':'')+(b.clipR?' clip-r':'')+'"'+
-        ' style="left:calc('+(b.i0/14*100)+'% + 2px);width:calc('+(span/14*100)+'% - 4px);'+
-        'top:'+(b.lane*26+4)+'px;background:'+taskColor(b.label)+'"'+
-        ' data-num="'+b.num+'" data-tip="'+esc(tip.join('||'))+'">'+
-        (b.kind==='done'?'✓ ':'')+(b.exact?'':'≈ ')+esc(b.label)+' <small>'+esc(b.project)+'</small></div>';
+      const tipAttr=esc(tip.join('||'));
+      return b.segments.map((sg,k)=>{
+        const span=sg[1]-sg[0]+1, first=k===0, last=k===b.segments.length-1;
+        return '<div class="bar k-'+b.kind+(b.overdue?' overdue':'')+(b.exact?'':' approx')+
+          (((b.clipL&&first)||!first)?' clip-l':'')+(((b.clipR&&last)||!last)?' clip-r':'')+'"'+
+          ' style="left:calc('+(sg[0]/14*100)+'% + 2px);width:calc('+(span/14*100)+'% - 4px);'+
+          'top:'+(b.lane*26+4)+'px;background:'+taskColor(b.label)+'"'+
+          ' data-num="'+b.num+'" data-tip="'+tipAttr+'">'+
+          (first?(b.kind==='done'?'✓ ':'')+(b.exact?'':'≈ ')+esc(b.label)+
+            ' <small>'+esc(b.project)+'</small>':'')+'</div>';
+      }).join('');
     }).join('');
     const wdays=list.reduce((s,b)=>s+b.work,0);
     const sub=list.length ? list.length+' задач · '+wdays+' раб. дн'
@@ -925,20 +961,28 @@ function renderRoad(){
 const cumTotal = () => S.sumCum ? Object.values(S.sumCum.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
 const prevTotal= () => Object.values(S.oldSum||{}).reduce((s,r)=>s+(r['Всего']||0),0);
 const cumType  = t => S.sumCum ? (S.sumCum.total||{})[t]||0 : 0;
+const q2Total  = () => S.sumQ2 ? Object.values(S.sumQ2.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
+const q2Type   = t => S.sumQ2 ? (S.sumQ2.total||{})[t]||0 : 0;
+/* Итог квартала — прирост накопительного итога к концу прошлого квартала */
+const qTotal   = () => Math.max(0, cumTotal() - q2Total());
+const qDiv     = d => Math.max(0, (((S.sumCum&&S.sumCum.rows[d])||{})['Всего']||0) -
+                                  (((S.sumQ2&&S.sumQ2.rows[d])||{})['Всего']||0));
+const qType    = t => Math.max(0, cumType(t) - q2Type(t));
 const qName    = () => 'Q'+(Math.floor(new Date().getMonth()/3)+1)+' '+new Date().getFullYear();
 function renderDiv(){
   const P=S.projects;
   const total=cumTotal(), prev=prevTotal();
   const wk=weekWindow(0), week=closedIn(wk[0],wk[6]).length;
   const sheetYear=S.sumDone?((S.sumDone.total||{})['Всего']||0):closedThisQuarter().length;
-  const q=sheetYear+Q_BASELINE;
+  const q=S.sumQ2 ? qTotal() : sheetYear+Q_BASELINE;
   const konc=cumType('Концепт');
   document.getElementById('d-total').textContent=total||P.length;
   document.getElementById('d-total-sub').innerHTML=prev
     ? '<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду' : (S.ref.divisions||[]).length+' дивизионов';
   document.getElementById('d-work').textContent=q;
-  document.getElementById('d-work-pct').textContent='закрыто в '+qName()+
-    (Q_BASELINE?' ('+sheetYear+' в файле + '+Q_BASELINE+' до него)':'');
+  document.getElementById('d-work-pct').textContent = S.sumQ2
+    ? 'прирост к концу Q2 ('+cumTotal()+' − '+q2Total()+')'
+    : 'закрыто в '+qName()+(Q_BASELINE?' ('+sheetYear+' в файле + '+Q_BASELINE+' до него)':'');
   document.getElementById('d-queue').textContent=week;
   document.getElementById('d-tasks').textContent=konc;
   document.getElementById('d-tasks-sub').textContent=total?Math.round(konc/total*100)+'% от всех':'';
@@ -1166,8 +1210,12 @@ function photoZone(p){
     '<button class="ph-x" data-drop="'+p.num+'_'+x.slot+'" title="Удалить">✕</button></div>';
   const empty=slot=>'<div class="ph ph-empty" data-add="'+p.num+'_'+slot+'">'+
     '<span>＋<br>фото</span></div>';
-  const cells=shots.map(cell).concat(free!==undefined?[empty(free)]:[]);
-  return '<div class="ph-zone pz-'+cells.length+'">'+cells.join('')+'</div>';
+  /* пока фото нет — вся плитка приглашает загрузить; как только появилось,
+     снимки занимают весь квадрат, а следующий добавляется кнопкой в углу */
+  if(!shots.length) return '<div class="ph-zone pz-1">'+empty(0)+'</div>';
+  return '<div class="ph-zone pz-'+shots.length+'">'+shots.map(cell).join('')+
+    (free!==undefined?'<button class="ph-add" data-add="'+p.num+'_'+free+
+      '" title="Добавить ещё изображение">＋</button>':'')+'</div>';
 }
 
 /* ═══════════════════ НЕДЕЛЯ ═══════════════════ */
@@ -1262,13 +1310,13 @@ function renderWeek(){
 
   document.getElementById('w-kpi').innerHTML=
     kpiCard('Закрыто запросов',done.length,
-      (S.sumDone?'из '+((S.sumDone.total||{})['Всего']||0)+' в этом файле за 2026'
-               :'из '+S.projects.filter(p=>p.closed).length+' закрытых'))+
+      (S.sumQ2?'из '+qTotal()+' за '+qName()
+              :'из '+((S.sumDone&&(S.sumDone.total||{})['Всего'])||S.projects.filter(p=>p.closed).length)+' за 2026'))+
     kpiCard('Загрузка отдела',pct+'%',load+' из '+cap+' раб. дн',null,
       pct>100?'bad':pct>80?'warn':'good')+
     kpiCard('Задач в работе',inWeek.filter(t=>t.person).length,
       (S.ref.persons||[]).length+' исполнителей')+
-    kpiCard('Просрочено',overdue,overdue?'требует внимания':'сроки соблюдены',null,overdue?'bad':'good');
+    kpiCard('Требуют внимания',overdue,overdue?'срок задачи прошёл':'сроки соблюдены',null,overdue?'bad':'good');
 
   document.getElementById('w-bydiv').innerHTML=done.length?barRows(byDiv,null,divColor,done.length):barRows({},null,divColor);
   document.getElementById('w-bytype').innerHTML=done.length?barRows(byType,null,typeColor,done.length):barRows({},null,typeColor);
@@ -1715,6 +1763,7 @@ function applyData(d){
   S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн/i.test(b.title)) || null;
   S.sumCum  = S.blocks.find(b=>b.kind==='div'&&/накопительн/i.test(b.title)) || null;
   S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
+  S.sumQ2   = S.blocks.find(b=>b.kind==='div'&&/квартал/i.test(b.title)) || null;
   S.projects=parseMain(d.main||[]);
   S.days=twoWeekWindow(new Date());
   if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
