@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v16</title>
+<title>ОИП — Проекты Q3 2026 · v18</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -363,7 +363,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v16 · 11.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v18 · 12.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -564,7 +564,7 @@ const Q_BASELINE = 21;
 
 /* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
 const AVATARS_MANUAL = {};
-const DRIVE = { folder:'1tkCmroSmMYKBRFrA1iT5KL5tzv4ijvP_', apiKey:'' };
+const DRIVE = { folder:'', apiKey:'' };   // папка подхватывается из «Справочника»
 
 const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9,pct:34,status:35,week:36};
 const SKIP_NAMES = ['шаблон'];
@@ -746,16 +746,42 @@ function parseRef(rows){
   const ref={divisions:[],persons:[],statuses:[],types:[],avatars:{},holidays:[]};
   if(!rows.length) return ref;
   const hdr=rows[0], colOf=t=>hdr.findIndex(h=>h&&h.toLowerCase().includes(t));
-  const down=j=>{const a=[];for(let i=1;i<rows.length;i++){const v=(rows[i][j]||'').trim();if(v)a.push(v);}return a;};
+  /* Список читается сверху вниз до первой пустой ячейки: ниже в той же колонке
+     могут стоять другие блоки — например, таблица фотографий исполнителей. */
+  const down=j=>{const a=[];
+    for(let i=1;i<rows.length;i++){
+      const v=((rows[i]||[])[j]||'').trim();
+      if(!v){ if(a.length) break; else continue; }
+      a.push(v);
+    }
+    return a;};
   const cD=colOf('дивизион'),cP=colOf('исполнител'),cS=colOf('статус'),cT=colOf('тип'),cF=colOf('фото');
   if(cD>=0) ref.divisions=down(cD);
   if(cP>=0) ref.persons=down(cP);
   if(cS>=0) ref.statuses=down(cS);
   if(cT>=0) ref.types=down(cT);
   if(cP>=0&&cF>=0) for(let i=1;i<rows.length;i++){
-    const n=(rows[i][cP]||'').trim(), u=(rows[i][cF]||'').trim();
+    const n=((rows[i]||[])[cP]||'').trim(), u=((rows[i]||[])[cF]||'').trim();
     if(n&&u) ref.avatars[n]=driveUrl(u);
   }
+  /* Отдельный блок вида «Исполнитель | Ссылка» — где угодно на листе */
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i]||[];
+    const ci=r.findIndex(x=>/исполнител/i.test(x||''));
+    if(ci<0) continue;
+    const li=r.findIndex((x,j)=>j!==ci && /ссылк|фото|url|картин/i.test(x||''));
+    if(li<0) continue;
+    for(let k=i+1;k<rows.length;k++){
+      const n=((rows[k]||[])[ci]||'').trim(), u=((rows[k]||[])[li]||'').trim();
+      if(!n) break;
+      if(u) ref.avatars[n]=driveUrl(u);
+    }
+  }
+  /* Ссылка на папку с фотографиями может лежать в любой ячейке «Справочника» */
+  rows.forEach(r=>r.forEach(v=>{
+    const m=String(v||'').match(/drive\.google\.com\/drive\/folders\/([-\w]{10,})/);
+    if(m&&!ref.folder) ref.folder=m[1];
+  }));
   Object.entries(AVATARS_MANUAL).forEach(([k,v])=>{ if(v) ref.avatars[k]=driveUrl(v); });
   /* «Праздники / доп. выходные» и «Даты (расчёт)» — берём из обеих колонок */
   const holCols=hdr.map((x,j)=>({t:String(x||'').toLowerCase(),j}))
@@ -805,6 +831,21 @@ function parseBlocks(rows){
   return out;
 }
 const normName = s => String(s).toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-zа-яё]/g,'');
+/* Сопоставляем имена файлов с исполнителями: регистр, пробелы и расширение не важны */
+function applyAvatarMap(map){
+  const persons=S.ref.persons||[];
+  const entries=Object.entries(map).filter(([k,v])=>k[0]!=='_'&&v);
+  persons.forEach(p=>{
+    if(S.ref.avatars[p]) return;                 // колонка «Фото» имеет приоритет
+    const n=normName(p);
+    const hit=entries.find(([k])=>normName(k)===n) || entries.find(([k])=>normName(k).startsWith(n));
+    if(hit) S.ref.avatars[p]=/^https?:/.test(hit[1])?hit[1]
+      :'https://drive.google.com/thumbnail?id='+hit[1]+'&sz=w400';
+  });
+  S.avatarNote = map._error ? 'Скрипт не смог прочитать папку: '+map._error
+    : (entries.length? entries.length+' фото в папке, сопоставлено '+
+       persons.filter(p=>S.ref.avatars[p]).length+' из '+persons.length : '');
+}
 async function loadDriveAvatars(persons){
   if(!DRIVE.apiKey||!DRIVE.folder) return {};
   const q="'"+DRIVE.folder+"' in parents and mimeType contains 'image/' and trashed=false";
@@ -1946,7 +1987,8 @@ async function grabViaScript(url){
   const main=pick(SHEETS.main);
   if(!main.length) throw new Error('Скрипт не вернул лист «'+SHEETS.main+'»');
   return {main,ref:pick(SHEETS.ref),old:pick(SHEETS.old),sum:pick(SHEETS.sum),
-          week:pick('Сводная неделя'),arch:pick(SHEET_ARCHIVE)};
+          week:pick('Сводная неделя'),arch:pick(SHEET_ARCHIVE),
+          avatars:(j._avatars&&typeof j._avatars==='object')?j._avatars:null};
 }
 async function grab(name,required){
   const r=await fetch(base(name),{cache:'no-store'});
@@ -1955,6 +1997,9 @@ async function grab(name,required){
 }
 function applyData(d){
   S.ref=parseRef(d.ref||[]);
+  if(S.ref.folder) DRIVE.folder=S.ref.folder;
+  /* Карта «имя файла → картинка», собранная скриптом на стороне Google */
+  if(d.avatars) applyAvatarMap(d.avatars);
   HOLIDAYS.clear();
   (S.ref.holidays||[]).forEach(x=>HOLIDAYS.add(dkey(x)));
   S.oldSum=parseSummary(d.old||[]);
@@ -1979,11 +2024,11 @@ function applyData(d){
   if(!document.querySelector('.page.show')) showTab('road');
 }
 async function fetchAll(){
-  let main=null,ref=[],old=[],sum=[],week=[],arch=[];
+  let main=null,ref=[],old=[],sum=[],week=[],arch=[],avatars=null;
   S.srcNote='';
   const url=S.scriptUrl||SCRIPT_URL;
   if(url){
-    try{ ({main,ref,old,sum,week,arch}=await grabViaScript(url)); S.src='script'; }
+    try{ ({main,ref,old,sum,week,arch,avatars}=await grabViaScript(url)); S.src='script'; }
     catch(err){ S.srcNote='Источник Apps Script недоступен: '+err.message+'.'; main=null; }
   }
   if(!main){
@@ -1993,7 +2038,7 @@ async function fetchAll(){
     S.src='gviz';
     if(S.srcNote) S.srcNote+=' Читаю через gviz — сроки будут нормативными.';
   }
-  return {main,ref,old,sum,week,arch};
+  return {main,ref,old,sum,week,arch,avatars};
 }
 async function load(silent){
   const L=document.getElementById('loading'), E=document.getElementById('errbox');
