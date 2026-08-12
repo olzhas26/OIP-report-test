@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v14</title>
+<title>ОИП — Проекты Q3 2026 · v16</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -300,6 +300,20 @@ table.wgrid tr.wsum td{border-top:1.5px solid var(--line);background:#fbfdff}
 table.wgrid tr.wdone td{font-weight:800}
 table.wgrid tr.wdone td.ok{background:#e8f5e9;color:#1b5e20}
 
+
+/* ── сравнение квартала с накопленным ── */
+.qrow{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:12px}
+.qrow .ql{width:118px;flex:0 0 118px;display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qrow .ql i{width:9px;height:9px;border-radius:2px;flex:0 0 9px}
+.qrow .qbars{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.qrow .qb{display:block;height:7px;background:#eef3f9;border-radius:4px;overflow:hidden}
+.qrow .qb i{display:block;height:100%;border-radius:4px;min-width:2px}
+.qrow b{width:30px;text-align:right;font-variant-numeric:tabular-nums}
+.qrow .qbase{width:38px;text-align:right;color:var(--faint);font-variant-numeric:tabular-nums}
+.qrow .delta{width:52px;text-align:right}
+.qrow.qtot{border-top:1px solid var(--line);margin-top:5px;padding-top:8px;font-weight:800}
+.qrow.qtot .ql{font-weight:800}
+
 @media(max-width:1080px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .week-grid2,.anal-grid,.sum-grid{grid-template-columns:1fr}
@@ -349,7 +363,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v14 · 11.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v16 · 11.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -1125,17 +1139,14 @@ function renderSummary(hostId,mode){
   host.innerHTML=
     '<div class="sum-grid">'+
       '<div class="card"><div class="card-h">'+(mode==='div'?'По дивизионам за ':'По типам за ')+qName()+
-        '<b class="card-n">'+qTotal()+'</b></div>'+
+        '<b class="card-n">'+sum(qMap)+'</b></div>'+
         barRows(qMap,null,colorFn,sum(qMap))+
         '<div class="load-note" style="margin-top:8px">Накопительный итог минус «'+
-        esc(S.sumQ2?S.sumQ2.title:'конец прошлого квартала')+'».'+
-        (sum(qMap)!==qTotal()?' <b style="color:#b06a10">Сумма строк '+sum(qMap)+' не равна итогу '+qTotal()+
-          ': в таблице прошлого квартала '+mismatchNote(mode)+'.</b>':'')+
-        '</div></div>'+
+        esc(S.sumQ2?S.sumQ2.title:'конец прошлого квартала')+'».'+mismatchNote()+'</div></div>'+
       '<div class="card"><div class="card-h">Закрыто за неделю '+dm(wk[0])+' — '+dm(wk[6])+
         '<b class="card-n">'+done.length+'</b></div>'+
         barRows(wMap,null,colorFn,done.length,true)+'</div>'+
-      archiveCard(mode,colorFn)+
+      quarterCompareCard(mode,colorFn)+
     '</div>'+
     matrixCard(S.sumCum,mode==='type');
 }
@@ -1167,15 +1178,51 @@ function archiveList(list){
     (list.length>head.length?'<div class="load-note">Показаны первые '+head.length+' из '+list.length+'.</div>':'');
 }
 /* Что именно не сходится между таблицей прошлого квартала и накопительным итогом */
-function mismatchNote(mode){
-  if(!S.sumQ2||!S.sumCum) return 'нет данных для сверки';
-  const a = mode==='div' ? Object.keys(S.sumQ2.rows) : S.sumQ2.cols.filter(c=>c!=='Всего');
-  const b = mode==='div' ? Object.keys(S.sumCum.rows) : S.sumCum.cols.filter(c=>c!=='Всего');
-  const gone=a.filter(x=>!b.includes(x)), added=b.filter(x=>!a.includes(x));
-  const bits=[];
-  if(gone.length)  bits.push('есть «'+gone.join('», «')+'», которых нет в накопительном');
-  if(added.length) bits.push('нет «'+added.join('», «')+'»');
-  return bits.join('; ')||'расходятся значения';
+/* Квартал против того, что было накоплено к его началу */
+function quarterCompareCard(mode,colorFn){
+  if(!S.sumQ2||!S.sumCum) return '';
+  const keys = mode==='div'
+    ? Object.keys(S.sumCum.rows)
+    : S.sumCum.cols.filter(c=>c!=='Всего');
+  const cur  = k => mode==='div' ? qDiv(k) : qType(k);
+  const base = k => mode==='div' ? (((S.sumQ2.rows[k]||{})['Всего'])||0) : q2Type(k);
+  const rows = keys.map(k=>({k,c:cur(k),b:base(k)})).filter(r=>r.c||r.b)
+                   .sort((a,b)=>b.c-a.c||b.b-a.b);
+  if(!rows.length) return '';
+  const max=Math.max(1,...rows.map(r=>Math.max(r.c,r.b)));
+  const sumC=rows.reduce((s,r)=>s+r.c,0), sumB=rows.reduce((s,r)=>s+r.b,0);
+  const pct=(c,b)=> b ? '<span class="delta '+(c?'up':'zero')+'">+'+Math.round(c/b*100)+'%</span>'
+                      : (c?'<span class="delta up">новый</span>':'<span class="delta zero">—</span>');
+  return '<div class="card"><div class="card-h">'+qName()+' против накопленного ранее'+
+    '<b class="card-n">'+sumC+' / '+sumB+'</b></div>'+
+    rows.map(r=>'<div class="qrow">'+
+      '<span class="ql"><i style="background:'+colorFn(r.k)+'"></i>'+esc(r.k)+'</span>'+
+      '<span class="qbars">'+
+        '<span class="qb"><i style="width:'+(r.c/max*100)+'%;background:'+colorFn(r.k)+'"></i></span>'+
+        '<span class="qb"><i style="width:'+(r.b/max*100)+'%;background:#c3cede"></i></span>'+
+      '</span>'+
+      '<b>'+r.c+'</b><span class="qbase">'+r.b+'</span>'+pct(r.c,r.b)+'</div>').join('')+
+    '<div class="qrow qtot"><span class="ql">Итого</span><span class="qbars"></span>'+
+      '<b>'+sumC+'</b><span class="qbase">'+sumB+'</span>'+pct(sumC,sumB)+'</div>'+
+    '<div class="load-note" style="margin-top:8px">Верхняя полоса — '+qName()+
+    ', нижняя серая — накоплено к его началу по таблице «'+esc(S.sumQ2.title)+
+    '». Процент показывает, на сколько квартал прирастил эту базу.</div></div>';
+}
+function mismatchNote(){
+  if(!S.sumQ2) return '';
+  const cols=S.sumQ2.cols.filter(c=>c!=='Всего');
+  let byCells=0, byTotal=0, badRows=[];
+  Object.entries(S.sumQ2.rows).forEach(([name,rec])=>{
+    const s=cols.reduce((a,c)=>a+(rec[c]||0),0), v=rec['Всего']||0;
+    byCells+=s; byTotal+=v;
+    if(s!==v) badRows.push(name+' '+v+' против '+s);
+  });
+  if(!badRows.length) return '';
+  return ' <b style="color:#b06a10">В таблице «'+esc(S.sumQ2.title)+
+    '» столбец «Всего» не равен сумме по типам: '+byTotal+' против '+byCells+
+    ' (расхождение '+(byCells-byTotal)+'). Строки: '+badRows.slice(0,4).join('; ')+
+    (badRows.length>4?' и ещё '+(badRows.length-4):'')+
+    '. Из-за этого квартал по дивизионам и по типам даёт разные суммы.</b>';
 }
 /* Матрица «дивизион × тип» как в таблице; transpose — строки становятся типами */
 function matrixCard(blk,transpose){
