@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v12</title>
+<title>ОИП — Проекты Q3 2026 · v14</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -216,7 +216,7 @@ tr.prow:hover td{background:#f8fbfe}
 .card-n{float:right;color:var(--ink);font-size:15px}
 
 .week-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(316px,1fr));gap:12px;margin-top:16px}
 .anal-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:12px}
 
 /* ── выполненные работы ── */
@@ -279,6 +279,27 @@ th.sortable.act{color:var(--cyan-d)}
 .ph-add:hover{background:var(--cyan);color:var(--navy)}
 .ph-zone{position:relative}
 
+
+/* ── числовая сетка недели ── */
+table.wgrid{width:100%;border-collapse:collapse;font-size:12px}
+table.wgrid th{background:#f4f8fc;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--mute);padding:6px 8px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+table.wgrid th:first-child{text-align:left;width:150px}
+table.wgrid th b{display:block;font-size:12.5px;color:var(--ink);font-weight:800}
+table.wgrid th.we{background:#f7fafd;color:var(--faint)}
+table.wgrid th.we b{color:var(--faint)}
+table.wgrid th.td{background:var(--navy);color:rgba(255,255,255,.7)}
+table.wgrid th.td b{color:#fff}
+table.wgrid td{padding:6px 8px;text-align:center;border-bottom:1px solid #f2f6fa;font-variant-numeric:tabular-nums;font-weight:700}
+table.wgrid td.mh{text-align:left;font-weight:600;white-space:nowrap}
+table.wgrid td.z{color:#cfd8e3;font-weight:400}
+table.wgrid td.we{background:#fafcfe}
+table.wgrid td.td{box-shadow:inset 2px 0 0 var(--cyan),inset -2px 0 0 var(--cyan)}
+table.wgrid td.tot,table.wgrid th.tot{background:#f8fbfe;font-weight:800}
+table.wgrid tr.wsum td{border-top:1.5px solid var(--line);background:#fbfdff}
+table.wgrid tr.wdone td{font-weight:800}
+table.wgrid tr.wdone td.ok{background:#e8f5e9;color:#1b5e20}
+
 @media(max-width:1080px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .week-grid2,.anal-grid,.sum-grid{grid-template-columns:1fr}
@@ -328,7 +349,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v12 · 11.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v14 · 11.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -426,8 +447,8 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
     <div class="card"><div class="card-h">Загрузка исполнителей</div><div id="w-persons"></div></div>
   </div>
   <div class="card" style="margin-top:14px;padding-bottom:8px">
-    <div class="card-h">Календарь недели</div>
-    <div class="day-cols" id="w-days"></div>
+    <div class="card-h">Загрузка по дням · число задач</div>
+    <div id="w-days" style="overflow-x:auto"></div>
   </div>
   <div class="done-head">
     <div class="card-h" style="margin:0">Выполненные работы <span id="w-done-count" style="color:var(--cyan-d)"></span></div>
@@ -533,6 +554,12 @@ const DRIVE = { folder:'1tkCmroSmMYKBRFrA1iT5KL5tzv4ijvP_', apiKey:'' };
 
 const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9,pct:34,status:35,week:36};
 const SKIP_NAMES = ['шаблон'];
+const SHEET_ARCHIVE = 'Старый список проектов';
+/* Старый формат вёлся другими названиями */
+const DIV_ALIAS  = {'Ташкент':'In-house'};
+const TYPE_ALIAS = {'Эскиз':'Эскизный проект','Эскизный':'Эскизный проект'};
+const normDiv  = d => DIV_ALIAS[d]  || d;
+const normType = t => TYPE_ALIAS[t] || t;
 
 const DIV_COLORS  = {'Центр':'#1e3a6b','Астана':'#2f5fa0','Алматы':'#4a80c0','Юг':'#f0a030',
   'Запад':'#f5d8a8','РДС':'#9ab8cc','In-house':'#4fb3d9','Другое':'#d0d8e8','Доп. задачи':'#8e6bc9'};
@@ -674,6 +701,29 @@ function parseMain(rows){
   }
   return out;
 }
+/* Старый список: одна строка — один проект, все закрыты */
+function parseArchive(rows){
+  const hi=findHeader(rows,['Наименование','Дивизион']);
+  if(hi<0) return [];
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const name=(r[1]||'').trim();
+    if(!name) continue;
+    const persons=[r[7],r[8],r[9]].map(x=>(x||'').trim()).filter(Boolean);
+    const due=realDate(r[5]);
+    out.push({
+      uid:'a'+(r[0]||i), num:parseFloat(r[0])||out.length+1, name,
+      div:normDiv((r[2]||'—').trim()), type:normType((r[3]||'—').trim()),
+      city:'', contact:'', video:/да|yes/i.test(r[4]||''),
+      task:(r[6]||'').trim(), weekNo:parseFloat(r[11])||null,
+      got:null, due, taken:null, begin:due, finish:due, weekStart:null,
+      status:'Готова', closed:true, archive:true,
+      persons, load:0, tasks:[]
+    });
+  }
+  return out;
+}
 function driveUrl(u){
   const m=String(u).match(/[-\w]{25,}/);
   return m ? 'https://drive.google.com/thumbnail?id='+m[0]+'&sz=w400' : u;
@@ -762,9 +812,9 @@ async function loadDriveAvatars(persons){
 
 /* ═══════════════════ СОСТОЯНИЕ ═══════════════════ */
 const S = {projects:[], ref:{}, oldSum:{}, blocks:[], sumDone:null, sumCum:null, sumPers:null,
-  loaded:false, cacheTs:null, scriptUrl:'', hideDone:false,
+  loaded:false, cacheTs:null, scriptUrl:'', hideDone:false, archive:[],
   days:[], weekOffset:0, roadMode:'assigned', workFilter:'все', src:'', srcNote:'',
-  aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),q:''},
+  aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),src:new Set(),q:''},
   aSort:{key:'num',dir:1}, aGroup:'div'};
 const charts = {};
 const today = midnight(new Date());
@@ -1064,22 +1114,68 @@ function renderSummary(hostId,mode){
     else Object.entries(blk.total||{}).forEach(([k,v])=>{ if(k!=='Всего') o[k]=v; });
     return o;
   };
-  const cur=pull(S.sumDone), cum=pull(S.sumCum);
-  const prev={};
-  Object.entries(S.oldSum||{}).forEach(([d,rec])=>{
-    if(mode==='div') prev[d]=rec['Всего']||0;
-    else Object.entries(rec).forEach(([t,v])=>{ if(t!=='Всего') prev[t]=(prev[t]||0)+v; });
-  });
+  const keys = mode==='div'
+    ? [...new Set([...(S.ref.divisions||[]), ...Object.keys((S.sumCum||{rows:{}}).rows)])]
+    : [...new Set([...(S.ref.types||[]), ...((S.sumCum&&S.sumCum.cols)||[])])].filter(t=>t!=='Всего');
+  const qMap={}; keys.forEach(k=>qMap[k]= mode==='div'?qDiv(k):qType(k));
+  const wk=weekWindow(0), done=closedIn(wk[0],wk[6]);
+  const wMap={}; keys.forEach(k=>wMap[k]=0);
+  done.forEach(p=>{ const k=(mode==='div'?p.div:p.type); if(k in wMap) wMap[k]++; else wMap[k]=1; });
   const sum=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
   host.innerHTML=
     '<div class="sum-grid">'+
-      '<div class="card"><div class="card-h">'+esc(S.sumDone?S.sumDone.title:'Закрыто за период')+
-        '<b class="card-n">'+sum(cur)+'</b></div>'+barRows(cur||{},null,colorFn)+'</div>'+
-      '<div class="card"><div class="card-h">Прирост к прошлому периоду'+
-        '<b class="card-n">'+(sum(cum)-sum(prev))+'</b></div>'+barRows(cum||{},prev,colorFn)+
-        '<div class="load-note" style="margin-top:8px">Дельта — разница с листом «Старый свод».</div></div>'+
+      '<div class="card"><div class="card-h">'+(mode==='div'?'По дивизионам за ':'По типам за ')+qName()+
+        '<b class="card-n">'+qTotal()+'</b></div>'+
+        barRows(qMap,null,colorFn,sum(qMap))+
+        '<div class="load-note" style="margin-top:8px">Накопительный итог минус «'+
+        esc(S.sumQ2?S.sumQ2.title:'конец прошлого квартала')+'».'+
+        (sum(qMap)!==qTotal()?' <b style="color:#b06a10">Сумма строк '+sum(qMap)+' не равна итогу '+qTotal()+
+          ': в таблице прошлого квартала '+mismatchNote(mode)+'.</b>':'')+
+        '</div></div>'+
+      '<div class="card"><div class="card-h">Закрыто за неделю '+dm(wk[0])+' — '+dm(wk[6])+
+        '<b class="card-n">'+done.length+'</b></div>'+
+        barRows(wMap,null,colorFn,done.length,true)+'</div>'+
+      archiveCard(mode,colorFn)+
     '</div>'+
     matrixCard(S.sumCum,mode==='type');
+}
+/* Старый список проектов в том же разрезе */
+function archiveCard(mode,colorFn){
+  const A=S.archive||[];
+  if(!A.length) return '';
+  const map={};
+  A.forEach(p=>{ const k=(mode==='div'?p.div:p.type); map[k]=(map[k]||0)+1; });
+  const alias=Object.entries(mode==='div'?DIV_ALIAS:TYPE_ALIAS).map(([a,b])=>a+' → '+b);
+  return '<div class="card"><div class="card-h">Старый список проектов'+
+    '<b class="card-n">'+A.length+'</b></div>'+
+    barRows(map,null,colorFn,A.length)+
+    '<div class="load-note" style="margin-top:8px">Архив до перехода на текущий формат.'+
+    (alias.length?' Приведено к общим названиям: '+alias.join(', ')+'.':'')+
+    ' Разбор — в «Аналитике», фильтр «Источник».</div></div>';
+}
+/* Список записей архива внутри разбора */
+function archiveList(list){
+  if(!list||!list.length) return '';
+  const head=list.slice(0,60);
+  return '<div class="card-h" style="margin:14px 0 6px">Старый список · '+list.length+'</div>'+
+    '<div class="tbl-wrap" style="box-shadow:none;max-height:270px;overflow:auto"><table>'+
+    '<thead><tr><th>№</th><th>Наименование</th><th>Тип</th><th>Ответственные</th><th>Нед.</th></tr></thead><tbody>'+
+    head.map(p=>'<tr class="prow" data-num="'+p.uid+'"><td class="num">'+p.num+'</td>'+
+      '<td class="pname">'+esc(p.name)+'</td><td>'+esc(p.type)+'</td>'+
+      '<td>'+esc(p.persons.join(', ')||'—')+'</td><td>'+(p.weekNo||'—')+'</td></tr>').join('')+
+    '</tbody></table></div>'+
+    (list.length>head.length?'<div class="load-note">Показаны первые '+head.length+' из '+list.length+'.</div>':'');
+}
+/* Что именно не сходится между таблицей прошлого квартала и накопительным итогом */
+function mismatchNote(mode){
+  if(!S.sumQ2||!S.sumCum) return 'нет данных для сверки';
+  const a = mode==='div' ? Object.keys(S.sumQ2.rows) : S.sumQ2.cols.filter(c=>c!=='Всего');
+  const b = mode==='div' ? Object.keys(S.sumCum.rows) : S.sumCum.cols.filter(c=>c!=='Всего');
+  const gone=a.filter(x=>!b.includes(x)), added=b.filter(x=>!a.includes(x));
+  const bits=[];
+  if(gone.length)  bits.push('есть «'+gone.join('», «')+'», которых нет в накопительном');
+  if(added.length) bits.push('нет «'+added.join('», «')+'»');
+  return bits.join('; ')||'расходятся значения';
 }
 /* Матрица «дивизион × тип» как в таблице; transpose — строки становятся типами */
 function matrixCard(blk,transpose){
@@ -1229,6 +1325,7 @@ function weekWindow(offset){
 /* Как только колонка «Начало недели» заполнена хотя бы у одного проекта,
    она становится единственным источником: расчётные догадки больше не добавляются. */
 const useWeekCol = () => S.projects.some(p=>p.closed && p.weekStart);
+const closeDate  = p => (useWeekCol() ? p.weekStart : p.finish) || null;
 /* «Начало недели» обязано быть понедельником — иначе это опечатка или остаток от заглушки */
 const isMonday = d => d && d.getDay()===1;
 const badWeekCells = () => S.projects.filter(p=>p.weekStart && !isMonday(p.weekStart));
@@ -1265,8 +1362,8 @@ function kpiCard(label,value,sub,delta,tone){
     '<div class="kpi-v'+(tone?' '+tone:'')+'">'+value+d+'</div>'+
     (sub?'<div class="kpi-s">'+sub+'</div>':'')+'</div>';
 }
-function barRows(map,prev,colorFn,total){
-  const keys=Object.keys(map).filter(k=>map[k]||(prev&&prev[k]));
+function barRows(map,prev,colorFn,total,showZeros){
+  const keys=Object.keys(map).filter(k=>showZeros||map[k]||(prev&&prev[k]));
   if(!keys.length) return '<div class="load-note">Закрытых запросов нет</div>';
   const max=Math.max(1,...keys.map(k=>map[k]||0));
   return keys.sort((a,b)=>(map[b]||0)-(map[a]||0)).map(k=>{
@@ -1332,17 +1429,45 @@ function renderWeek(){
     }).join('')||'<div class="load-note">Нет задач</div>';
 
   const wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  document.getElementById('w-days').innerHTML=week.map((d,i)=>{
-    const items=inWeek.filter(t=>midnight(t.start)<=d&&midnight(t.end)>=d);
-    const fin=done.filter(p=>+midnight(p.finish)===+d);
-    return '<div class="day-col'+(isFree(d)?' we':'')+(isHoliday(d)?' hol':'')+'">'+
-      '<div class="dc-h'+(+d===+today?' today':'')+(isHoliday(d)?' hol':'')+'">'+wd[i]+' '+dm(d)+
-      (isHoliday(d)?' ★':'')+'</div><div class="dc-b">'+
-      fin.map(p=>'<div class="dc-item dc-done" data-num="'+p.num+'">✓ '+esc(p.name)+'</div>').join('')+
-      (items.map(t=>'<div class="dc-item" data-num="'+t.num+'" style="background:'+taskColor(t.label)+
-        '">'+esc(t.label)+'<span>'+esc(t.person||'без исполнителя')+'</span></div>').join('')
-       ||(fin.length?'':'<div class="dc-none">—</div>'))+'</div></div>';
-  }).join('');
+  /* Плотная числовая сетка: строка — исполнитель, столбец — день, в ячейке число задач */
+  const grid={}, byDay=Array(7).fill(0), namesByDay=Array(7).fill(null).map(()=>[]);
+  inWeek.forEach(t=>week.forEach((d,i)=>{
+    if(midnight(t.start)<=d&&midnight(t.end)>=d){
+      const who=t.person||'— не назначен';
+      grid[who]=grid[who]||Array(7).fill(0);
+      grid[who][i]++; byDay[i]++;
+      namesByDay[i].push(who+': '+t.label+' — '+t.project);
+    }
+  }));
+  const rowsOrder=(S.ref.persons||[]).filter(n=>grid[n])
+    .concat(Object.keys(grid).filter(n=>!(S.ref.persons||[]).includes(n)));
+  const maxCell=Math.max(1,...Object.values(grid).flat());
+  const doneByDay=week.map(d=>done.filter(p=>+midnight(closeDate(p)||0)===+d).length);
+  const cell=(v,i,tip)=>{
+    const cls='wc'+(isFree(week[i])?' we':'')+(+week[i]===+today?' td':'');
+    return v
+      ? '<td class="'+cls+'" style="background:rgba(0,194,224,'+(0.08+0.42*v/maxCell).toFixed(3)+')"'+
+        (tip?' title="'+esc(tip)+'"':'')+'>'+v+'</td>'
+      : '<td class="'+cls+' z">·</td>';
+  };
+  document.getElementById('w-days').innerHTML=
+    '<table class="wgrid"><thead><tr><th>Исполнитель</th>'+
+    week.map((d,i)=>'<th class="'+(isFree(d)?'we':'')+(+d===+today?' td':'')+'">'+wd[i]+
+      '<b>'+dm(d)+'</b></th>').join('')+'<th class="tot">Итого</th></tr></thead><tbody>'+
+    (rowsOrder.length?rowsOrder.map(n=>{
+      const r=grid[n], s=r.reduce((a,b)=>a+b,0);
+      return '<tr><td class="mh">'+esc(n)+'</td>'+
+        r.map((v,i)=>cell(v,i,namesByDay[i].filter(x=>x.startsWith(n+':')).join('\n'))).join('')+
+        '<td class="tot">'+s+'</td></tr>';
+    }).join(''):'<tr><td colspan="9" class="z" style="padding:14px">Задач на этой неделе нет</td></tr>')+
+    '<tr class="wsum"><td class="mh">Задач в день</td>'+
+      byDay.map((v,i)=>cell(v,i)).join('')+
+      '<td class="tot">'+byDay.reduce((a,b)=>a+b,0)+'</td></tr>'+
+    '<tr class="wdone"><td class="mh">Закрыто запросов</td>'+
+      doneByDay.map((v,i)=>'<td class="wc'+(isFree(week[i])?' we':'')+(+week[i]===+today?' td':'')+
+        (v?' ok':' z')+'">'+(v||'·')+'</td>').join('')+
+      '<td class="tot">'+done.length+'</td></tr>'+
+    '</tbody></table>';
 
   document.getElementById('w-done-count').textContent=done.length?'· '+done.length:'';
   const wsrc=document.getElementById('w-src');
@@ -1390,11 +1515,16 @@ const A_COLS=[
   {k:'team',  t:'Исполнители',get:p=>p.persons.join(', '), cell:p=>p.persons.length?esc(p.persons.join(', ')):'—'},
   {k:'begin', t:'Начало',     get:p=>p.begin?+p.begin:0, cell:p=>'<span class="due">'+dmy(p.begin)+'</span>'},
   {k:'finish',t:'Финиш',      get:p=>p.finish?+p.finish:0, cell:p=>'<span class="due '+(p.closed?'':dueClass(p.finish))+'">'+dmy(p.finish)+'</span>'},
+  {k:'src',   t:'Источник',   get:p=>SRC_LABEL(p), cell:p=>'<span class="pill" style="background:'+
+    (p.archive?'#eef3f9;color:#5a6a80':'#e0f7fa;color:#006064')+'">'+(p.archive?'старый':'реестр')+'</span>'},
 ];
 const A_GROUPS={div:'Дивизион',type:'Тип задачи',status:'Статус',city:'Город',person:'Исполнитель',month:'Месяц закрытия'};
+const allProjects = () => S.projects.concat(S.archive||[]);
+const SRC_LABEL   = p => p.archive?'Старый список':'Текущий реестр';
 function aFiltered(){
   const f=S.aFilter, q=f.q.trim().toLowerCase();
-  return S.projects.filter(p=>
+  return allProjects().filter(p=>
+    (!f.src.size    || f.src.has(SRC_LABEL(p))) &&
     (!f.div.size    || f.div.has(p.div)) &&
     (!f.type.size   || f.type.has(p.type)) &&
     (!f.status.size || f.status.has(p.status)) &&
@@ -1416,14 +1546,16 @@ function groupOf(p,g){
   return [p[g]||'—'];
 }
 function renderAnalytics(skipFilters){
-  const div=[...new Set([...(S.ref.divisions||[]),...S.projects.map(p=>p.div)])];
-  const typ=[...new Set([...(S.ref.types||[]),...S.projects.map(p=>p.type)])];
-  const sta=[...new Set([...(S.ref.statuses||[]),...S.projects.map(p=>p.status)])];
-  const per=[...new Set([...(S.ref.persons||[]),...S.projects.flatMap(p=>p.persons)])];
+  const ALL=allProjects();
+  const div=[...new Set([...(S.ref.divisions||[]),...ALL.map(p=>p.div)])];
+  const typ=[...new Set([...(S.ref.types||[]),...ALL.map(p=>p.type)])];
+  const sta=[...new Set([...(S.ref.statuses||[]),...ALL.map(p=>p.status)])];
+  const per=[...new Set([...(S.ref.persons||[]),...ALL.flatMap(p=>p.persons)])];
   if(!skipFilters) document.getElementById('a-filters').innerHTML=
     '<div class="frow"><span class="flab">Поиск</span>'+
     '<input id="a-q" class="fsearch" placeholder="название, город, исполнитель…" value="'+esc(S.aFilter.q)+'"></div>'+
     chipRow('Дивизион','div',div)+chipRow('Тип','type',typ)+
+    chipRow('Источник','src',['Текущий реестр','Старый список'])+
     chipRow('Статус','status',sta)+chipRow('Исполнитель','person',per);
 
   const L=aFiltered();
@@ -1432,7 +1564,7 @@ function renderAnalytics(skipFilters){
   const durs=L.filter(p=>p.begin&&p.finish).map(p=>workDaysBetween(p.begin,p.finish));
   const avg=durs.length?(durs.reduce((a,b)=>a+b,0)/durs.length).toFixed(1):'—';
   document.getElementById('a-kpi').innerHTML=
-    kpiCard('Проектов',L.length,'из '+S.projects.length+' в реестре')+
+    kpiCard('Проектов',L.length,'из '+ALL.length+' всего')+
     kpiCard('Закрыто',closed,L.length?Math.round(closed/L.length*100)+'% выборки':'')+
     kpiCard('Трудоёмкость',days,'раб. дней назначено')+
     kpiCard('Средний цикл',avg,'раб. дней от старта до финиша');
@@ -1471,7 +1603,7 @@ function renderAnalytics(skipFilters){
     return String(x).localeCompare(String(y),'ru')*S.aSort.dir;
   });
   document.getElementById('a-count').textContent='· '+sorted.length;
-  document.getElementById('a-tbody').innerHTML=sorted.map(p=>'<tr class="prow" data-num="'+p.num+'">'+
+  document.getElementById('a-tbody').innerHTML=sorted.map(p=>'<tr class="prow" data-num="'+(p.uid||p.num)+'">'+
     A_COLS.map(c=>'<td>'+c.cell(p)+'</td>').join('')+'</tr>').join('')
     ||'<tr><td colspan="'+A_COLS.length+'" style="color:#c5cfdc">Под фильтры ничего не подошло</td></tr>';
 }
@@ -1494,7 +1626,7 @@ function exportCSV(){
   const esc2=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const head=A_COLS.map(c=>c.t);
   const body=L.map(p=>[p.num,p.name,p.div,p.city,p.type,p.status,p.tasks.length,p.load,
-    p.persons.join(', '),dmy(p.begin),dmy(p.finish)]);
+    p.persons.join(', '),dmy(p.begin),dmy(p.finish),SRC_LABEL(p)]);
   const csv='\ufeff'+[head,...body].map(r=>r.map(esc2).join(';')).join('\r\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
@@ -1552,8 +1684,9 @@ function openDivSum(d){
   const list=S.projects.filter(p=>p.div===d);
   show('Дивизион '+d, 'накопительно за 2026 год',
     [['Всего',rec['Всего']||0],['В этом файле',cur['Всего']||0],
-     ['В реестре',list.length],['Закрыто',list.filter(p=>p.closed).length]],
+     ['В реестре',list.length],['В архиве',(S.archive||[]).filter(p=>p.div===d).length]],
     breakdownTable('Тип задачи',rec,cur,typeColor)+
+    archiveList((S.archive||[]).filter(p=>p.div===d))+
     (list.length?'<div class="card-h" style="margin:14px 0 6px">Текущий реестр</div>'+
       '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
       '<th>Тип</th><th>Статус</th></tr></thead><tbody>'+
@@ -1568,9 +1701,10 @@ function openTypeSum(t){
   const tot=(S.sumCum&&(S.sumCum.total||{})[t])||0;
   show(t, 'накопительно за 2026 год',
     [['Всего',tot],['В этом файле',(S.sumDone&&(S.sumDone.total||{})[t])||0],
-     ['Дивизионов',Object.keys(rec).length],
+     ['В архиве',(S.archive||[]).filter(p=>p.type===t).length],
      ['Доля',cumTotal()?Math.round(tot/cumTotal()*100)+'%':'—']],
-    breakdownTable('Дивизион',rec,cur,divColor));
+    breakdownTable('Дивизион',rec,cur,divColor)+
+    archiveList((S.archive||[]).filter(p=>p.type===t)));
 }
 function breakdownTable(head,rec,cur,colorFn){
   const keys=Object.keys(rec).filter(k=>k!=='Всего'&&rec[k]);
@@ -1585,9 +1719,15 @@ function breakdownTable(head,rec,cur,colorFn){
       '<td><b>'+rec[k]+'</b></td><td>'+(cur[k]||'—')+'</td></tr>').join('')+
     '</tbody></table></div>';
 }
-function openProject(num){
-  const p=S.projects.find(x=>x.num===num);
+function findProj(key){
+  const k=String(key);
+  return S.projects.find(p=>p.uid===k) || (S.archive||[]).find(p=>p.uid===k)
+      || S.projects.find(p=>String(p.num)===k) || null;
+}
+function openProject(key){
+  const p=findProj(key);
   if(!p) return;
+  if(p.archive) return openArchive(p);
   const done=p.tasks.filter(t=>statusKind(t.status)==='done').length;
   show(p.name, p.div+(p.city&&p.city!=='Нет'?' · '+p.city:'')+' · '+p.type,
     [['Задач',p.tasks.length],['Готово',done],
@@ -1603,6 +1743,19 @@ function openProject(num){
       :'<tr><td colspan="6" style="color:#c5cfdc">Состав работ не заполнен</td></tr>')+
     '</tbody></table></div><div class="load-note" style="margin-top:10px">Поступило: '+dmy(p.got)+
     ' · взят в работу: '+dmy(p.taken)+(p.contact?' · инициатор: '+esc(p.contact):'')+'</div>');
+}
+function openArchive(p){
+  show(p.name, p.div+' · '+p.type+' · старый список проектов',
+    [['Тип',p.type],['Неделя',p.weekNo||'—'],
+     ['Исполнителей',p.persons.length],['Срок',dmy(p.due)]],
+    '<div class="tbl-wrap" style="box-shadow:none"><table><tbody>'+
+    [['Дивизион',esc(p.div)],['Задача',esc(p.task||'—')],
+     ['Ответственные',p.persons.length?esc(p.persons.join(', ')):'—'],
+     ['Видео',p.video?'да':'нет'],['Статус','готово']]
+      .map(r=>'<tr><td style="width:150px;color:var(--mute)">'+r[0]+'</td><td><b>'+r[1]+'</b></td></tr>').join('')+
+    '</tbody></table></div>'+
+    '<div class="load-note" style="margin-top:10px">Запись из архивного листа «'+esc(SHEET_ARCHIVE)+
+    '». Задачи по дням в старом формате не велись.</div>');
 }
 function show(title,sub,stats,body){
   document.getElementById('m-title').textContent=title;
@@ -1691,7 +1844,7 @@ document.addEventListener('click',e=>{
     renderRoad(); return; }
   const f=e.target.closest('[data-f]');          if(f){ S.workFilter=f.dataset.f; renderWork(); return; }
   if(e.target.closest('#m-close')||e.target.id==='ov'){ closeModal(); return; }
-  const row=e.target.closest('[data-num]');      if(row) openProject(parseFloat(row.dataset.num));
+  const row=e.target.closest('[data-num]');      if(row) openProject(row.dataset.num);
 });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ closeModal(); document.getElementById('lightbox').classList.remove('open'); }
@@ -1746,7 +1899,7 @@ async function grabViaScript(url){
   const main=pick(SHEETS.main);
   if(!main.length) throw new Error('Скрипт не вернул лист «'+SHEETS.main+'»');
   return {main,ref:pick(SHEETS.ref),old:pick(SHEETS.old),sum:pick(SHEETS.sum),
-          week:pick('Сводная неделя')};
+          week:pick('Сводная неделя'),arch:pick(SHEET_ARCHIVE)};
 }
 async function grab(name,required){
   const r=await fetch(base(name),{cache:'no-store'});
@@ -1765,6 +1918,8 @@ function applyData(d){
   S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
   S.sumQ2   = S.blocks.find(b=>b.kind==='div'&&/квартал/i.test(b.title)) || null;
   S.projects=parseMain(d.main||[]);
+  S.projects.forEach(p=>{ p.uid='r'+p.num; p.div=normDiv(p.div); p.type=normType(p.type); });
+  S.archive=parseArchive(d.arch||[]);
   S.days=twoWeekWindow(new Date());
   if(!S.projects.length) throw new Error('В листе «'+SHEETS.main+'» не найдено ни одного проекта');
   S.loaded=true;
@@ -1777,21 +1932,21 @@ function applyData(d){
   if(!document.querySelector('.page.show')) showTab('road');
 }
 async function fetchAll(){
-  let main=null,ref=[],old=[],sum=[],week=[];
+  let main=null,ref=[],old=[],sum=[],week=[],arch=[];
   S.srcNote='';
   const url=S.scriptUrl||SCRIPT_URL;
   if(url){
-    try{ ({main,ref,old,sum,week}=await grabViaScript(url)); S.src='script'; }
+    try{ ({main,ref,old,sum,week,arch}=await grabViaScript(url)); S.src='script'; }
     catch(err){ S.srcNote='Источник Apps Script недоступен: '+err.message+'.'; main=null; }
   }
   if(!main){
-    [main,ref,old,sum,week]=await Promise.all([
+    [main,ref,old,sum,week,arch]=await Promise.all([
       grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false),
-      grab(SHEETS.sum,false), grab('Сводная неделя',false)]);
+      grab(SHEETS.sum,false), grab('Сводная неделя',false), grab(SHEET_ARCHIVE,false)]);
     S.src='gviz';
     if(S.srcNote) S.srcNote+=' Читаю через gviz — сроки будут нормативными.';
   }
-  return {main,ref,old,sum,week};
+  return {main,ref,old,sum,week,arch};
 }
 async function load(silent){
   const L=document.getElementById('loading'), E=document.getElementById('errbox');
