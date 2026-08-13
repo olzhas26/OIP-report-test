@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v18</title>
+<title>ОИП — Проекты Q3 2026 · v19</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -363,7 +363,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v18 · 12.08</small></div>
+  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v19 · 12.08</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -1913,6 +1913,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(e.target.closest('#w-export')){ exportReport(); return; }
+  if(e.target.closest('#src-retry')){ load(true); return; }
   if(e.target.closest('#src-save')){
     const v=(document.getElementById('src-url').value||'').trim();
     S.scriptUrl=v; cacheSet('scriptUrl',v).catch(()=>{}); load(true); return;
@@ -1958,7 +1959,8 @@ function checkDurations(){
   }));
   const head=S.srcNote
     ? '<div style="margin-bottom:6px;color:#a03a2a"><b>'+esc(S.srcNote)+'</b></div>'+
-      '<div class="src-fix"><input id="src-url" placeholder="https://script.google.com/macros/s/.../exec" value="'+
+      '<div class="src-fix"><button class="chip sm" id="src-retry">↻ Повторить</button>'+
+      '<input id="src-url" placeholder="https://script.google.com/macros/s/.../exec" value="'+
       esc(S.scriptUrl||'')+'"><button class="chip sm" id="src-save">Подключить</button>'+
       (S.scriptUrl?'<button class="chip sm clear" id="src-clear">Сбросить</button>':'')+
       '<span>Новая ссылка веб-приложения сохранится в этом браузере.</span></div>'
@@ -1973,8 +1975,24 @@ function checkDurations(){
     : 'Срок исполнения не заполнен у <b>'+miss+'</b> задач из '+(miss+got)+
       ' — для них взят норматив, такие полосы помечены знаком ≈.');
 }
-async function grabViaScript(url){
-  const r=await fetch(url,{cache:'no-store',redirect:'follow'});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+/* Apps Script время от времени отвечает 404 на внутреннем редиректе.
+   Пробуем несколько раз с нарастающей паузой, прежде чем сдаться. */
+async function grabViaScript(url,tries){
+  tries=tries||3;
+  let last;
+  for(let i=0;i<tries;i++){
+    try{ return await grabViaScriptOnce(url); }
+    catch(e){
+      last=e; S.tries=i+1;
+      if(i<tries-1) await sleep(500*(i+1));
+    }
+  }
+  throw new Error(last.message+' (попыток: '+tries+')');
+}
+async function grabViaScriptOnce(url){
+  const bust=url+(url.includes('?')?'&':'?')+'t='+Date.now();
+  const r=await fetch(bust,{cache:'no-store',redirect:'follow'});
   if(!r.ok) throw new Error('HTTP '+r.status);
   const txt=await r.text();
   if(/^\s*</.test(txt))
@@ -2023,14 +2041,17 @@ function applyData(d){
   renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork(); renderAnalytics();
   if(!document.querySelector('.page.show')) showTab('road');
 }
-async function fetchAll(){
+async function fetchAll(allowFallback){
   let main=null,ref=[],old=[],sum=[],week=[],arch=[],avatars=null;
   S.srcNote='';
   const url=S.scriptUrl||SCRIPT_URL;
   if(url){
-    try{ ({main,ref,old,sum,week,arch,avatars}=await grabViaScript(url)); S.src='script'; }
+    try{ ({main,ref,old,sum,week,arch,avatars}=await grabViaScript(url)); S.src='script'; S.tries=0; }
     catch(err){ S.srcNote='Источник Apps Script недоступен: '+err.message+'.'; main=null; }
   }
+  /* Уже показаны полные данные из скрипта — не заменяем их урезанными из gviz */
+  if(!main && allowFallback===false)
+    throw new Error(S.srcNote||'источник недоступен');
   if(!main){
     [main,ref,old,sum,week,arch]=await Promise.all([
       grab(SHEETS.main,true), grab(SHEETS.ref,false), grab(SHEETS.old,false),
@@ -2050,7 +2071,7 @@ async function load(silent){
     try{ S.scriptUrl=await cacheGet('scriptUrl')||''; }catch(e){}
   }
   try{
-    const fresh=await fetchAll();
+    const fresh=await fetchAll(!(S.loaded && S.src==='script'));
     S.cacheTs=null;
     applyData(fresh);
     photoInit();
