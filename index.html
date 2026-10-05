@@ -2405,5 +2405,212 @@ setInterval(()=>load(true),5*60*1000);
 </script>
 <!-- ====== конец вставки ====== -->
 
+
+<!-- ====== ОИП · Планы QBR (вставка) ====== -->
+<style id="qbr-style">
+.qbr-toolbar{background:#fff;border-radius:12px;padding:11px 14px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:14px}
+.qbr-frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 0}
+.qbr-flab{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mute);width:78px;flex:0 0 78px}
+.qbr-chipf{border:1px solid var(--line);background:#fff;border-radius:20px;padding:3px 11px;font-size:11.5px;font-weight:600;color:var(--mute);cursor:pointer;transition:.15s}
+.qbr-chipf:hover{border-color:var(--cyan)}
+.qbr-chipf.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.qbr-chipf.clear{color:#e5533d;border-color:#f0cfc9}
+.qbr-search{flex:1;min-width:220px;border:1px solid var(--line);border-radius:20px;padding:6px 14px;font-size:12.5px;font-family:inherit;outline:none}
+.qbr-search:focus{border-color:var(--cyan)}
+.qbr-count{font-size:12px;color:var(--mute);font-weight:600;margin:2px 0 12px}
+.qbr-count b{color:var(--cyan-d)}
+.qbr-list{display:flex;flex-direction:column;gap:12px}
+.qbr-item{display:grid;grid-template-columns:210px 1fr;background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);overflow:hidden}
+.qbr-img{position:relative;background:#dde8f4;min-height:150px;cursor:pointer}
+.qbr-img img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0}
+.qbr-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;border:2px dashed #b8d0e8;margin:8px;border-radius:8px;color:#8fa8c4;font-size:11px;font-weight:700;text-align:center;line-height:1.5;transition:.15s;background:#eef4fa}
+.qbr-empty:hover{border-color:var(--cyan);background:#e2f5fb;color:var(--cyan-d)}
+.qbr-xbtn{position:absolute;top:7px;right:7px;width:22px;height:22px;border:none;border-radius:6px;background:rgba(16,26,46,.6);color:#fff;font-size:11px;cursor:pointer;opacity:0;transition:.15s;z-index:3}
+.qbr-img:hover .qbr-xbtn{opacity:1}
+.qbr-body{padding:13px 16px 15px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.qbr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.qbr-name{font-size:15px;font-weight:800;line-height:1.3;color:var(--ink)}
+.qbr-pwrap{display:flex;align-items:center;gap:9px}
+.qbr-pbar{flex:1;height:9px;background:#eef3f9;border-radius:5px;overflow:hidden}
+.qbr-pbar i{display:block;height:100%;border-radius:5px;transition:width .4s}
+.qbr-pct{font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;width:40px;text-align:right}
+.qbr-desc{font-size:12.5px;color:#5a6a80;line-height:1.55}
+.qbr-cmt{background:#f6f9fc;border-left:3px solid var(--cyan);border-radius:0 7px 7px 0;padding:7px 11px;font-size:12px;color:#44546a;line-height:1.5}
+.qbr-cmt b{color:var(--navy);font-weight:700}
+.qbr-empty2{padding:40px;text-align:center;color:var(--faint);font-size:13px}
+@media(max-width:700px){.qbr-item{grid-template-columns:1fr}.qbr-img{min-height:170px}}
+</style>
+<script>
+
+(function(){
+  if(window.__qbrInit) return; window.__qbrInit=1;
+  var SHEET_ID='1bK4JnYWsf8BndjRvJdGGGuYbzjW9jZfAr2pCnFYMKeU';
+  var SHEET_NAME='Планы QBR';
+  var SEED=[{"id":"lib-proj","name":"Библиотека проектов (пример)","desc":"Каталог концептов и ЭП с обложками и поиском. Строка-пример — замените данными из листа «Планы QBR».","comment":"Собран каталог на 462 файла, подключены обложки.","status":"В работе","pct":60},{"id":"bim-std","name":"BIM-стандарт отдела (пример)","desc":"Единые шаблоны и правила моделирования. Строка-пример.","comment":"Черновик стандарта на согласовании.","status":"Очередь","pct":15},{"id":"intake","name":"Единый интейк запросов (пример)","desc":"Форма приёма заявок от дивизионов. Строка-пример.","comment":"На паузе до утверждения процесса.","status":"На паузе","pct":30}];
+  var ST={'Очередь':['#fff8e1','#e65100'],'В работе':['#e0f7fa','#006064'],'На паузе':['#f3e5f5','#6a1b9a'],
+          'Готова':['#e8f5e9','#1b5e20'],'Готово':['#e8f5e9','#1b5e20'],
+          'Отменён':['#fdecea','#b0201a'],'Отменен':['#fdecea','#b0201a'],'Отменено':['#fdecea','#b0201a']};
+  var ORDER=['В работе','Очередь','На паузе','Готова','Готово','Отменён','Отменен','Отменено'];
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
+  function stStyle(s){return ST[s]||['#eef3f9','#5a6a80'];}
+  function pillOf(s){var c=stStyle(s);return '<span class="pill" style="background:'+c[0]+';color:'+c[1]+'">'+esc(s||'—')+'</span>';}
+  function barColor(s){ if(/готов/i.test(s))return '#2aa87a'; if(/отмен/i.test(s))return '#b0201a'; if(/пауз/i.test(s))return '#8e6bc9'; if(/очеред/i.test(s))return '#e0a020'; return 'var(--cyan-d)'; }
+  function clampPct(v){ v=parseFloat(String(v).replace(',','.').replace('%',''))||0; return Math.max(0,Math.min(100,Math.round(v))); }
+  function slug(s){return String(s||'').toLowerCase().replace(/[^a-zа-яё0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'row';}
+
+  var ROWS=SEED.slice();
+  var QF={st:new Set(),q:''};
+  var IMG={};  // id -> dataURL
+
+  /* ── отдельное хранилище картинок (не пересекается с «Выполненными работами») ── */
+  var qdbP=null;
+  function qdb(){ if(qdbP) return qdbP; qdbP=new Promise(function(res,rej){
+    var q=indexedDB.open('oipQBRimg',1);
+    q.onupgradeneeded=function(){ var db=q.result; if(!db.objectStoreNames.contains('img')) db.createObjectStore('img'); };
+    q.onsuccess=function(){res(q.result);}; q.onerror=function(){rej(q.error);};
+  }); return qdbP; }
+  function qImgSet(k,v){ return qdb().then(function(db){return new Promise(function(res,rej){var t=db.transaction('img','readwrite');t.objectStore('img').put(v,k);t.oncomplete=function(){res();};t.onerror=function(){rej(t.error);};});}); }
+  function qImgDel(k){ return qdb().then(function(db){return new Promise(function(res,rej){var t=db.transaction('img','readwrite');t.objectStore('img').delete(k);t.oncomplete=function(){res();};t.onerror=function(){rej(t.error);};});}); }
+  function qImgAll(){ return qdb().then(function(db){return new Promise(function(res,rej){var st=db.transaction('img','readonly').objectStore('img'),out={},c=st.openCursor();c.onsuccess=function(e){var cur=e.target.result;if(cur){out[cur.key]=cur.value;cur.continue();}else res(out);};c.onerror=function(){rej(c.error);};});}); }
+
+  function mount(){
+    var grp=document.querySelector('.tab-group'); if(!grp) return false;
+    if(!document.querySelector('.tab[data-tab="qbr"]')){
+      var b=document.createElement('button'); b.className='tab'; b.dataset.tab='qbr'; b.textContent='Планы QBR';
+      var anchor=grp.querySelector('.tab[data-tab="anal"]');
+      grp.insertBefore(b, anchor||null);
+    }
+    if(!document.getElementById('tab-qbr')){
+      var p=document.createElement('div'); p.id='tab-qbr'; p.className='page';
+      p.innerHTML=
+        '<div class="page-title">Планы <span>QBR</span></div>'+
+        '<div class="page-subtitle">Отчётность по внедрениям и инициативам. Текст — из листа «'+SHEET_NAME+'», картинка добавляется здесь и хранится в этом браузере.</div>'+
+        '<div class="qbr-toolbar" id="qbr-tb"></div>'+
+        '<div class="qbr-count" id="qbr-count"></div>'+
+        '<div class="qbr-list" id="qbr-list"></div>';
+      document.body.appendChild(p);
+    }
+    return true;
+  }
+
+  function chipRow(){
+    var present=ORDER.filter(function(s){return ROWS.some(function(r){return r.status===s;});});
+    var seen={}; var uniq=[]; present.forEach(function(s){var key=/отмен/i.test(s)?'отм':/готов/i.test(s)?'гот':s; if(!seen[key]){seen[key]=1;uniq.push(s);}});
+    return '<div class="qbr-frow"><span class="qbr-flab">Статус</span>'+
+      uniq.map(function(s){return '<button class="qbr-chipf'+(QF.st.has(s)?' on':'')+'" data-qf="'+esc(s)+'">'+esc(s)+'</button>';}).join('')+
+      (QF.st.size?'<button class="qbr-chipf clear" data-qf="__all">сбросить</button>':'')+'</div>';
+  }
+  function renderTB(){
+    document.getElementById('qbr-tb').innerHTML=
+      '<div class="qbr-frow"><span class="qbr-flab">Поиск</span>'+
+      '<input id="qbr-q" class="qbr-search" placeholder="название, описание, комментарий…" value="'+esc(QF.q)+'"></div>'+
+      chipRow();
+  }
+  function match(r){
+    if(QF.st.size && !QF.st.has(r.status)) return false;
+    if(QF.q){ var q=QF.q.toLowerCase(); if((r.name+' '+r.desc+' '+r.comment+' '+r.status).toLowerCase().indexOf(q)<0) return false; }
+    return true;
+  }
+  function imgZone(r){
+    var src=IMG[r.id];
+    if(src) return '<div class="qbr-img" data-shot="'+esc(src)+'"><img src="'+esc(src)+'" alt="">'+
+      '<button class="qbr-xbtn" data-qdel="'+esc(r.id)+'" title="Удалить картинку">✕</button></div>';
+    return '<div class="qbr-img"><div class="qbr-empty" data-qadd="'+esc(r.id)+'"><span>＋</span><span>добавить<br>картинку</span></div></div>';
+  }
+  function render(){
+    var list=ROWS.filter(match);
+    document.getElementById('qbr-count').innerHTML='Показано <b>'+list.length+'</b> из '+ROWS.length;
+    var host=document.getElementById('qbr-list');
+    if(!list.length){ host.innerHTML='<div class="qbr-empty2">Ничего не найдено. Заполните лист «'+SHEET_NAME+'» в таблице.</div>'; return; }
+    host.innerHTML=list.map(function(r){
+      var pct=clampPct(r.pct);
+      return '<div class="qbr-item">'+imgZone(r)+
+        '<div class="qbr-body">'+
+          '<div class="qbr-top"><div class="qbr-name">'+esc(r.name)+'</div>'+pillOf(r.status)+'</div>'+
+          '<div class="qbr-pwrap"><div class="qbr-pbar"><i style="width:'+pct+'%;background:'+barColor(r.status)+'"></i></div>'+
+            '<span class="qbr-pct">'+pct+'%</span></div>'+
+          (r.desc?'<div class="qbr-desc">'+esc(r.desc)+'</div>':'')+
+          (r.comment?'<div class="qbr-cmt"><b>Комментарий:</b> '+esc(r.comment)+'</div>':'')+
+        '</div></div>';
+    }).join('');
+  }
+
+  /* ── загрузка картинки (ресайз → dataURL → IndexedDB) ── */
+  var _tid=null;
+  var _inp=(function(){
+    var el=document.createElement('input'); el.type='file'; el.accept='image/*'; el.style.display='none';
+    el.addEventListener('change',function(){
+      var f=el.files[0]; if(!f||!_tid) return; var id=_tid; el.value='';
+      var fr=new FileReader();
+      fr.onload=function(ev){ var img=new Image();
+        img.onload=function(){ var MAX=1400,w=img.width,h=img.height;
+          if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
+          var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+          cv.getContext('2d').drawImage(img,0,0,w,h);
+          var b64=cv.toDataURL('image/jpeg',0.8);
+          IMG[id]=b64; render();
+          qImgSet(id,b64).catch(function(){ alert('Не удалось сохранить картинку — возможно, нет места в хранилище браузера.'); });
+        };
+        img.src=ev.target.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    document.body.appendChild(el); return el;
+  })();
+  function addImg(id){ _tid=id; _inp.click(); }
+  function delImg(id){ delete IMG[id]; render(); qImgDel(id).catch(function(){}); }
+
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('[data-qadd]'); if(a){ addImg(a.dataset.qadd); return; }
+    var d=e.target.closest('[data-qdel]'); if(d){ delImg(d.dataset.qdel); return; }
+    var c=e.target.closest('[data-qf]');
+    if(c){ var v=c.dataset.qf; if(v==='__all') QF.st.clear(); else QF.st.has(v)?QF.st.delete(v):QF.st.add(v); renderTB(); render(); return; }
+  });
+  document.addEventListener('input',function(e){ if(e.target.id==='qbr-q'){ QF.q=e.target.value; render(); }});
+
+  /* ── чтение листа (gviz) ── */
+  function parseCSV(t){ var rows=[],cur='',q=false,cells=[];
+    for(var i=0;i<t.length;i++){var ch=t[i];
+      if(ch==='"'){ if(q&&t[i+1]==='"'){cur+='"';i++;} else q=!q; continue; }
+      if(ch===','&&!q){cells.push(cur);cur='';continue;}
+      if((ch==='\n'||ch==='\r')&&!q){cells.push(cur);cur='';rows.push(cells);cells=[];if(ch==='\r'&&t[i+1]==='\n')i++;continue;}
+      cur+=ch;
+    } if(cur!==''||cells.length){cells.push(cur);rows.push(cells);}
+    return rows.map(function(r){return r.map(function(c){return c.replace(/\s+/g,' ').trim();});});
+  }
+  function col(h,names){ for(var i=0;i<h.length;i++){var x=(h[i]||'').toLowerCase(); for(var j=0;j<names.length;j++) if(x.indexOf(names[j])>=0) return i;} return -1; }
+  function loadSheet(){
+    var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&headers=0&sheet='+encodeURIComponent(SHEET_NAME)+'&t='+Date.now();
+    fetch(url,{cache:'no-store'}).then(function(r){return r.ok?r.text():Promise.reject();}).then(function(txt){
+      if(/^\s*</.test(txt)) return;
+      var rows=parseCSV(txt), hi=-1;
+      for(var i=0;i<Math.min(rows.length,8);i++){ var j=rows[i].join('|').toLowerCase(); if(j.indexOf('назв')>=0 && (j.indexOf('статус')>=0||j.indexOf('процент')>=0||j.indexOf('коммент')>=0)){hi=i;break;} }
+      if(hi<0) return;
+      var h=rows[hi];
+      var cN=col(h,['назв','наимен']),cD=col(h,['описан']),cC=col(h,['коммент']),
+          cS=col(h,['статус']),cP=col(h,['процент','%','progress']),cI=col(h,['id']);
+      if(cN<0) return;
+      var out=[],used={};
+      for(var k=hi+1;k<rows.length;k++){ var r=rows[k]; var nm=(cN>=0?r[cN]:'')||''; if(!nm.trim()) continue;
+        var id=(cI>=0&&r[cI])?r[cI].trim():slug(nm); if(used[id]) id=id+'-'+k; used[id]=1;
+        out.push({ id:id, name:nm, desc:(cD>=0?r[cD]:'')||'', comment:(cC>=0?r[cC]:'')||'',
+          status:(cS>=0?r[cS]:'')||'—', pct:clampPct(cP>=0?r[cP]:0) });
+      }
+      if(out.length){ ROWS=out; renderTB(); render(); }
+    }).catch(function(){});
+  }
+
+  function init(){
+    if(!mount()) return setTimeout(init,300);
+    renderTB(); render();
+    qImgAll().then(function(all){ IMG=all||{}; render(); }).catch(function(){});
+    loadSheet();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+
+</script>
+<!-- ====== конец вставки QBR ====== -->
+
 </body>
 </html>
