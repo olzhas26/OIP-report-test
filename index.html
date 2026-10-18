@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q3 2026 · v20</title>
+<title>ОИП — Проекты Q4 2026 · v21</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -30,6 +30,13 @@ button{font-family:inherit}
 .topbar-right b{color:rgba(255,255,255,.8);display:block;font-size:12px}
 .refresh{background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:6px;width:30px;height:30px;font-size:14px;cursor:pointer}
 .refresh:hover{background:rgba(255,255,255,.2)}
+.per-switch{display:flex;gap:2px;background:rgba(255,255,255,.08);border-radius:8px;padding:3px;flex:0 0 auto}
+.per-switch button{border:none;background:transparent;color:rgba(255,255,255,.62);font-size:11.5px;font-weight:700;
+  padding:5px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:.15s}
+.per-switch button:hover{color:#fff;background:rgba(255,255,255,.12)}
+.per-switch button.on{background:#fff;color:var(--navy)}
+.per-switch button:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+@media print{.per-switch{display:none}}
 .wk-badge{border:1px solid rgba(240,160,48,.45);background:rgba(240,160,48,.14);color:#f7c46c;border-radius:6px;
   padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap}
 .wk-badge b{color:#fff;font-weight:700}
@@ -370,7 +377,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span>Q3 2026</span> <small style="opacity:.4;font-weight:600" id="build">v20 · 28.09</small></div>
+  <div class="topbar-logo">ОИП · <span id="logo-per">Q4 2026</span> <small style="opacity:.4;font-weight:600" id="build">v21 · 18.10</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -378,6 +385,11 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
     <button class="tab" data-tab="week">Неделя</button>
     <button class="tab" data-tab="work">Проекты</button>
     <button class="tab" data-tab="anal">Аналитика</button>
+  </div>
+  <div class="per-switch" role="group" aria-label="Период отчёта">
+    <button data-per="q3" title="Предыдущий квартал, закрыт">◀ Q3</button>
+    <button data-per="q4" class="on" title="Текущий квартал">Q4 · сейчас</button>
+    <button data-per="year" title="Весь 2026 год">Год</button>
   </div>
   <button class="wk-badge" id="wk-badge" data-wk="0" title="Вернуться к текущей неделе" hidden></button>
   <div class="topbar-right"><b id="ts">—</b>обновлено</div>
@@ -425,8 +437,8 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 
 <!-- ═══ ПО ДИВИЗИОНАМ ═══ -->
 <div id="tab-div" class="page">
-  <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
-  <div class="page-subtitle" id="d-sub">Запросы по дивизионам · накопительно за 2026 год</div>
+  <div class="page-title">Отдел инициации проектов <span class="per-name">Q4 2026</span></div>
+  <div class="page-subtitle" id="d-sub">Запросы по дивизионам</div>
   <div class="road-toolbar">
     <button class="chip" data-wk="-1">◀ Прошлая</button>
     <button class="chip on" data-wk="0">Текущая</button>
@@ -434,8 +446,8 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
   </div>
   <div class="report-body">
     <div class="stats-panel">
-      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
-      <div><div class="stat-lbl">За этот<br>квартал</div><div class="stat-val" id="d-work" style="font-size:32px">—</div><div class="stat-sub" id="d-work-pct"></div></div>
+      <div><div class="stat-lbl" id="d-total-l">Запросов<br>за Q4 2026</div><div class="stat-val" id="d-total">—</div><div class="stat-hint" id="d-total-sub"></div></div>
+      <div><div class="stat-lbl" id="d-work-l">Накопительно<br>за год</div><div class="stat-val" id="d-work" style="font-size:32px">—</div><div class="stat-sub" id="d-work-pct"></div></div>
       <div><div class="stat-lbl">Закрыто<br>в неделю</div><div class="stat-val" id="d-queue" style="font-size:32px">—</div><div class="stat-hint" id="d-queue-sub">текущая неделя</div></div>
       <div><div class="stat-lbl">Кол-во<br>концептов</div><div class="stat-val" id="d-tasks" style="font-size:32px">—</div><div class="stat-hint" id="d-tasks-sub"></div></div>
     </div>
@@ -446,8 +458,8 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 
 <!-- ═══ ПО ТИПАМ ═══ -->
 <div id="tab-type" class="page">
-  <div class="page-title">Отдел инициации проектов <span>Q3 2026</span></div>
-  <div class="page-subtitle" id="t-sub">Запросы по типам · накопительно за 2026 год</div>
+  <div class="page-title">Отдел инициации проектов <span class="per-name">Q4 2026</span></div>
+  <div class="page-subtitle" id="t-sub">Запросы по типам</div>
   <div class="road-toolbar">
     <button class="chip" data-wk="-1">◀ Прошлая</button>
     <button class="chip on" data-wk="0">Текущая</button>
@@ -455,9 +467,9 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
   </div>
   <div class="report-body">
     <div class="stats-panel">
-      <div><div class="stat-lbl">Общее кол-во<br>запросов</div><div class="stat-val" id="t-total">—</div><div class="stat-hint" id="t-total-sub"></div></div>
-      <div><div class="stat-lbl">Концептов</div><div class="stat-val" id="t-konc" style="font-size:32px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
-      <div><div class="stat-lbl">С видео</div><div class="stat-val" id="t-old" style="font-size:32px">—</div><div class="stat-hint" id="t-old-sub"></div></div>
+      <div><div class="stat-lbl" id="t-total-l">Запросов<br>за Q4 2026</div><div class="stat-val" id="t-total">—</div><div class="stat-hint" id="t-total-sub"></div></div>
+      <div><div class="stat-lbl">Концептов<br>за период</div><div class="stat-val" id="t-konc" style="font-size:32px">—</div><div class="stat-sub" id="t-konc-pct"></div></div>
+      <div><div class="stat-lbl">С видео<br>за период</div><div class="stat-val" id="t-old" style="font-size:32px">—</div><div class="stat-hint" id="t-old-sub"></div></div>
     </div>
     <div class="charts-grid" id="type-charts"></div>
   </div>
@@ -578,10 +590,7 @@ const TASK_BLOCKS = [
 ];
 const WORK_DAYS_PER_WEEK = 5;
 
-/* Показатель «За этот квартал» берётся из первой таблицы «Сводного листа»
-   («Общее количество запросов по дивизионам за 2026») — это то, что ведётся в этом файле.
-   Если нужно добавить закрытое до перехода на этот формат, впишите число сюда. */
-const Q_BASELINE = 21;
+/* Итоги кварталов (286 за полугодие, 190 за Q3) — в блоке «ПЕРИОДЫ ОТЧЁТА» ниже. */
 
 /* Фото исполнителей: колонка «Фото» в листе «Справочник» либо папка Диска (нужен ключ API) */
 const AVATARS_MANUAL = {};
@@ -890,7 +899,8 @@ async function loadDriveAvatars(persons){
 const S = {projects:[], ref:{}, oldSum:{}, blocks:[], sumDone:null, sumCum:null, sumPers:null,
   loaded:false, cacheTs:null, scriptUrl:'', hideDone:false, archive:[],
   days:[], weekOffset:0, roadMode:'assigned', workFilter:'все', src:'', srcNote:'',
-  aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),src:new Set(),q:''},
+  period:'q4',
+  aFilter:{div:new Set(),type:new Set(),status:new Set(),person:new Set(),src:new Set(),per:new Set(),q:''},
   aSort:{key:'num',dir:1}, aGroup:'div'};
 const charts = {};
 const today = midnight(new Date());
@@ -1085,48 +1095,166 @@ function renderRoad(){
   } else box.style.display='none';
 }
 
-/* ═══════════════════ ДИВИЗИОНЫ ═══════════════════ */
+/* ═══════════════════ ПЕРИОДЫ ОТЧЁТА ═══════════════════ */
+/* Закрытые периоды фиксируются числом и больше не пересчитываются.
+   Когда закроете Q4: перенесите его в CLOSED_PERIODS с итоговым числом,
+   а в CURRENT_Q впишите следующий квартал. */
+const CLOSED_PERIODS = [
+  {key:'h1', name:'1 полугодие 2026', short:'H1', total:286, from:new Date(2026,0,1), to:new Date(2026,5,30)},
+  {key:'q3', name:'Q3 2026',          short:'Q3', total:190, from:new Date(2026,6,1), to:new Date(2026,8,30)},
+];
+const CURRENT_Q = {key:'q4', name:'Q4 2026', short:'Q4', from:new Date(2026,9,1), to:new Date(2026,11,31)};
+const YEAR_P    = {key:'year', name:'2026 год', short:'Год', from:new Date(2026,0,1), to:new Date(2026,11,31)};
+const PREV_Q    = CLOSED_PERIODS[CLOSED_PERIODS.length-1];
+const PERIODS   = {[PREV_Q.key]:PREV_Q, [CURRENT_Q.key]:CURRENT_Q, year:YEAR_P};
+const PERIOD_ORDER = [PREV_Q.key, CURRENT_Q.key, 'year'];
+const curPeriod = () => PERIODS[S.period] || CURRENT_Q;
+const closedSum = () => CLOSED_PERIODS.reduce((s,p)=>s+p.total,0);
+
 const cumTotal = () => S.sumCum ? Object.values(S.sumCum.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
 const prevTotal= () => Object.values(S.oldSum||{}).reduce((s,r)=>s+(r['Всего']||0),0);
-const cumType  = t => S.sumCum ? (S.sumCum.total||{})[t]||0 : 0;
-const q2Total  = () => S.sumQ2 ? Object.values(S.sumQ2.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
-const q2Type   = t => S.sumQ2 ? (S.sumQ2.total||{})[t]||0 : 0;
-/* Итог квартала — прирост накопительного итога к концу прошлого квартала */
-const qTotal   = () => Math.max(0, cumTotal() - q2Total());
-const qDiv     = d => Math.max(0, (((S.sumCum&&S.sumCum.rows[d])||{})['Всего']||0) -
-                                  (((S.sumQ2&&S.sumQ2.rows[d])||{})['Всего']||0));
-const qType    = t => Math.max(0, cumType(t) - q2Type(t));
-const qName    = () => 'Q'+(Math.floor(new Date().getMonth()/3)+1)+' '+new Date().getFullYear();
+/* Итог периода: закрытый — зафиксированное число; текущий — накопительный минус все закрытые */
+function periodTotal(key){
+  if(key==='year') return cumTotal();
+  const closed=CLOSED_PERIODS.find(p=>p.key===key);
+  if(closed) return closed.total;
+  return Math.max(0, cumTotal()-closedSum());
+}
+const qName  = () => CURRENT_Q.name;
+const qTotal = () => periodTotal(CURRENT_Q.key);
+
+/* ── матрицы «дивизион × тип» за период ── */
+function blkFinalize(b){
+  b.total={};
+  b.cols.forEach(c=>b.total[c]=Object.values(b.rows).reduce((s,r)=>s+(r[c]||0),0));
+  return b;
+}
+/* Из проектов реестра (используется для текущего квартала) */
+function blkFromProjects(list,title){
+  const base=(S.sumCum&&S.sumCum.cols)||[];
+  const types=[...new Set([...base.filter(c=>c!=='Всего'), ...list.map(p=>p.type)])];
+  const b={title,kind:'div',cols:types.concat('Всего'),rows:{}};
+  Object.keys((S.sumCum&&S.sumCum.rows)||{}).forEach(d=>{ b.rows[d]={}; });
+  list.forEach(p=>{
+    const r=b.rows[p.div]=b.rows[p.div]||{};
+    r[p.type]=(r[p.type]||0)+1; r['Всего']=(r['Всего']||0)+1;
+  });
+  return blkFinalize(b);
+}
+/* a − b − c…: клетки не уходят в минус; «Всего» считается из столбца «Всего» */
+function blkDiff(title,a,...subs){
+  const b={title,kind:'div',cols:[...a.cols],rows:{}};
+  Object.keys(a.rows).forEach(d=>{
+    const r={};
+    b.cols.forEach(c=>{
+      let v=(a.rows[d]||{})[c]||0;
+      subs.forEach(s=>{ if(s) v-=((s.rows[d]||{})[c]||0); });
+      r[c]=Math.max(0,v);
+    });
+    b.rows[d]=r;
+  });
+  return blkFinalize(b);
+}
+const curQRegistry = () => closedIn(CURRENT_Q.from, CURRENT_Q.to);
+function periodBlk(key){
+  const cum=S.sumCum;
+  if(!cum) return null;
+  const per=PERIODS[key]||CURRENT_Q;
+  if(key==='year') return cum;
+  if(key===CURRENT_Q.key)
+    return S.sumQ3 ? blkDiff('Дивизион × тип · '+per.name, cum, S.sumQ3)
+                   : blkFromProjects(curQRegistry(), 'Дивизион × тип · '+per.name);
+  if(key===PREV_Q.key)
+    return S.sumQ3 ? blkDiff('Дивизион × тип · '+per.name, S.sumQ3, S.sumQ2)
+                   : blkDiff('Дивизион × тип · '+per.name, cum, S.sumQ2,
+                             blkFromProjects(curQRegistry(),''));
+  return null;
+}
+const blkSum  = b => b ? Object.values(b.rows).reduce((s,r)=>s+(r['Всего']||0),0) : 0;
+const blkType = (b,t) => b ? (b.total||{})[t]||0 : 0;
+const blkDivN = (b,d) => b ? ((b.rows[d]||{})['Всего']||0) : 0;
+/* Откуда цифры и сходятся ли они */
+function periodNote(key){
+  const per=PERIODS[key]||CURRENT_Q, b=periodBlk(key), split=blkSum(b), tot=periodTotal(key);
+  const snap=S.sumQ3?'«'+esc(S.sumQ3.title)+'»':'';
+  const warn=(t)=>' <b style="color:#b06a10">'+t+'</b>';
+  const hint=' Чтобы разбивка сходилась точно, добавьте в «Сводный лист» таблицу «Конец 3 квартала» — снимок накопительного итога на 30.09, в том же виде, что «Конец 2 квартала».';
+  if(key==='year')
+    return 'Накопительный итог из «Сводного листа»: '+
+      CLOSED_PERIODS.map(p=>p.short+' '+p.total).join(' + ')+' + '+CURRENT_Q.short+' '+periodTotal(CURRENT_Q.key)+' = '+tot+'.';
+  if(key===CURRENT_Q.key){
+    const base='Итог '+per.short+' = накопительный '+cumTotal()+' − '+
+      CLOSED_PERIODS.map(p=>p.total).join(' − ')+' = '+tot+'.';
+    if(S.sumQ3) return base+' Разбивка — накопительный минус '+snap+'.'+
+      (split!==tot?warn('Сумма разбивки '+split+' не равна итогу '+tot+'.'):'');
+    return base+' Разбивка — по проектам реестра, закрытым с '+dm(per.from)+' (колонка «Начало недели»): '+split+'.'+
+      (split!==tot?warn('Расходится с итогом на '+Math.abs(tot-split)+'.')+hint:'');
+  }
+  const base=per.short+' закрыт на '+tot+'.';
+  if(S.sumQ3) return base+' Разбивка — '+snap+' минус «'+esc(S.sumQ2?S.sumQ2.title:'конец Q2')+'».'+
+    (split!==tot?warn('Сумма разбивки '+split+' не равна '+tot+'.'):'');
+  return base+' Разбивка — накопительный минус «'+esc(S.sumQ2?S.sumQ2.title:'конец Q2')+'» минус '+
+    CURRENT_Q.short+' по реестру: '+split+'.'+(split!==tot?warn('Расходится на '+Math.abs(tot-split)+'.')+hint:'');
+}
+
+/* ── переключатель периода ── */
+function syncPeriodUI(){
+  const per=curPeriod();
+  document.querySelectorAll('[data-per]').forEach(b=>b.classList.toggle('on',b.dataset.per===S.period));
+  document.querySelectorAll('.per-name').forEach(el=>el.textContent=per.name);
+  const lp=document.getElementById('logo-per'); if(lp) lp.textContent=per.name;
+}
+function setPeriod(key){
+  if(!PERIODS[key]) return;
+  S.period=key; syncPeriodUI();
+  if(!S.loaded) return;
+  renderDiv(); renderType(); renderAnalytics();
+}
+function periodSubtitle(what){
+  const per=curPeriod();
+  if(per.key==='year') return what+' · накопительно за 2026 год';
+  if(per.key===CURRENT_Q.key) return what+' · '+per.name+', с '+dm(per.from)+' по сегодня';
+  return what+' · '+per.name+', '+dm(per.from)+' — '+dm(per.to)+' · квартал закрыт';
+}
+const setTxt=(id,v)=>{ const el=document.getElementById(id); if(el) el.innerHTML=v; };
+
+/* ═══════════════════ ДИВИЗИОНЫ ═══════════════════ */
 function renderDiv(){
-  const P=S.projects;
-  const total=cumTotal(), prev=prevTotal();
+  const P=S.projects, per=curPeriod(), blk=periodBlk(per.key);
+  const total=periodTotal(per.key), year=cumTotal();
   const off=pastOffset(), wk=weekWindow(off), week=closedIn(wk[0],wk[6]).length;
-  const sheetYear=S.sumDone?((S.sumDone.total||{})['Всего']||0):closedThisQuarter().length;
-  const q=S.sumQ2 ? qTotal() : sheetYear+Q_BASELINE;
-  const konc=cumType('Концепт');
-  document.getElementById('d-total').textContent=total||P.length;
-  document.getElementById('d-total-sub').innerHTML=prev
-    ? '<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду' : (S.ref.divisions||[]).length+' дивизионов';
-  document.getElementById('d-work').textContent=q;
-  document.getElementById('d-work-pct').textContent = S.sumQ2
-    ? 'прирост к концу Q2 ('+cumTotal()+' − '+q2Total()+')'
-    : 'закрыто в '+qName()+(Q_BASELINE?' ('+sheetYear+' в файле + '+Q_BASELINE+' до него)':'');
-  document.getElementById('d-queue').textContent=week;
-  document.getElementById('d-queue-sub').textContent=off===0?'текущая неделя':weekName(off)+', '+dm(wk[0])+' — '+dm(wk[6]);
-  weekCaption('d','Запросы по дивизионам · накопительно за 2026 год');
-  document.getElementById('d-tasks').textContent=konc;
-  document.getElementById('d-tasks-sub').textContent=total?Math.round(konc/total*100)+'% от всех':'';
+  const konc=blkType(blk,'Концепт');
+  setTxt('d-total-l', per.key==='year'?'Запросов<br>за 2026 год':'Запросов<br>за '+per.name);
+  setTxt('d-total', total);
+  setTxt('d-total-sub', per.key==='year'
+    ? CLOSED_PERIODS.map(p=>p.short+' '+p.total).join(' · ')+' · '+CURRENT_Q.short+' '+periodTotal(CURRENT_Q.key)
+    : per.key===CURRENT_Q.key ? 'идёт с '+dm(per.from) : 'квартал закрыт');
+  if(per.key==='year'){
+    setTxt('d-work-l','Текущий<br>квартал');
+    setTxt('d-work', periodTotal(CURRENT_Q.key));
+    setTxt('d-work-pct', CURRENT_Q.name+' · '+(year?Math.round(periodTotal(CURRENT_Q.key)/year*100):0)+'% года');
+  } else {
+    setTxt('d-work-l','Накопительно<br>за год');
+    setTxt('d-work', year);
+    setTxt('d-work-pct', per.short+' — '+(year?Math.round(total/year*100):0)+'% года');
+  }
+  setTxt('d-queue', week);
+  setTxt('d-queue-sub', off===0?'текущая неделя':weekName(off)+', '+dm(wk[0])+' — '+dm(wk[6]));
+  weekCaption('d', periodSubtitle('Запросы по дивизионам'));
+  setTxt('d-tasks', konc);
+  setTxt('d-tasks-sub', total?Math.round(konc/total*100)+'% от всех за период':'');
 
   const host=document.getElementById('div-charts'); clearCharts(host);
-  const cum=S.sumCum;
-  if(cum){
+  if(blk){
     const known=S.ref.divisions||[];
-    const order=known.filter(d=>cum.rows[d]).concat(Object.keys(cum.rows).filter(d=>!known.includes(d)));
+    const order=known.filter(d=>blk.rows[d]).concat(Object.keys(blk.rows).filter(d=>!known.includes(d)));
     order.forEach(d=>{
-      const rec=cum.rows[d]||{};
+      const rec=blk.rows[d]||{};
       const entries=Object.entries(rec).filter(([k,v])=>k!=='Всего'&&v>0)
         .sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value,color:typeColor(label)}));
-      donut(host,d,entries,rec['Всего']||0,()=>openDivSum(d));
+      const yr=per.key==='year'?'':'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">за год '+
+        blkDivN(S.sumCum,d)+'</div>';
+      donut(host,d,entries,rec['Всего']||0,()=>openDivSum(d),yr);
     });
   } else {
     const order=(S.ref.divisions||[]).length?S.ref.divisions:[...new Set(P.map(p=>p.div))];
@@ -1143,32 +1271,34 @@ function renderDiv(){
 
 /* ═══════════════════ ТИПЫ ═══════════════════ */
 function renderType(){
-  const P=S.projects, byType={};
+  const P=S.projects, byType={}, per=curPeriod(), blk=periodBlk(per.key);
   P.forEach(p=>byType[p.type]=(byType[p.type]||0)+1);
-  const total=cumTotal(), prev=prevTotal();
-  const konc=cumType('Концепт'), vid=cumType('Видео');
-  document.getElementById('t-total').textContent=total||P.length;
-  document.getElementById('t-total-sub').innerHTML=prev?'<span class="delta up">+'+(total-prev)+'</span> к прошлому периоду':'';
-  document.getElementById('t-konc').textContent=konc;
-  document.getElementById('t-konc-pct').textContent=total?Math.round(konc/total*100)+'% от всех':'';
-  document.getElementById('t-old').textContent=vid;
-  document.getElementById('t-old-sub').textContent=total?Math.round(vid/total*100)+'% от всех':'';
-  weekCaption('t','Запросы по типам · накопительно за 2026 год');
+  const total=periodTotal(per.key);
+  const konc=blkType(blk,'Концепт'), vid=blkType(blk,'Видео');
+  setTxt('t-total-l', per.key==='year'?'Запросов<br>за 2026 год':'Запросов<br>за '+per.name);
+  setTxt('t-total', total);
+  setTxt('t-total-sub', per.key==='year'?'накопительно':per.key===CURRENT_Q.key?'идёт с '+dm(per.from):'квартал закрыт');
+  setTxt('t-konc', konc);
+  setTxt('t-konc-pct', total?Math.round(konc/total*100)+'% от всех':'');
+  setTxt('t-old', vid);
+  setTxt('t-old-sub', total?Math.round(vid/total*100)+'% от всех':'');
+  weekCaption('t', periodSubtitle('Запросы по типам'));
 
   const oldByType={};
   Object.values(S.oldSum).forEach(v=>Object.entries(v).forEach(([k,n])=>{
     if(k!=='Всего') oldByType[k]=(oldByType[k]||0)+n;
   }));
   const host=document.getElementById('type-charts'); clearCharts(host);
-  const cum=S.sumCum;
-  if(cum){
-    cum.cols.filter(c=>c!=='Всего').forEach(t=>{
-      const tot=(cum.total||{})[t]||0, prev=oldByType[t]||0;
-      if(!tot&&!prev) return;
-      const entries=Object.entries(cum.rows).map(([d,rec])=>({label:d,value:rec[t]||0,color:divColor(d)}))
+  if(blk){
+    blk.cols.filter(c=>c!=='Всего').forEach(t=>{
+      const tot=(blk.total||{})[t]||0, yr=blkType(S.sumCum,t), prev=oldByType[t]||0;
+      if(!tot&&!(per.key==='year'?prev:yr)) return;
+      const entries=Object.entries(blk.rows).map(([d,rec])=>({label:d,value:rec[t]||0,color:divColor(d)}))
         .filter(e=>e.value>0).sort((a,b)=>b.value-a.value);
-      donut(host,t,entries,tot,()=>openTypeSum(t),
-        prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' ранее</div>':'');
+      const extra = per.key==='year'
+        ? (prev?'<div style="margin-top:6px;font-size:11px;color:#9aa8b8">было '+prev+' ранее</div>':'')
+        : '<div style="margin-top:6px;font-size:11px;color:#9aa8b8">за год '+yr+'</div>';
+      donut(host,t,entries,tot,()=>openTypeSum(t),extra);
     });
   } else {
     ((S.ref.types||[]).length?S.ref.types:Object.keys(byType))
@@ -1182,40 +1312,34 @@ function renderType(){
   renderSummary('type-summary','type');
 }
 
-/* Закрытые запросы из «Сводного листа»: за период и накопительно */
+/* Сводка под диаграммами: выбранный период, неделя, кварталы года, матрица */
 function renderSummary(hostId,mode){
   const host=document.getElementById(hostId);
   if(!host) return;
   if(!S.sumDone&&!S.sumCum){ host.innerHTML=''; return; }
+  const per=curPeriod(), blk=periodBlk(per.key);
   const colorFn=mode==='div'?divColor:typeColor;
-  const pull=(blk)=>{
-    if(!blk) return null;
-    const o={};
-    if(mode==='div') Object.entries(blk.rows).forEach(([k,v])=>o[k]=v['Всего']||0);
-    else Object.entries(blk.total||{}).forEach(([k,v])=>{ if(k!=='Всего') o[k]=v; });
-    return o;
-  };
   const keys = mode==='div'
     ? [...new Set([...(S.ref.divisions||[]), ...Object.keys((S.sumCum||{rows:{}}).rows)])]
     : [...new Set([...(S.ref.types||[]), ...((S.sumCum&&S.sumCum.cols)||[])])].filter(t=>t!=='Всего');
-  const qMap={}; keys.forEach(k=>qMap[k]= mode==='div'?qDiv(k):qType(k));
+  const pMap={}; keys.forEach(k=>pMap[k]= mode==='div'?blkDivN(blk,k):blkType(blk,k));
   const wk=weekWindow(pastOffset()), done=closedIn(wk[0],wk[6]);
   const wMap={}; keys.forEach(k=>wMap[k]=0);
   done.forEach(p=>{ const k=(mode==='div'?p.div:p.type); if(k in wMap) wMap[k]++; else wMap[k]=1; });
   const sum=o=>Object.values(o||{}).reduce((a,b)=>a+b,0);
   host.innerHTML=
     '<div class="sum-grid">'+
-      '<div class="card"><div class="card-h">'+(mode==='div'?'По дивизионам за ':'По типам за ')+qName()+
-        '<b class="card-n">'+sum(qMap)+'</b></div>'+
-        barRows(qMap,null,colorFn,sum(qMap))+
-        '<div class="load-note" style="margin-top:8px">Накопительный итог минус «'+
-        esc(S.sumQ2?S.sumQ2.title:'конец прошлого квартала')+'».'+mismatchNote()+'</div></div>'+
+      '<div class="card"><div class="card-h">'+(mode==='div'?'По дивизионам · ':'По типам · ')+esc(per.name)+
+        '<b class="card-n">'+sum(pMap)+'</b></div>'+
+        barRows(pMap,null,colorFn,sum(pMap))+
+        '<div class="load-note" style="margin-top:8px">'+periodNote(per.key)+
+        (per.key===PREV_Q.key?mismatchNote():'')+'</div></div>'+
       '<div class="card"><div class="card-h">Закрыто за неделю '+dm(wk[0])+' — '+dm(wk[6])+
         '<b class="card-n">'+done.length+'</b></div>'+
         barRows(wMap,null,colorFn,done.length,true)+'</div>'+
-      quarterCompareCard(mode,colorFn)+
+      quartersCard(mode,colorFn)+
     '</div>'+
-    matrixCard(S.sumCum,mode==='type');
+    matrixCard(blk,mode==='type');
 }
 /* Старый список проектов в том же разрезе */
 function archiveCard(mode,colorFn){
@@ -1244,37 +1368,39 @@ function archiveList(list){
     '</tbody></table></div>'+
     (list.length>head.length?'<div class="load-note">Показаны первые '+head.length+' из '+list.length+'.</div>':'');
 }
-/* Что именно не сходится между таблицей прошлого квартала и накопительным итогом */
-/* Квартал против того, что было накоплено к его началу */
-function quarterCompareCard(mode,colorFn){
-  if(!S.sumQ2||!S.sumCum) return '';
-  const keys = mode==='div'
-    ? Object.keys(S.sumCum.rows)
-    : S.sumCum.cols.filter(c=>c!=='Всего');
-  const cur  = k => mode==='div' ? qDiv(k) : qType(k);
-  const base = k => mode==='div' ? (((S.sumQ2.rows[k]||{})['Всего'])||0) : q2Type(k);
-  const rows = keys.map(k=>({k,c:cur(k),b:base(k)})).filter(r=>r.c||r.b)
-                   .sort((a,b)=>b.c-a.c||b.b-a.b);
-  if(!rows.length) return '';
-  const max=Math.max(1,...rows.map(r=>Math.max(r.c,r.b)));
-  const sumC=rows.reduce((s,r)=>s+r.c,0), sumB=rows.reduce((s,r)=>s+r.b,0);
-  const pct=(c,b)=> b ? '<span class="delta '+(c?'up':'zero')+'">+'+Math.round(c/b*100)+'%</span>'
-                      : (c?'<span class="delta up">новый</span>':'<span class="delta zero">—</span>');
-  return '<div class="card"><div class="card-h">'+qName()+' против накопленного ранее'+
-    '<b class="card-n">'+sumC+' / '+sumB+'</b></div>'+
-    rows.map(r=>'<div class="qrow">'+
-      '<span class="ql"><i style="background:'+colorFn(r.k)+'"></i>'+esc(r.k)+'</span>'+
-      '<span class="qbars">'+
-        '<span class="qb"><i style="width:'+(r.c/max*100)+'%;background:'+colorFn(r.k)+'"></i></span>'+
-        '<span class="qb"><i style="width:'+(r.b/max*100)+'%;background:#c3cede"></i></span>'+
-      '</span>'+
-      '<b>'+r.c+'</b><span class="qbase">'+r.b+'</span>'+pct(r.c,r.b)+'</div>').join('')+
-    '<div class="qrow qtot"><span class="ql">Итого</span><span class="qbars"></span>'+
-      '<b>'+sumC+'</b><span class="qbase">'+sumB+'</span>'+pct(sumC,sumB)+'</div>'+
-    '<div class="load-note" style="margin-top:8px">Верхняя полоса — '+qName()+
-    ', нижняя серая — накоплено к его началу по таблице «'+esc(S.sumQ2.title)+
-    '». Процент показывает, на сколько квартал прирастил эту базу.</div></div>';
+/* Кварталы года рядом: 1 полугодие · Q3 · Q4 · год. Выбранный период подсвечен. */
+function quartersCard(mode,colorFn){
+  if(!S.sumCum) return '';
+  const per=curPeriod();
+  const h1=S.sumQ2, q3=periodBlk(PREV_Q.key), q4=periodBlk(CURRENT_Q.key), yr=S.sumCum;
+  const val=(b,k)=> !b ? 0 : mode==='div' ? blkDivN(b,k) : blkType(b,k);
+  const keys = (mode==='div'
+    ? Object.keys(yr.rows)
+    : yr.cols.filter(c=>c!=='Всего'))
+    .filter(k=>val(yr,k)||val(h1,k)||val(q3,k)||val(q4,k))
+    .sort((a,b)=>val(yr,b)-val(yr,a));
+  if(!keys.length) return '';
+  const cols=[
+    {k:'h1', t:CLOSED_PERIODS[0].short, b:h1, tot:CLOSED_PERIODS[0].total},
+    {k:PREV_Q.key, t:PREV_Q.short, b:q3, tot:PREV_Q.total},
+    {k:CURRENT_Q.key, t:CURRENT_Q.short, b:q4, tot:periodTotal(CURRENT_Q.key)},
+    {k:'year', t:'Год', b:yr, tot:cumTotal()},
+  ];
+  const on=k=>k===per.key?' style="background:rgba(0,194,224,.14);font-weight:800"':'';
+  return '<div class="card"><div class="card-h">Кварталы 2026 · '+(mode==='div'?'дивизионы':'типы')+
+    '<b class="card-n">'+cumTotal()+'</b></div>'+
+    '<table class="mtx"><thead><tr><th>'+(mode==='div'?'Дивизион':'Тип')+'</th>'+
+      cols.map(c=>'<th'+on(c.k)+'>'+c.t+'</th>').join('')+'</tr></thead><tbody>'+
+    keys.map(k=>'<tr><td class="mh"><span class="dot" style="background:'+colorFn(k)+'"></span>'+esc(k)+'</td>'+
+      cols.map(c=>{const v=val(c.b,k);
+        return '<td'+(c.k===per.key?on(c.k):(v?'':' class="z"'))+'>'+(v||'·')+'</td>';}).join('')+'</tr>').join('')+
+    '<tr class="mtot"><td class="mh">ИТОГО</td>'+cols.map(c=>'<td'+on(c.k)+'>'+c.tot+'</td>').join('')+'</tr>'+
+    '</tbody></table>'+
+    '<div class="load-note" style="margin-top:8px">Строка «Итого» — зафиксированные итоги периодов; '+
+    'клетки — разбивка из «Сводного листа» и реестра. '+esc(CLOSED_PERIODS[0].short)+' — таблица «'+
+    esc(h1?h1.title:'Конец 2 квартала')+'».</div></div>';
 }
+/* Что именно не сходится между таблицей прошлого квартала и накопительным итогом */
 function mismatchNote(){
   if(!S.sumQ2) return '';
   const cols=S.sumQ2.cols.filter(c=>c!=='Всего');
@@ -1568,8 +1694,7 @@ function renderWeek(){
 
   document.getElementById('w-kpi').innerHTML=
     kpiCard('Закрыто запросов',done.length,
-      (S.sumQ2?'из '+qTotal()+' за '+qName()
-              :'из '+((S.sumDone&&(S.sumDone.total||{})['Всего'])||S.projects.filter(p=>p.closed).length)+' за 2026'))+
+      'из '+qTotal()+' за '+qName()+' · '+cumTotal()+' за год')+
     kpiCard('Загрузка отдела',pct+'%',load+' из '+cap+' раб. дн',null,
       pct>100?'bad':pct>80?'warn':'good')+
     kpiCard('Задач в работе',inWeek.filter(t=>t.person).length,
@@ -1681,11 +1806,19 @@ const A_COLS=[
 ];
 const A_GROUPS={div:'Дивизион',type:'Тип задачи',status:'Статус',city:'Город',person:'Исполнитель',month:'Месяц закрытия'};
 const allProjects = () => S.projects.concat(S.archive||[]);
+/* Проект реестра закрыт в квартале с таким названием (по колонке «Начало недели») */
+function closedInPeriod(p,name){
+  const per=[PREV_Q,CURRENT_Q].find(x=>x.name===name);
+  if(!per||!p.closed||p.archive) return false;
+  const d=closeDate(p);
+  return !!d && midnight(d)>=per.from && midnight(d)<=per.to;
+}
 const SRC_LABEL   = p => p.archive?'Старый список':'Текущий реестр';
 function aFiltered(){
   const f=S.aFilter, q=f.q.trim().toLowerCase();
   return allProjects().filter(p=>
     (!f.src.size    || f.src.has(SRC_LABEL(p))) &&
+    (!f.per.size    || [...f.per].some(n=>closedInPeriod(p,n))) &&
     (!f.div.size    || f.div.has(p.div)) &&
     (!f.type.size   || f.type.has(p.type)) &&
     (!f.status.size || f.status.has(p.status)) &&
@@ -1717,6 +1850,7 @@ function renderAnalytics(skipFilters){
     '<input id="a-q" class="fsearch" placeholder="название, город, исполнитель…" value="'+esc(S.aFilter.q)+'"></div>'+
     chipRow('Дивизион','div',div)+chipRow('Тип','type',typ)+
     chipRow('Источник','src',['Текущий реестр','Старый список'])+
+    chipRow('Закрыт в','per',[PREV_Q.name,CURRENT_Q.name])+
     chipRow('Статус','status',sta)+chipRow('Исполнитель','person',per);
 
   const L=aFiltered();
@@ -1829,7 +1963,7 @@ function drawWork(){
 function openDiv(name){
   const list=S.projects.filter(p=>p.div===name);
   const persons=new Set(); list.forEach(p=>p.tasks.forEach(t=>t.person&&persons.add(t.person)));
-  show('Дивизион '+name, list.length+' запросов в реестре Q3',
+  show('Дивизион '+name, list.length+' запросов в реестре',
     [['Запросов',list.length],['Задач',list.reduce((s,p)=>s+p.tasks.length,0)],
      ['Исполнителей',persons.size],['В работе',list.filter(p=>/работе/i.test(p.status)).length]],
     '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
@@ -1840,13 +1974,16 @@ function openDiv(name){
     '</tbody></table></div>');
 }
 function openDivSum(d){
+  const per=curPeriod(), isYear=per.key==='year';
   const rec=(S.sumCum&&S.sumCum.rows[d])||{};
-  const cur=(S.sumDone&&S.sumDone.rows[d])||{};
+  const pb=periodBlk(per.key);
+  const cur=isYear?((S.sumDone&&S.sumDone.rows[d])||{}):((pb&&pb.rows[d])||{});
   const list=S.projects.filter(p=>p.div===d);
-  show('Дивизион '+d, 'накопительно за 2026 год',
-    [['Всего',rec['Всего']||0],['В этом файле',cur['Всего']||0],
+  show('Дивизион '+d, isYear?'накопительно за 2026 год':per.name+' · рядом — итог за год',
+    [[isYear?'Всего за год':'За '+per.short,isYear?(rec['Всего']||0):(cur['Всего']||0)],
+     [isYear?'В этом файле':'За год',isYear?(cur['Всего']||0):(rec['Всего']||0)],
      ['В реестре',list.length],['В архиве',(S.archive||[]).filter(p=>p.div===d).length]],
-    breakdownTable('Тип задачи',rec,cur,typeColor)+
+    breakdownTable('Тип задачи',rec,cur,typeColor,isYear?'В файле':per.short)+
     archiveList((S.archive||[]).filter(p=>p.div===d))+
     (list.length?'<div class="card-h" style="margin:14px 0 6px">Текущий реестр</div>'+
       '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>№</th><th>Наименование</th>'+
@@ -1856,23 +1993,27 @@ function openDivSum(d){
       '</tbody></table></div>':''));
 }
 function openTypeSum(t){
+  const per=curPeriod(), isYear=per.key==='year';
+  const src=isYear?S.sumDone:periodBlk(per.key);
   const rec={},cur={};
-  if(S.sumCum)  Object.entries(S.sumCum.rows).forEach(([d,r])=>{ if(r[t]) rec[d]=r[t]; });
-  if(S.sumDone) Object.entries(S.sumDone.rows).forEach(([d,r])=>{ if(r[t]) cur[d]=r[t]; });
-  const tot=(S.sumCum&&(S.sumCum.total||{})[t])||0;
-  show(t, 'накопительно за 2026 год',
-    [['Всего',tot],['В этом файле',(S.sumDone&&(S.sumDone.total||{})[t])||0],
+  if(S.sumCum) Object.entries(S.sumCum.rows).forEach(([d,r])=>{ if(r[t]) rec[d]=r[t]; });
+  if(src)      Object.entries(src.rows).forEach(([d,r])=>{ if(r[t]) cur[d]=r[t]; });
+  const tot=(S.sumCum&&(S.sumCum.total||{})[t])||0, pt=blkType(src,t);
+  const ptot=periodTotal(per.key);
+  show(t, isYear?'накопительно за 2026 год':per.name+' · рядом — итог за год',
+    [[isYear?'Всего за год':'За '+per.short,isYear?tot:pt],
+     [isYear?'В этом файле':'За год',isYear?pt:tot],
      ['В архиве',(S.archive||[]).filter(p=>p.type===t).length],
-     ['Доля',cumTotal()?Math.round(tot/cumTotal()*100)+'%':'—']],
-    breakdownTable('Дивизион',rec,cur,divColor)+
+     ['Доля',isYear?(cumTotal()?Math.round(tot/cumTotal()*100)+'%':'—'):(ptot?Math.round(pt/ptot*100)+'%':'—')]],
+    breakdownTable('Дивизион',rec,cur,divColor,isYear?'В файле':per.short)+
     archiveList((S.archive||[]).filter(p=>p.type===t)));
 }
-function breakdownTable(head,rec,cur,colorFn){
+function breakdownTable(head,rec,cur,colorFn,curLabel){
   const keys=Object.keys(rec).filter(k=>k!=='Всего'&&rec[k]);
   if(!keys.length) return '<div class="load-note">Данных нет</div>';
   const max=Math.max(...keys.map(k=>rec[k]));
   return '<div class="tbl-wrap" style="box-shadow:none"><table><thead><tr><th>'+head+
-    '</th><th style="width:52%">Накопительно</th><th>Всего</th><th>В файле</th></tr></thead><tbody>'+
+    '</th><th style="width:52%">Накопительно за год</th><th>Год</th><th>'+esc(curLabel||'В файле')+'</th></tr></thead><tbody>'+
     keys.sort((a,b)=>rec[b]-rec[a]).map(k=>
       '<tr><td><span class="dot" style="background:'+colorFn(k)+'"></span>'+esc(k)+'</td>'+
       '<td><span class="mbar" style="display:block"><i style="width:'+(rec[k]/max*100)+
@@ -1946,6 +2087,7 @@ document.addEventListener('mousemove',e=>{
 document.addEventListener('mouseout',e=>{ if(e.target.closest('[data-tip]')) tip.classList.remove('on'); });
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');            if(tab){ showTab(tab.dataset.tab); return; }
+  const pr=e.target.closest('[data-per]');        if(pr){ setPeriod(pr.dataset.per); return; }
   const lb=e.target.closest('#lightbox');        if(lb){ lb.classList.remove('open'); return; }
   const wk=e.target.closest('[data-wk]');
   if(wk){ setWeek(+wk.dataset.wk); return; }
@@ -2096,10 +2238,12 @@ function applyData(d){
   S.oldSum=parseSummary(d.old||[]);
   S.blocks=parseBlocks(d.sum||[]);
   const wk=parseBlocks(d.week||[]).find(b=>b.kind==='div');
-  S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн/i.test(b.title)) || null;
+  S.sumDone = wk || S.blocks.find(b=>b.kind==='div'&&!/накопительн|квартал/i.test(b.title)) || null;
   S.sumCum  = S.blocks.find(b=>b.kind==='div'&&/накопительн/i.test(b.title)) || null;
   S.sumPers = S.blocks.find(b=>b.kind==='person') || null;
-  S.sumQ2   = S.blocks.find(b=>b.kind==='div'&&/квартал/i.test(b.title)) || null;
+  /* «Конец 2 квартала» — база полугодия; «Конец 3 квартала», если появится, делает разбивку Q3/Q4 точной */
+  S.sumQ2   = S.blocks.find(b=>b.kind==='div'&&/(2|ii|втор)\S*\s*квартал|\bq2\b|полугод/i.test(b.title)) || null;
+  S.sumQ3   = S.blocks.find(b=>b.kind==='div'&&/(3|iii|трет)\S*\s*квартал|\bq3\b/i.test(b.title)) || null;
   S.projects=parseMain(d.main||[]);
   S.projects.forEach(p=>{ p.uid='r'+p.num; p.div=normDiv(p.div); p.type=normType(p.type); });
   S.archive=parseArchive(d.arch||[]);
@@ -2111,6 +2255,7 @@ function applyData(d){
     : new Date().toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   checkDurations();
   renderRoad(); renderDiv(); renderType(); renderWeek(); renderWork(); renderAnalytics();
+  syncPeriodUI();
   if(!document.querySelector('.page.show')) showTab('road');
 }
 async function fetchAll(allowFallback){
