@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q4 2026 · v21</title>
+<title>ОИП — Проекты Q4 2026 · v22</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -377,7 +377,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span id="logo-per">Q4 2026</span> <small style="opacity:.4;font-weight:600" id="build">v21 · 18.10</small></div>
+  <div class="topbar-logo">ОИП · <span id="logo-per">Q4 2026</span> <small style="opacity:.4;font-weight:600" id="build">v22 · 18.10</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -596,6 +596,11 @@ const WORK_DAYS_PER_WEEK = 5;
 const AVATARS_MANUAL = {};
 const DRIVE = { folder:'', apiKey:'' };   // папка подхватывается из «Справочника»
 
+/* Исполнители, которых сайт не показывает (ушли из отдела). Их прошлые проекты
+   остаются в итогах и в составе команд, но в плане, загрузке и фильтрах их нет. */
+const HIDDEN_PERSONS = ['Салтанат'];
+const isHiddenPerson = n => HIDDEN_PERSONS.some(h=>h.toLowerCase()===String(n||'').trim().toLowerCase());
+
 const C = {num:0,name:1,div:2,city:3,contact:4,got:5,due:6,left:7,taken:8,type:9,pct:34,status:35,week:36};
 const SKIP_NAMES = ['шаблон'];
 const SHEET_ARCHIVE = 'Старый список проектов';
@@ -787,7 +792,7 @@ function parseRef(rows){
     return a;};
   const cD=colOf('дивизион'),cP=colOf('исполнител'),cS=colOf('статус'),cT=colOf('тип'),cF=colOf('фото');
   if(cD>=0) ref.divisions=down(cD);
-  if(cP>=0) ref.persons=down(cP);
+  if(cP>=0) ref.persons=down(cP).filter(n=>!isHiddenPerson(n));
   if(cS>=0) ref.statuses=down(cS);
   if(cT>=0) ref.types=down(cT);
   if(cP>=0&&cF>=0) for(let i=1;i<rows.length;i++){
@@ -971,6 +976,7 @@ function buildBars(){
       if(t.person||t.active) noDate.push({project:p.name,num:p.num,label:t.label,person:t.person,status:t.status||p.status});
       return;
     }
+    if(isHiddenPerson(t.person)) return;
     if(!t.person){ noPerson.push({project:p.name,num:p.num,label:t.label,start:t.start,end:t.end}); return; }
     let i0=dayIdx(t.start,days), i1=dayIdx(t.end||t.start,days);
     if(i1<0||i0>13) return;
@@ -1682,6 +1688,7 @@ function renderWeek(){
     if(!t.start||!t.end) return;
     if(midnight(t.end)<ws||midnight(t.start)>we) return;
     const a=midnight(t.start)<ws?ws:midnight(t.start), b=midnight(t.end)>we?we:midnight(t.end);
+    if(isHiddenPerson(t.person)) return;
     inWeek.push({...t,project:p.name,div:p.div,num:p.num,load:workDaysBetween(a,b)});
   }));
   const wdInWeek=workDaysBetween(ws,we);
@@ -1844,7 +1851,7 @@ function renderAnalytics(skipFilters){
   const div=[...new Set([...(S.ref.divisions||[]),...ALL.map(p=>p.div)])];
   const typ=[...new Set([...(S.ref.types||[]),...ALL.map(p=>p.type)])];
   const sta=[...new Set([...(S.ref.statuses||[]),...ALL.map(p=>p.status)])];
-  const per=[...new Set([...(S.ref.persons||[]),...ALL.flatMap(p=>p.persons)])];
+  const per=[...new Set([...(S.ref.persons||[]),...ALL.flatMap(p=>p.persons)])].filter(n=>!isHiddenPerson(n));
   if(!skipFilters) document.getElementById('a-filters').innerHTML=
     '<div class="frow"><span class="flab">Поиск</span>'+
     '<input id="a-q" class="fsearch" placeholder="название, город, исполнитель…" value="'+esc(S.aFilter.q)+'"></div>'+
