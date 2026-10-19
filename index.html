@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ОИП — Проекты Q4 2026 · v22</title>
+<title>ОИП — Проекты Q4 2026 · v23</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
 <style>
 :root{
@@ -377,7 +377,7 @@ table.mtx tr.mtot td{border-top:1.5px solid var(--line);font-weight:800;backgrou
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">ОИП · <span id="logo-per">Q4 2026</span> <small style="opacity:.4;font-weight:600" id="build">v22 · 18.10</small></div>
+  <div class="topbar-logo">ОИП · <span id="logo-per">Q4 2026</span> <small style="opacity:.4;font-weight:600" id="build">v23 · 19.10</small></div>
   <div class="tab-group">
     <button class="tab on" data-tab="road">Дорожная карта</button>
     <button class="tab" data-tab="div">По дивизионам</button>
@@ -2742,6 +2742,17 @@ setInterval(()=>load(true),5*60*1000);
       var cN=col(h,['назв','наимен']),cD=col(h,['описан']),cC=col(h,['коммент']),
           cS=col(h,['статус']),cP=col(h,['процент','%','progress']),cI=col(h,['id']);
       if(cN<0) return;
+      /* Google при выгрузке числового столбца стирает его текстовый заголовок («Процент» приходит пустым).
+         Тогда берём столбец без заголовка, где в строках стоят числа. */
+      if(cP<0){
+        for(var ci=0;ci<h.length && cP<0;ci++){
+          if((h[ci]||'').trim()) continue;
+          var nums=0,txt=0;
+          for(var ri=hi+1;ri<rows.length;ri++){ var v=String((rows[ri]||[])[ci]||'').trim(); if(!v) continue;
+            if(/^\d+([.,]\d+)?\s*%?$/.test(v)) nums++; else txt++; }
+          if(nums&&!txt) cP=ci;
+        }
+      }
       var out=[],used={};
       for(var k=hi+1;k<rows.length;k++){ var r=rows[k]; var nm=(cN>=0?r[cN]:'')||''; if(!nm.trim()) continue;
         var id=(cI>=0&&r[cI])?r[cI].trim():slug(nm); if(used[id]) id=id+'-'+k; used[id]=1;
